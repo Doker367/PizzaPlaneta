@@ -1,0 +1,88 @@
+/*
+Mejora visual y consistencia con dashboard de ventas para contactos y modales:
+- Tarjetas, botones, filtros, modales, colores, paddings, etc.
+- Inspiraci�n: Ventas.razor.css
+- Prefijo: .mb- para evitar conflictos globales
+*/
+
+.contactos-container[b-uvlqraoqcv] {
+    max-width: 760px;
+    margin: 40px auto 0 auto;
+    background: rgba(30,36,49,0.93);
+    border-radius: 18px;
+    padding: 38px 38px 28px 38px;
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.14);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.contactos-header[b-uvlqraoqcv] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 34px;
+}
+.mb-btn-primary.mb-btn-gradient[b-uvlqraoqcv] {
+    background: linear-gradient(90deg, #6a5af9 0%, #8f6ed5 100%);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    padding: 10px 20px;
+    font-weight: 500;
+    font-size: 1.06em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 12px;
+    box-shadow: 0 2px 8px #0001;
+    transition: background 0.2s;
+}
+.mb-btn-primary.mb-btn-gradient:hover[b-uvlqraoqcv] {
+    background: linear-gradient(90deg, #8f6ed5 0%, #6a5af9 100%);
+}
+.contactos-lista[b-uvlqraoqcv] {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 24px;
+}
+.contacto-item[b-uvlqraoqcv] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #23243a;
+    border-radius: 10px;
+    padding: 18px 24px;
+    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.06);
+}
+.contacto-nombre[b-uvlqraoqcv] {
+    font-size: 1.13em;
+    font-weight: 500;
+    color: #fff;
+}
+.contactos-modal[b-uvlqraoqcv] {
+    background: #23243a;
+    border-radius: 16px;
+    padding: 32px 28px;
+    min-width: 380px;
+    max-width: 96vw;
+    box-shadow: 0 8px 32px #0004;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    animation: slideUp-b-uvlqraoqcv 0.19s;
+}
+@keyframes slideUp-b-uvlqraoqcv {
+    from { opacity: 0; transform: translateY(30px);}
+    to { opacity: 1; transform: translateY(0);}
+}
+.miembro-item[b-uvlqraoqcv] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+}
+.modal-actions[b-uvlqraoqcv] {
+    display: flex;
+    gap: 16px;
+    margin-top: 18px;
+}

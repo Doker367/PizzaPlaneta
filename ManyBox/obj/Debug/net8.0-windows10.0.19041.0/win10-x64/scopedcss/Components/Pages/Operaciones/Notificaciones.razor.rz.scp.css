@@ -1,0 +1,191 @@
+/* Estilos para Notificaciones y CrearNotificacion inspirados en empleados */
+
+.mb-notificaciones[b-axi3ok1npe], .mb-crear-notificacion[b-axi3ok1npe] {
+    width: 100%;
+    margin: 0 auto;
+}
+.mb-actions-bar[b-axi3ok1npe] {
+    display: flex;
+    gap: 1.8rem;
+    justify-content: flex-start;
+    margin-bottom: 2.2rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0.5rem 0;
+}
+.mb-btn-dark.mb-btn-sm[b-axi3ok1npe] {
+    background: #23243a;
+    color: #fff;
+    border: 1.5px solid #35365a;
+    border-radius: 10px;
+    font-size: 1rem;
+    padding: 0.5rem 1.2rem;
+    font-weight: 600;
+    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.mb-btn-dark.mb-btn-sm:hover[b-axi3ok1npe] {
+    background: #35365a;
+    color: #7b5cff;
+    box-shadow: 0 2px 12px #23243a55;
+}
+.mb-search-bar[b-axi3ok1npe] {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    margin-bottom: 2.5rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+.mb-search-row-sep[b-axi3ok1npe] {
+    display: flex;
+    gap: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+.mb-search-select-sep[b-axi3ok1npe] {
+    display: flex;
+    gap: 1.2rem;
+}
+.mb-search-bar input.form-control[b-axi3ok1npe],
+.mb-search-bar .form-control[b-axi3ok1npe] {
+    border-radius: 10px;
+    margin-bottom: 0;
+}
+.mb-search-bar .buscador-btn[b-axi3ok1npe] {
+    margin-left: 1.2rem;
+}
+.mb-notificaciones-grid[b-axi3ok1npe] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2.2rem;
+    margin-bottom: 2.2rem;
+}
+.mb-notificacion-card[b-axi3ok1npe] {
+    background: rgba(44, 48, 80, 0.55);
+    border-radius: 22px;
+    box-shadow: 0 2px 8px #4f8cff22;
+    border: 1.5px solid #7b5cff33;
+    padding: 0;
+}
+.mb-card-header[b-axi3ok1npe] {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1.5rem 1.5rem 0.7rem 1.5rem;
+    background: transparent;
+    border-bottom: none;
+}
+.mb-notificacion-info[b-axi3ok1npe] {
+    flex: 1;
+}
+.mb-notificacion-title[b-axi3ok1npe] {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 0.2rem 0;
+}
+.mb-notificacion-meta[b-axi3ok1npe] {
+    color: #a0aec0;
+    font-size: 0.95rem;
+    display: flex;
+    gap: 1.2rem;
+}
+.mb-notificacion-prioridad[b-axi3ok1npe] {
+    color: #10b981;
+    font-weight: 600;
+}
+.mb-notificacion-estado[b-axi3ok1npe] {
+    color: #7b5cff;
+    font-weight: 600;
+}
+.mb-notificacion-body[b-axi3ok1npe] {
+    padding: 0 1.5rem 1.2rem 1.5rem;
+    color: #e0e6f0;
+    font-size: 1.05rem;
+}
+.mb-card-footer[b-axi3ok1npe] {
+    padding: 1.2rem 1.5rem;
+    background: transparent;
+    border-top: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+.notificaciones-feedback[b-axi3ok1npe] {
+    margin-top: 1.5rem;
+    color: #ffb347;
+    background: #23243a;
+    border-radius: 10px;
+    padding: 0.8rem 1.2rem;
+    font-weight: 600;
+    text-align: center;
+}
+.notificaciones-loading[b-axi3ok1npe], .notificaciones-vacio[b-axi3ok1npe] {
+    color: #a0aec0;
+    text-align: center;
+    margin: 2rem 0;
+    font-size: 1.1rem;
+}
+
+/* Modal estilos reutilizados de empleados */
+.modal-overlay[b-axi3ok1npe] {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    overflow-y: auto;
+}
+.modal-card[b-axi3ok1npe] {
+    background: #23243a;
+    padding: 2.5rem 2.5rem;
+    border-radius: 22px;
+    min-width: 400px;
+    max-width: 98vw;
+    box-shadow: 0 4px 24px #0005;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+}
+.modal-card-md[b-axi3ok1npe] {
+    min-width: 400px;
+    max-width: 90vw;
+}
+.modal-title[b-axi3ok1npe] {
+    margin-bottom: 1rem;
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
+}
+.modal-form-responsive[b-axi3ok1npe] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2rem;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 1.2rem;
+}
+.modal-actions.modal-actions-center[b-axi3ok1npe] {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+}
+@media screen and (max-width: 700px) {
+    .modal-card-md[b-axi3ok1npe] {
+        min-width: 98vw;
+        max-width: 98vw;
+        padding: 1.2rem 0.5rem;
+    }
+    .modal-form-responsive[b-axi3ok1npe] {
+        grid-template-columns: 1fr;
+        gap: 0.7rem;
+    }
+}

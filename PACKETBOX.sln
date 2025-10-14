@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManyBox", "ManyBox\ManyBox.csproj", "{6969BAE8-7394-A803-77AF-15BFB3FA6186}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManyBoxApi", "ManyBoxApi\ManyBoxApi.csproj", "{F0BC08B0-022F-59DB-7954-1B8CA50408E0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6969BAE8-7394-A803-77AF-15BFB3FA6186}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6969BAE8-7394-A803-77AF-15BFB3FA6186}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6969BAE8-7394-A803-77AF-15BFB3FA6186}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6969BAE8-7394-A803-77AF-15BFB3FA6186}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0BC08B0-022F-59DB-7954-1B8CA50408E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0BC08B0-022F-59DB-7954-1B8CA50408E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0BC08B0-022F-59DB-7954-1B8CA50408E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0BC08B0-022F-59DB-7954-1B8CA50408E0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2377C0C0-6A83-4F6A-B604-08598558221B}
+	EndGlobalSection
+EndGlobal

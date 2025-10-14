@@ -1,0 +1,85 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\obj\\Debug\\net8.0-windows10.0.19041.0\\win10-x64\\scopedcss\\bundle\\ManyBox.styles.css",
+      "PackagePath": "staticwebassets\\ManyBox.styles.css"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\_content\\Blazor-ApexCharts\\apex-charts.min.js",
+      "PackagePath": "staticwebassets\\_content\\Blazor-ApexCharts\\apex-charts.min.js"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\_content\\Blazor-ApexCharts\\blazor-apex-charts.js",
+      "PackagePath": "staticwebassets\\_content\\Blazor-ApexCharts\\blazor-apex-charts.js"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\css\\ChatDashboard.css",
+      "PackagePath": "staticwebassets\\css\\ChatDashboard.css"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\css\\app.css",
+      "PackagePath": "staticwebassets\\css\\app.css"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\css\\bootstrap\\bootstrap.min.css",
+      "PackagePath": "staticwebassets\\css\\bootstrap\\bootstrap.min.css"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\css\\bootstrap\\bootstrap.min.css.map",
+      "PackagePath": "staticwebassets\\css\\bootstrap\\bootstrap.min.css.map"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\css\\jsonviewer.css",
+      "PackagePath": "staticwebassets\\css\\jsonviewer.css"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\css\\superadmin.css",
+      "PackagePath": "staticwebassets\\css\\superadmin.css"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\img\\inicio.jpg",
+      "PackagePath": "staticwebassets\\img\\inicio.jpg"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\js\\dashboard.js",
+      "PackagePath": "staticwebassets\\js\\dashboard.js"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\js\\firmaCanvas.js",
+      "PackagePath": "staticwebassets\\js\\firmaCanvas.js"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\js\\toggleNav.js",
+      "PackagePath": "staticwebassets\\js\\toggleNav.js"
+    },
+    {
+      "Id": "C:\\Users\\Wiliamm\\source\\repos\\PACKETBOX\\ManyBox\\wwwroot\\js\\ventas.js",
+      "PackagePath": "staticwebassets\\js\\ventas.js"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-windows10.0.19041.0\\win10-x64\\staticwebassets\\msbuild.ManyBox.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-windows10.0.19041.0\\win10-x64\\staticwebassets\\msbuild.ManyBox.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-windows10.0.19041.0\\win10-x64\\staticwebassets\\msbuild.build.ManyBox.props",
+      "PackagePath": "build\\ManyBox.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-windows10.0.19041.0\\win10-x64\\staticwebassets\\msbuild.buildMultiTargeting.ManyBox.props",
+      "PackagePath": "buildMultiTargeting\\ManyBox.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-windows10.0.19041.0\\win10-x64\\staticwebassets\\msbuild.buildTransitive.ManyBox.props",
+      "PackagePath": "buildTransitive\\ManyBox.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
