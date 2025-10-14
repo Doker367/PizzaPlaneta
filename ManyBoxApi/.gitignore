@@ -1,0 +1,6 @@
+# .gitignore
+.env
+appsettings.json
+# Ignore logs
+logs/
+*.log

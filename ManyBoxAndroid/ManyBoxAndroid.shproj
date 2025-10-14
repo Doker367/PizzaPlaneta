@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{A8B8C0D1-2E3F-4567-8901-23456789ABCD}</ProjectGuid>
+    <ProjectName>ManyBoxAndroid</ProjectName>
+    <ProjectType>Documentation</ProjectType>
+  </PropertyGroup>
+  
+  <ItemGroup Label="Documentation">
+    <None Include="README.md" />
+    <None Include="TESTING.md" />
+    <None Include="QUICK_SETUP.md" />
+    <None Include="SETUP.md" />
+    <None Include="configure.ps1" />
+    <None Include="database_setup.sql" />
+  </ItemGroup>
+  
+  <ItemGroup Label="Android Build Files">
+    <None Include="build.gradle" />
+    <None Include="settings.gradle.kts" />
+    <None Include="gradle.properties" />
+    <None Include="app\build.gradle" />
+    <None Include="app\proguard-rules.pro" />
+  </ItemGroup>
+  
+  <ItemGroup Label="Android Manifest">
+    <None Include="app\src\main\AndroidManifest.xml" />
+  </ItemGroup>
+  
+  <ItemGroup Label="Android Source Code">
+    <None Include="app\src\main\java\com\manybox\chofer\**\*.kt" />
+  </ItemGroup>
+  
+  <ItemGroup Label="Android Resources">
+    <None Include="app\src\main\res\**\*.xml" />
+  </ItemGroup>
+  
+</Project>

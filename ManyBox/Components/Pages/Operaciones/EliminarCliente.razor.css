@@ -1,0 +1,96 @@
+/* SOLO ESTILOS NECESARIOS PARA ELIMINAR CLIENTE, IGUAL QUE REGISTRAR CLIENTE */
+
+.mb-form-centered {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: 900px !important;
+    min-width: 400px;
+    width: 100%;
+}
+.mb-actions-bar {
+    display: flex;
+    gap: 1.8rem;
+    justify-content: flex-start;
+    margin-bottom: 2.2rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0.5rem 0;
+}
+.mb-btn-dark.mb-btn-sm, .mb-btn-dark {
+    background: #23243a;
+    color: #fff;
+    border: 1.5px solid #35365a;
+    border-radius: 10px;
+    font-size: 1rem;
+    padding: 0.5rem 1.2rem;
+    font-weight: 600;
+    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.mb-btn-dark.mb-btn-sm:hover, .mb-btn-dark:hover {
+    background: #35365a;
+    color: #7b5cff;
+    box-shadow: 0 2px 12px #23243a55;
+}
+.modal-card {
+    background: #23243a;
+    padding: 2.5rem 2.5rem;
+    border-radius: 22px;
+    min-width: 400px;
+    max-width: 98vw;
+    box-shadow: 0 4px 24px #0005;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+}
+.modal-card-md {
+    min-width: 400px;
+    max-width: 90vw;
+}
+.modal-title {
+    margin-bottom: 1rem;
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
+}
+.modal-form-responsive {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2rem;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 1.2rem;
+}
+.form-group label {
+    color: #fff;
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+    display: block;
+}
+.form-group .form-control {
+    border-radius: 10px;
+    margin-bottom: 0;
+    background: #23243a;
+    color: #fff;
+    border: 1.5px solid #35365a;
+}
+.modal-actions.modal-actions-center {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+}
+@media screen and (max-width: 700px) {
+    .modal-card-md {
+        min-width: 98vw;
+        max-width: 98vw;
+        padding: 1.2rem 0.5rem;
+    }
+    .modal-form-responsive {
+        grid-template-columns: 1fr;
+        gap: 0.7rem;
+    }
+}

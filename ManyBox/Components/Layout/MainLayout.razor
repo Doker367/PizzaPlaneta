@@ -1,0 +1,206 @@
+﻿@inherits LayoutComponentBase
+@using ManyBox.Utils
+@using ManyBox.Services
+@using ManyBox.Models.Client
+@inject NotificacionesService NotiService
+
+<div class="mb-app">
+    <div class="page">
+        <aside class="sidebar">
+            <NavMenu />
+        </aside>
+
+        <main class="main-content">
+            <header class="top-row">
+                <div class="header-content">
+                    <div class="breadcrumb">
+                        <span class="breadcrumb-item">ManyBox</span>
+                    </div>
+                    <div class="header-actions">
+                        @if (SessionState.IsLoggedIn)
+                        {
+                            <!-- USUARIO -->
+                            <button class="user-info" @onclick="ShowUserModal" aria-label="Ver información de usuario">
+                                <div class="user-avatar">
+                                    <span>@(SessionState.Usuario?.Substring(0, 1).ToUpper() ?? "U")</span>
+                                </div>
+                                <div class="user-details">
+                                    <span class="user-name">@(SessionState.Usuario ?? "Usuario")</span>
+                                    <span class="user-role">@GetUserRole()</span>
+                                </div>
+                            </button>
+                            <!-- NOTIFICACIONES -->
+                            <button class="notification-bell" @onclick="ShowNotificationsModal" aria-label="Ver notificaciones">
+                                <span class="mb-title-icon">🔔</span>
+                                <span class="notification-badge">@notificacionesNoLeidas</span>
+                            </button>
+                        }
+                        else
+                        {
+                            <a href="/login" class="mb-btn mb-btn-primary mb-btn-sm">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M15 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M10 17L15 12L10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                Iniciar Sesión
+                            </a>
+                        }
+                    </div>
+                </div>
+            </header>
+            <section class="content">
+                <div class="content-wrapper">
+                    @Body
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<!-- MODAL USUARIO -->
+@if (showUserModal)
+{
+    <div class="ml-modal-overlay" @onclick="HideModals">
+        <div class="ml-modal" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-label="Información de usuario">
+            <div class="ml-modal-header">
+                <span class="ml-modal-title">Información de Usuario</span>
+                <button class="ml-modal-close" @onclick="HideModals" aria-label="Cerrar">×</button>
+            </div>
+            <div class="ml-modal-body">
+                <div class="ml-modal-user mb-flex mb-items-center mb-gap-md mb-mb-md">
+                    <div class="user-avatar" style="width:48px;height:48px;font-size:1.5em;">
+                        <span>@(SessionState.Usuario?.Substring(0, 1).ToUpper() ?? "U")</span>
+                    </div>
+                    <div>
+                        <div class="mb-font-bold mb-text-lg">@SessionState.Usuario</div>
+                        <div class="mb-text-sm mb-text-muted">@GetUserRole()</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- MODAL NOTIFICACIONES SOLO NO LEÍDAS -->
+@if (showNotificationsModal)
+{
+    <div class="ml-modal-overlay" @onclick="HideModals">
+        <div class="ml-modal" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-label="Notificaciones">
+            <div class="ml-modal-header">
+                <span class="ml-modal-title">Notificaciones no leídas</span>
+                <button class="ml-modal-close" @onclick="HideModals" aria-label="Cerrar">×</button>
+            </div>
+            <div class="ml-modal-body">
+                @if (notificacionesNoLeidasList.Count == 0)
+                {
+                    <div class="mb-text-muted">No tienes notificaciones no leídas.</div>
+                }
+                else
+                {
+                    <ul class="ml-modal-list">
+                        @foreach (var notif in notificacionesNoLeidasList)
+                        {
+                            <li class="ml-notif-item mb-mb-sm">
+                                <span class="ml-notif-icon" aria-hidden="true">@ObtenerIcono(notif.Prioridad)</span>
+                                <span class="mb-font-bold">@notif.Titulo</span>
+                                <span class="mb-text-sm mb-text-muted"> — @notif.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</span>
+                                <div class="mb-text-sm">@notif.Mensaje</div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    bool showUserModal = false;
+    bool showNotificationsModal = false;
+    bool wsError = false;
+
+    // Lista local de notificaciones (extendidas)
+    private List<NotificacionFullDto> notificaciones = new();
+
+    // Lista filtrada de no leídas
+    private List<NotificacionFullDto> notificacionesNoLeidasList => notificaciones.Where(n => !n.Leido).ToList();
+
+    private int notificacionesNoLeidas => notificacionesNoLeidasList.Count;
+
+    void ShowUserModal() => (showNotificationsModal, showUserModal) = (false, true);
+
+    async Task ShowNotificationsModal()
+    {
+        (showUserModal, showNotificationsModal) = (false, true);
+        await CargarNotificaciones();
+    }
+
+    void HideModals() => (showUserModal, showNotificationsModal) = (false, false);
+
+    private async Task CargarNotificaciones()
+    {
+        if (SessionState.IsLoggedIn)
+        {
+            try
+            {
+                notificaciones = await NotiService.ObtenerNotificacionesUsuarioActual();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                wsError = true;
+                Console.WriteLine($"Error cargando notificaciones: {ex.Message}");
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarNotificaciones();
+    }
+
+    private string ObtenerIcono(string prioridad) => prioridad switch
+    {
+        "Alta" => "⚠️",
+        "Media" => "ℹ️",
+        "Baja" => "✅",
+        _ => "🔔"
+    };
+
+    private string GetUserRole()
+    {
+        var rol = (SessionState.Rol ?? "").ToLower();
+        return rol switch
+        {
+            "superadmin" => "Super Administrador",
+            "admin" => "Administrador",
+            "empleado" => "Empleado",
+            "chofer" => "Chofer",
+            _ => "Usuario"
+        };
+    }
+
+    [Inject] NavigationManager NavigationManager { get; set; }
+    private IDisposable? locationChangedHandler;
+
+    protected override void OnInitialized()
+    {
+        locationChangedHandler = NavigationManager.RegisterLocationChangingHandler(OnLocationChanging);
+        base.OnInitialized();
+    }
+
+    private ValueTask OnLocationChanging(LocationChangingContext context)
+    {
+        // Cierra modales globales al navegar
+        showUserModal = false;
+        showNotificationsModal = false;
+        StateHasChanged();
+        return ValueTask.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        locationChangedHandler?.Dispose();
+    }
+}

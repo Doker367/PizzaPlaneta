@@ -1,0 +1,79 @@
+@page "/registrar-empleado"
+@using ManyBox.Models.Api
+@using ManyBox.Utils
+
+<div class="mb-empleados">
+    <div class="mb-actions-bar mb-dark-bar">
+        <button class="mb-btn-dark mb-btn-sm" @onclick="NavigateBack">Volver</button>
+    </div>
+
+    <div class="modal-card modal-card-md mb-form-centered">
+        <div class="modal-title">Registrar nuevo empleado</div>
+        <EditForm Model="nuevoEmpleado" OnValidSubmit="RegistrarEmpleadoAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="modal-form-responsive">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <InputText class="form-control" @bind-Value="nuevoEmpleado.Username" />
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <InputText class="form-control" @bind-Value="nuevoEmpleado.Password" type="password" />
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Contraseña</label>
+                    <InputText class="form-control" @bind-Value="nuevoEmpleado.ConfirmPassword" type="password" />
+                </div>
+                <div class="form-group">
+                    <label>Rol</label>
+                    <InputSelect class="form-control" @bind-Value="nuevoEmpleado.RolId">
+                        <option value="">Selecciona un rol</option>
+                        @foreach (var rol in rolesDisponibles)
+                        {
+                            <option value="@rol.Id">@rol.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <InputText class="form-control" @bind-Value="nuevoEmpleado.Nombre" />
+                </div>
+                <div class="form-group">
+                    <label>Apellido</label>
+                    <InputText class="form-control" @bind-Value="nuevoEmpleado.Apellido" />
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Nacimiento</label>
+                    <InputDate class="form-control" @bind-Value="nuevoEmpleado.FechaNacimiento" />
+                </div>
+                <div class="form-group">
+                    <label>Correo</label>
+                    <InputText class="form-control" @bind-Value="nuevoEmpleado.Correo" />
+                </div>
+                <div class="form-group">
+                    <label>Teléfono</label>
+                    <InputText class="form-control" @bind-Value="nuevoEmpleado.Telefono" />
+                </div>
+                <div class="form-group">
+                    <label>Sucursal</label>
+                    <InputSelect class="form-control" @bind-Value="nuevoEmpleado.SucursalId" disabled="@(sucursales.Count == 1)">
+                        <option value="">Selecciona una sucursal</option>
+                        @foreach (var suc in sucursales)
+                        {
+                            <option value="@suc.Id">@suc.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="modal-actions modal-actions-center">
+                <button class="mb-btn-dark" type="submit" disabled="@isLoading">Registrar Empleado</button>
+                <button class="btn btn-secondary" type="button" @onclick="NavigateBack">Cancelar</button>
+            </div>
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <div class="alert alert-danger mt-2">@errorMsg</div>
+            }
+        </EditForm>
+    </div>
+</div>

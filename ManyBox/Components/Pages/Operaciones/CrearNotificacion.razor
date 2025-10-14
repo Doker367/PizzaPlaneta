@@ -1,0 +1,90 @@
+@page "/crear-notificacion"
+
+@using ManyBox.Services
+@using ManyBox.Models.Custom
+@using ManyBox.Models.Api
+@inject NotificacionesService NotificacionesService
+@inject UserService UserService
+@inject ChatApiService ChatApiService
+@inject SucursalApiService SucursalApiService
+@inject NavigationManager NavigationManager
+
+<EditForm Model="nuevaNotificacion" OnValidSubmit="CrearNotificacionAsync">
+    <div class="modal-card modal-card-md">
+        <div class="modal-title">Nueva Notificación</div>
+        <div class="modal-form-responsive">
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label>Buscar usuarios destinatarios</label>
+                <div style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px;">
+                    <input class="form-control" placeholder="Buscar usuario..." @bind="filtroUsuario" @bind:event="oninput" style="flex:2;" />
+                    <select class="form-control" @bind="sucursalSeleccionadaId" style="flex:1;">
+                        <option value="">Todas las sucursales</option>
+                        @foreach (var suc in sucursales)
+                        {
+                            <option value="@suc.Id">@suc.Nombre</option>
+                        }
+                    </select>
+                    <button class="mb-btn-blue" type="button" @onclick="BuscarUsuariosAsync">Buscar</button>
+                </div>
+                <div class="mb-search-bar" style="max-height:180px;overflow-y:auto; margin-top: 12px;">
+                    @if (isBuscandoUsuarios)
+                    {
+                        <div class="notificaciones-loading">Buscando...</div>
+                    }
+                    else if (usuariosFiltrados.Count == 0)
+                    {
+                        <div class="notificaciones-vacio">No se encontraron usuarios.</div>
+                    }
+                    else
+                    {
+                        <ul class="list-group">
+                            @foreach (var usuario in usuariosFiltrados)
+                            {
+                                <li class="list-group-item" style="cursor:pointer; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" @bind="usuario.Selected" disabled="@(usuario.Id == myUserId)" />
+                                    <span>@usuario.Nombre @usuario.Apellido (@usuario.Username)</span>
+                                    @if (usuario.Id == myUserId)
+                                    {
+                                        <span style="color:#aaa; font-size:0.95em;"> (Tú)</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+                @if (usuariosFiltrados.Any(u => u.Selected))
+                {
+                    <div class="mb-detail-text" style="margin-top: 8px;">Seleccionados: <b>@string.Join(", ", usuariosFiltrados.Where(u => u.Selected).Select(u => $"{u.Nombre} {u.Apellido} ({u.Username})"))</b></div>
+                }
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label>Título</label>
+                <InputText class="form-control" @bind-Value="nuevaNotificacion.Titulo" />
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label>Mensaje</label>
+                <InputTextArea class="form-control" @bind-Value="nuevaNotificacion.Mensaje" />
+            </div>
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label>Prioridad</label>
+                <InputSelect class="form-control" @bind-Value="nuevaNotificacion.Prioridad">
+                    <option value="Alta">Alta</option>
+                    <option value="Media">Media</option>
+                    <option value="Baja">Baja</option>
+                </InputSelect>
+            </div>
+        </div>
+        <div class="modal-actions modal-actions-center" style="margin-top: 24px; gap: 16px;">
+            <button type="submit" class="mb-btn-blue">Crear</button>
+            <button type="button" class="mb-btn-blue" @onclick="Cancelar">Cancelar</button>
+        </div>
+        @if (!string.IsNullOrEmpty(mensajeFeedback))
+        {
+            <div class="notificaciones-feedback">@mensajeFeedback</div>
+        }
+    </div>
+</EditForm>
+
+@code {
+    void Cancelar() => NavigationManager.NavigateTo("/notificaciones");
+}

@@ -1,0 +1,206 @@
+.bitacora-main {
+    padding-top: 2rem !important;
+    padding: 1rem;
+    max-width: 850px;
+    margin: auto;
+    font-family: 'Segoe UI', sans-serif;
+    color: #f8fafc;
+    background: linear-gradient(44deg,rgba(40, 0, 64, 0.07) 0%, rgba(37, 6, 69, 0.17) 55%, rgba(30, 13, 48, 0.13) 100%);
+    border-radius: 2rem;
+    border: 0.5px solid #ffffff35;
+}
+
+.bitacora-header {
+    gap: 2rem;
+}
+
+.bitacora-avatar img {
+    border-radius: 20rem;
+    border: 2px solid #00ffe7;
+    background: #111927;
+}
+
+.bitacora-title {
+    font-size: 2.2rem;
+    color: #50e6ff;
+
+    margin-bottom: 0.2rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+}
+
+.bitacora-icon {
+    font-size: 1.4em;
+    margin-right: .2em;
+}
+
+.bitacora-desc {
+    color: #b0c4df;
+    font-size: 1.07rem;
+    margin-bottom: 0.6rem;
+}
+
+.subsection-title {
+    font-size: 1.3rem;
+    color: #00d6ff;
+    margin-top: 2.2rem;
+    margin-bottom: .7rem;
+    gap: .5em;
+    font-weight: 700;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 1.8rem;
+}
+
+.stat-card {
+    background: #182136;
+    border: 1.5px solid #36cfff80;
+    border-radius: 1rem;
+    padding: 1.2rem 1.1rem 1rem 1.1rem;
+    text-align: center;
+    min-width: 0;
+    box-shadow: 0 2px 8px #36cfff22;
+    transition: transform 0.16s, box-shadow 0.16s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+    .stat-card:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 0 16px #00ffe7aa;
+        border-color: #00ffe7bb;
+    }
+
+.stat-label {
+    font-size: 1.07rem;
+    color: #50e6ff;
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: .03em;
+    display: flex;
+    align-items: center;
+    gap: .3em;
+}
+
+.stat-value {
+    font-size: 1.7rem;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 0 0 6px #00ffe7aa;
+}
+
+.stat-desc {
+    font-size: .98rem;
+    color: #b0c4df;
+    margin-top: .22em;
+}
+
+.bitacora-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.bitacora-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: .6rem;
+    background: #182136;
+    border-radius: 12px;
+    box-shadow: 0 0 8px #36cfff22;
+    font-size: 1rem;
+}
+
+    .bitacora-table th, .bitacora-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #222;
+        color: white;
+        min-width: 120px;
+    }
+
+    .bitacora-table th {
+        background: #50e6ff;
+        color: #182136;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+    }
+
+    .bitacora-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .bitacora-table td[data-label]::before {
+        content: attr(data-label) ": ";
+        font-weight: bold;
+        color: #36cfff;
+        display: none;
+    }
+
+@media (max-width: 740px) {
+    .bitacora-main {
+        padding: .7rem .2rem 1.2rem .2rem;
+        border-radius: 1rem;
+    }
+
+    .bitacora-table th, .bitacora-table td {
+        padding: .7em;
+        font-size: .97em;
+    }
+
+    .stats-container {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 540px) {
+    .bitacora-table th, .bitacora-table td {
+        padding: .5em;
+        font-size: .95em;
+        min-width: 90px;
+    }
+
+    .bitacora-header {
+        flex-direction: column;
+        gap: .8rem;
+    }
+
+    .bitacora-avatar img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .stats-container {
+        grid-template-columns: 1fr;
+        gap: .7rem;
+    }
+}
+
+.estado {
+    font-weight: bold;
+    padding: 0.32rem 0.7rem;
+    border-radius: 0.5rem;
+    text-transform: capitalize;
+    display: inline-block;
+    color: #fff;
+    font-size: 1em;
+    letter-spacing: .02em;
+}
+
+    .estado.entregado {
+        background-color: #28a745;
+    }
+
+    .estado.incidencia {
+        background-color: #dc3545;
+    }

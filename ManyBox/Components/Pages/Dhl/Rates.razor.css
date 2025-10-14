@@ -1,0 +1,46 @@
+/* Estilos para la página de cotización DHL */
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.rate-card {
+    background: var(--mb-bg-surface, #23243a);
+    border: 1px solid var(--mb-border-light, #35365a);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px #0003;
+}
+
+.rate-card .head {
+    padding: 14px 16px 8px 16px;
+    border-bottom: 1px solid var(--mb-border-light, #35365a);
+}
+
+.rate-card .body {
+    padding: 12px 16px 16px 16px;
+}
+
+.rate-card h3 {
+    margin: 0;
+}
+
+.rate-price {
+    font-size: 1.4rem;
+    font-weight: 800;
+}
+
+.paquetes-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.paquetes-table th, .paquetes-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--mb-border-light, #35365a);
+}
+
+/* Ajuste de resumen/detalle */
+details summary {
+    cursor: pointer;
+    opacity: .9;
+}

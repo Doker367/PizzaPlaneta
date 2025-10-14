@@ -1,0 +1,252 @@
+﻿@page "/ventas"
+@using ManyBox.Components.Pages.Operaciones
+@inject IJSRuntime JSRuntime
+
+<div class="ventas-container">
+    <div class="ventas-dashboard">
+        <div class="dashboard-header">
+            <div class="header-icon-container">
+                <div class="header-icon">📦</div>
+            </div>
+            <h1 class="dashboard-title">Historial de Ventas</h1>
+        </div>
+
+        @if (ventas == null)
+        {
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <span>Cargando historial...</span>
+            </div>
+        }
+        else if (!ventas.Any())
+        {
+            <div class="empty-state">
+                <i class="fas fa-box-open"></i>
+                <p>No se encontraron ventas registradas.</p>
+            </div>
+        }
+        else
+        {
+            <div class="data-card">
+                <div class="card-header">
+                    <h2>Entregas registradas</h2>
+                    <div class="last-update">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Última actualización: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">#</th>
+                                <th>Remitente</th>
+                                <th>Destinatario</th>
+                                <th style="width: 100px;">Estado</th>
+                                <th style="width: 140px;">Acciones</th>
+                                <th style="width: 100px;">Sucursal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < ventas.Count; i++)
+                            {
+                                var venta = ventas[i];
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>@venta.Remitente?.Nombre</td>
+                                    <td>@venta.Destinatario?.Nombre</td>
+                                    <td>
+                                        @if (venta.Completada == true)
+                                        {
+                                            <span class="badge badge-success">Completada</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-danger">Incompleta</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <button class="view-button" @onclick="() => MostrarDetalle(venta)">
+                                            Ver
+                                        </button>
+                                    </td>
+                                    <td class="sucursal-cell">@venta.SucursalOrigen</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer">
+                    <div class="summary-item">
+                        <div class="summary-label">Total ventas</div>
+                        <div class="summary-value">@ventas.Count</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Total cobrado</div>
+                        <div class="summary-value">$@ventas.Sum(v => v.Total_Cobrado ?? 0).ToString("N2")</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (ventaDetalle != null)
+{
+    <div class="ventas-modal-backdrop" @onclick="CerrarDetalle">
+        <div class="ventas-modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <div class="modal-title">
+                    <h2>Detalle de Venta</h2>
+                    <div class="modal-subtitle">ID: <strong>@ventaDetalle.Id</strong> | Folio: <strong>@ventaDetalle.Folio</strong>
+                    </div>
+                </div>
+                <button class="modal-close" @onclick="CerrarDetalle">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Indicador de desplazamiento -->
+                <div class="scroll-indicator"></div>
+
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Remitente</div>
+                        <div class="detail-value">@ventaDetalle.Remitente?.Nombre</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Destinatario</div>
+                        <div class="detail-value">@ventaDetalle.Destinatario?.Nombre</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Compañía</div>
+                        <div class="detail-value">@ventaDetalle.Compania_Envio</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Tipo de Pago</div>
+                        <div class="detail-value">@ventaDetalle.Tipo_Pago</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Fecha</div>
+                        <div class="detail-value">@ventaDetalle.Fecha.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Total Cobrado</div>
+                        <div class="detail-value highlight">$@ventaDetalle.Total_Cobrado</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Seguro</div>
+                        <div class="detail-value">
+                            <span class="badge @(ventaDetalle.Seguro == true ? "badge-success" : "badge-danger")">
+                                @(ventaDetalle.Seguro == true ? "Sí" : "No")
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Piezas</div>
+                        <div class="detail-value">@ventaDetalle.Total_Piezas</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Estado</div>
+                        <div class="detail-value">
+                            @if (ventaDetalle.Completada == true)
+                            {
+                                <span class="badge badge-success">Completada</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-danger">Incompleta</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Sucursal</div>
+                        <div class="detail-value">@ventaDetalle.SucursalOrigen</div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-header">
+                        <i class="fas fa-clock"></i>
+                        <h3>Tiempo Estimado</h3>
+                    </div>
+                    <div class="section-content">
+                        @ventaDetalle.Tiempo_Estimado
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-header">
+                        <i class="fas fa-box"></i>
+                        <h3>Contenido</h3>
+                    </div>
+                    <div class="section-content">
+                        <ul class="content-list">
+                            @if (ventaDetalle.DetalleContenido != null)
+                            {
+                                @foreach (var item in ventaDetalle.DetalleContenido)
+                                {
+                                    <li>@item.Descripcion (@item.Cantidad @item.Unidad)</li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-header">
+                        <i class="fas fa-user"></i>
+                        <h3>Datos Remitente</h3>
+                    </div>
+                    <div class="section-content">
+                        <ul>
+                            <li><b>Nombre:</b> @ventaDetalle.Remitente?.Nombre</li>
+                            <li><b>Teléfono:</b> @ventaDetalle.Remitente?.Telefono</li>
+                            <li><b>Compañía:</b> @ventaDetalle.Remitente?.Compania</li>
+                            <li><b>Dirección:</b> @ventaDetalle.Remitente?.Direccion</li>
+                            <li><b>Ciudad:</b> @ventaDetalle.Remitente?.Ciudad</li>
+                            <li><b>Estado:</b> @ventaDetalle.Remitente?.Estado</li>
+                            <li><b>País:</b> @ventaDetalle.Remitente?.Pais</li>
+                            <li><b>CP:</b> @ventaDetalle.Remitente?.CP</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <div class="section-header">
+                        <i class="fas fa-user"></i>
+                        <h3>Datos Destinatario</h3>
+                    </div>
+                    <div class="section-content">
+                        <ul>
+                            <li><b>Nombre:</b> @ventaDetalle.Destinatario?.Nombre</li>
+                            <li><b>Teléfono:</b> @ventaDetalle.Destinatario?.Telefono</li>
+                            <li><b>Compañía:</b> @ventaDetalle.Destinatario?.Compania</li>
+                            <li><b>Dirección:</b> @ventaDetalle.Destinatario?.Direccion</li>
+                            <li><b>Ciudad:</b> @ventaDetalle.Destinatario?.Ciudad</li>
+                            <li><b>Estado:</b> @ventaDetalle.Destinatario?.Estado</li>
+                            <li><b>País:</b> @ventaDetalle.Destinatario?.Pais</li>
+                            <li><b>CP:</b> @ventaDetalle.Destinatario?.CP</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                @if (ventaDetalle?.Completada != true)
+                {
+                    <button class="button-primary" @onclick="() => TerminarDesdeHistorial(ventaDetalle!.Id)">
+                        Terminar ahora
+                    </button>
+                }
+                <button class="button-primary" style="margin-left:8px;" @onclick="CerrarDetalle">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+}
+

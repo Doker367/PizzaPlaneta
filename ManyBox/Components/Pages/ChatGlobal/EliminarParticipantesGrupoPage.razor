@@ -1,0 +1,142 @@
+@page "/eliminar-participantes/{ConversacionId:int}"
+@using ManyBox.Models.Custom
+@inject ManyBox.Services.ChatApiService ChatService
+@inject NavigationManager Navigation
+
+<div class="main-bg">
+    <div class="agregar-participantes-center-card">
+        <h2>Eliminar participantes</h2>
+        @if (!esAdmin)
+        {
+            <div style="color: #e74c3c; font-size: 1.1em; margin-bottom: 18px;">Usted no es administrador, no puede eliminar participantes.</div>
+            <button class="mb-btn-primary mb-btn-gradient" @onclick="VolverAlChat">Volver al chat</button>
+        }
+        else
+        {
+            <div style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 16px;">
+                <div style="flex: 2;">
+                    <label>Buscar participante:</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input class="form-control" placeholder="Buscar..." @bind="modalSearchTerm" @bind:event="oninput" />
+                        <button class="mb-btn-primary" @onclick="BuscarParticipantes" style="border-radius: 8px;">Buscar</button>
+                    </div>
+                </div>
+                <div style="flex: 1;">
+                    <label>Sucursal:</label>
+                    <select class="form-control" @bind="modalSelectedSucursalId">
+                        <option value="">Todas</option>
+                        @foreach (var suc in sucursales)
+                        {
+                            <option value="@suc.Id">@suc.Nombre</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div style="max-height: 260px; overflow-y: auto; margin-top: 8px;">
+                @foreach (var contact in modalParticipantes)
+                {
+                    <label class="miembro-item" style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <input type="checkbox" @bind="contact.Selected" />
+                        <span style="font-weight: 500;">@contact.Nombre @contact.Apellido</span>
+                        <span style="color:#aaa; font-size:0.95em;">(@contact.SucursalNombre)</span>
+                    </label>
+                }
+            </div>
+            <div style="font-size:0.95em; color:#888; margin-bottom: 4px;">@modalParticipantes.Count(c => c.Selected) miembros seleccionados</div>
+            <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button class="btn btn-secondary" @onclick="VolverAlChat" style="border-radius: 8px;">Cancelar</button>
+                <button class="mb-btn-primary mb-btn-gradient" @onclick="EliminarSeleccionados" disabled="@(modalParticipantes.Count(c => c.Selected) == 0)" style="border-radius: 8px;">Eliminar</button>
+            </div>
+            @if (showValidationError)
+            {
+                <div style="color: #e74c3c; font-size: 0.95em;">@validationMessage</div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int ConversacionId { get; set; }
+    private List<UsuarioContactoVM> modalParticipantes = new();
+    private List<SucursalModel> sucursales = new();
+    private string modalSearchTerm = "";
+    private int? modalSelectedSucursalId;
+    private bool showValidationError = false;
+    private int myUserIdInt;
+    private bool esAdmin = false;
+    private string validationMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        esAdmin = await ChatService.EsAdminEnConversacionAsync(ConversacionId);
+        myUserIdInt = await GetMyUserId();
+        await CargarSucursales();
+        await CargarParticipantesModal();
+    }
+
+    private async Task<int> GetMyUserId()
+    {
+        // Usa el UserService para obtener el id del usuario actual
+        // O si tienes Preferences, úsalo aquí
+        // Ejemplo con Preferences:
+        return Microsoft.Maui.Storage.Preferences.Default.Get("idUsuario", 0);
+    }
+
+    private async Task CargarSucursales()
+    {
+        sucursales = await ChatService.GetSucursalesAsync();
+    }
+
+    private async Task CargarParticipantesModal()
+    {
+        var convs = await ChatService.GetMisConversacionesAsync();
+        var conv = convs.FirstOrDefault(c => c.Id == ConversacionId);
+        if (conv != null && conv.Participantes != null)
+        {
+            modalParticipantes = conv.Participantes
+                .Where(p => p.Id != myUserIdInt)
+                .Where(p => string.IsNullOrWhiteSpace(modalSearchTerm) ||
+                            (p.Nombre != null && p.Nombre.Contains(modalSearchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                            (p.Apellido != null && p.Apellido.Contains(modalSearchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                            (p.Username != null && p.Username.Contains(modalSearchTerm, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+        }
+        else
+        {
+            modalParticipantes = new List<UsuarioContactoVM>();
+        }
+        StateHasChanged();
+    }
+
+    private async Task BuscarParticipantes()
+    {
+        await CargarParticipantesModal();
+    }
+
+    private async Task EliminarSeleccionados()
+    {
+        showValidationError = false;
+        validationMessage = "";
+        var seleccionados = modalParticipantes.Where(c => c.Selected).Select(c => c.Id).ToList();
+        if (seleccionados.Count == 0)
+        {
+            showValidationError = true;
+            validationMessage = "Debes seleccionar al menos un usuario (no puedes eliminarte a ti mismo).";
+            return;
+        }
+        var res = await ChatService.EliminarParticipantesGrupoAsync(ConversacionId, seleccionados);
+        if (res)
+        {
+            Navigation.NavigateTo($"/chat/{ConversacionId}");
+        }
+        else
+        {
+            showValidationError = true;
+            validationMessage = "No puedes eliminarte a ti mismo del grupo.";
+        }
+    }
+    private void VolverAlChat()
+    {
+        Navigation.NavigateTo($"/chat/{ConversacionId}");
+    }
+}

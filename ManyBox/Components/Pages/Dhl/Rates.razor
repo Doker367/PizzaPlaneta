@@ -1,0 +1,258 @@
+@page "/dhl/rates"
+@using ManyBox.Models.Dhl
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Text.Json
+@inject HttpClient Http
+
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "accountNumber")] public string? qAccountNumber { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "originCountryCode")] public string? qOriginCountryCode { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "originCityName")] public string? qOriginCityName { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "destinationCountryCode")] public string? qDestinationCountryCode { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "destinationCityName")] public string? qDestinationCityName { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "plannedShippingDate")] public string? qPlannedShippingDate { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "unitOfMeasurement")] public string? qUnitOfMeasurement { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "weight")] public string? qWeight { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "length")] public string? qLength { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "width")] public string? qWidth { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "height")] public string? qHeight { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "isCustomsDeclarable")] public string? qIsCustomsDeclarable { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "originPostalCode")] public string? qOriginPostalCode { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "destinationPostalCode")] public string? qDestinationPostalCode { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        // Asigna valores solo si vienen en query
+        if (!string.IsNullOrWhiteSpace(qAccountNumber)) rateRequest.AccountNumber = qAccountNumber;
+        if (!string.IsNullOrWhiteSpace(qOriginCountryCode)) rateRequest.OriginCountryCode = qOriginCountryCode;
+        if (!string.IsNullOrWhiteSpace(qOriginCityName)) rateRequest.OriginCityName = qOriginCityName;
+        if (!string.IsNullOrWhiteSpace(qDestinationCountryCode)) rateRequest.DestinationCountryCode = qDestinationCountryCode;
+        if (!string.IsNullOrWhiteSpace(qDestinationCityName)) rateRequest.DestinationCityName = qDestinationCityName;
+        if (!string.IsNullOrWhiteSpace(qPlannedShippingDate)) rateRequest.PlannedShippingDate = qPlannedShippingDate!;
+        if (!string.IsNullOrWhiteSpace(qUnitOfMeasurement)) rateRequest.UnitOfMeasurement = qUnitOfMeasurement!;
+        if (!string.IsNullOrWhiteSpace(qOriginPostalCode)) rateRequest.OriginPostalCode = qOriginPostalCode;
+        if (!string.IsNullOrWhiteSpace(qDestinationPostalCode)) rateRequest.DestinationPostalCode = qDestinationPostalCode;
+        if (!string.IsNullOrWhiteSpace(qIsCustomsDeclarable))
+        {
+            if (bool.TryParse(qIsCustomsDeclarable, out var b)) rateRequest.IsCustomsDeclarable = b;
+        }
+        if (decimal.TryParse(qWeight, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var w)) rateRequest.Weight = w;
+        if (decimal.TryParse(qLength, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var l)) rateRequest.Dimensions.Length = l;
+        if (decimal.TryParse(qWidth, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var wi)) rateRequest.Dimensions.Width = wi;
+        if (decimal.TryParse(qHeight, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var h)) rateRequest.Dimensions.Height = h;
+    }
+}
+
+@if (OperatingSystem.IsWindows())
+{
+    <div class="mb-empleados">
+        <header class="mb-empleados-header">
+            <h1 class="mb-empleados-title">
+                <span class="mb-title-icon">💲</span>
+                DHL - Cotizador de Tarifas
+            </h1>
+        </header>
+
+        <div class="mb-modal-overlay is-active" style="position: relative; background: none;">
+            <div class="mb-modal mb-modal-lg" style="max-width: 900px;">
+                <div class="mb-modal-body">
+                    <EditForm Model="@rateRequest" OnValidSubmit="HandleValidSubmit" class="mb-form">
+                        <DataAnnotationsValidator />
+
+                        <div class="mb-form-row">
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">Número de Cuenta</label>
+                                <InputText class="mb-form-input" @bind-Value="rateRequest.AccountNumber" />
+                            </div>
+                        </div>
+
+                        <div class="mb-form-row">
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">País de Origen</label>
+                                <InputText class="mb-form-input" @bind-Value="rateRequest.OriginCountryCode"
+                                    placeholder="Ej: MX" />
+                            </div>
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">Código Postal de Origen</label>
+                                <InputText class="mb-form-input" @bind-Value="rateRequest.OriginPostalCode" />
+                            </div>
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">Ciudad de Origen</label>
+                                <InputText class="mb-form-input" @bind-Value="rateRequest.OriginCityName" />
+                            </div>
+                        </div>
+
+                        <div class="mb-form-row">
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">País de Destino</label>
+                                <InputText class="mb-form-input" @bind-Value="rateRequest.DestinationCountryCode"
+                                    placeholder="Ej: US" />
+                            </div>
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">Código Postal de Destino</label>
+                                <InputText class="mb-form-input" @bind-Value="rateRequest.DestinationPostalCode" />
+                            </div>
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">Ciudad de Destino</label>
+                                <InputText class="mb-form-input" @bind-Value="rateRequest.DestinationCityName" />
+                            </div>
+                        </div>
+
+                        <div class="mb-form-row">
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">Peso</label>
+                                <InputNumber class="mb-form-input" @bind-Value="rateRequest.Weight" />
+                            </div>
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">Largo</label>
+                                <InputNumber class="mb-form-input" @bind-Value="rateRequest.Dimensions.Length" />
+                            </div>
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">Ancho</label>
+                                <InputNumber class="mb-form-input" @bind-Value="rateRequest.Dimensions.Width" />
+                            </div>
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">Alto</label>
+                                <InputNumber class="mb-form-input" @bind-Value="rateRequest.Dimensions.Height" />
+                            </div>
+                        </div>
+
+                        <div class="mb-form-row">
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">Fecha de Envío</label>
+                                <InputText class="mb-form-input" @bind-Value="rateRequest.PlannedShippingDate"
+                                    placeholder="YYYY-MM-DD" />
+                            </div>
+                            <div class="mb-form-group">
+                                <label class="mb-form-label">Unidad de Medida</label>
+                                <InputText class="mb-form-input" @bind-Value="rateRequest.UnitOfMeasurement"
+                                    placeholder="metric o imperial" />
+                            </div>
+                        </div>
+
+                        <div class="mb-form-row">
+                            <div class="mb-form-group mb-form-checkbox">
+                                <InputCheckbox class="mb-checkbox" @bind-Value="rateRequest.IsCustomsDeclarable" />
+                                <label class="mb-checkbox-label">Declarable en Aduana</label>
+                            </div>
+                            <div class="mb-form-group mb-form-checkbox">
+                                <InputCheckbox class="mb-checkbox" @bind-Value="nextBusinessDay" />
+                                <label class="mb-checkbox-label">Siguiente Día Hábil</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-form-actions">
+                            <button type="submit" class="mb-btn-primary mb-btn-gradient">
+                                <span class="mb-btn-icon">✔️</span>
+                                Obtener Cotización
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        @if (_rates != null)
+        {
+            <section class="mb-card" style="margin-top:16px;">
+                <div class="mb-card-header">
+                    <h2 class="mb-text-xl mb-font-bold">Resultados</h2>
+                </div>
+                <div class="mb-card-body">
+                    @if (_rates.Products?.Count > 0)
+                    {
+                        <div class="mb-grid mb-gap-lg mb-grid-cols-2">
+                            @foreach (var p in _rates.Products)
+                            {
+                                var bestPrice = p.TotalPrice?.FirstOrDefault(tp => tp.CurrencyType == "PULCL") ?? p.TotalPrice?.FirstOrDefault();
+                                <div class="mb-card">
+                                    <div class="mb-card-body">
+                                        <h3 class="mb-text-lg mb-font-bold">@p.ProductName (@p.ProductCode)</h3>
+                                        <div class="mb-text-muted">Peso: @p?.Weight?.Provided @p?.Weight?.UnitOfMeasurement • Vol: @p?.Weight?.Volumetric</div>
+                                        @if (p.DeliveryCapabilities?.EstimatedDeliveryDateAndTime != null)
+                                        {
+                                            <div class="mb-mt-sm">Entrega estimada: @p.DeliveryCapabilities.EstimatedDeliveryDateAndTime:dd/MM/yyyy HH:mm</div>
+                                        }
+                                        @if (bestPrice?.Price != null)
+                                        {
+                                            <div class="mb-mt-sm mb-text-xl mb-font-bold">@bestPrice.Price @bestPrice.PriceCurrency</div>
+                                        }
+
+                                        @if (p.DetailedPriceBreakdown != null && p.DetailedPriceBreakdown.Any())
+                                        {
+                                            var mxn = p.DetailedPriceBreakdown.FirstOrDefault(x => x.PriceCurrency == "MXN");
+                                            if (mxn?.Breakdown != null)
+                                            {
+                                                <details class="mb-mt-sm">
+                                                    <summary>Ver desglose (MXN)</summary>
+                                                    <table class="paquetes-table" style="margin-top:8px;">
+                                                        <thead>
+                                                            <tr><th>Concepto</th><th style="text-align:right;">Precio</th></tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var item in mxn.Breakdown)
+                                                            {
+                                                                <tr>
+                                                                    <td>@item.Name</td>
+                                                                    <td style="text-align:right;">@item.Price?.ToString("0.##")</td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                                </details>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-alert mb-alert-warning">Sin resultados.</div>
+                    }
+                </div>
+            </section>
+        }
+    </div>
+}
+
+@code {
+    private DhlRateRequest rateRequest = new DhlRateRequest();
+    private bool nextBusinessDay = false;
+    private DhlRateResponse? _rates;
+
+    private async Task HandleValidSubmit()
+    {
+        rateRequest.NextBusinessDay = nextBusinessDay;
+        var queryString = $"?accountNumber={rateRequest.AccountNumber}"
+            + $"&originCountryCode={rateRequest.OriginCountryCode}"
+            + $"&originPostalCode={rateRequest.OriginPostalCode}"
+            + $"&originCityName={rateRequest.OriginCityName}"
+            + $"&destinationCountryCode={rateRequest.DestinationCountryCode}"
+            + $"&destinationPostalCode={rateRequest.DestinationPostalCode}"
+            + $"&destinationCityName={rateRequest.DestinationCityName}"
+            + $"&weight={rateRequest.Weight.ToString(System.Globalization.CultureInfo.InvariantCulture)}"
+            + $"&length={rateRequest.Dimensions.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)}"
+            + $"&width={rateRequest.Dimensions.Width.ToString(System.Globalization.CultureInfo.InvariantCulture)}"
+            + $"&height={rateRequest.Dimensions.Height.ToString(System.Globalization.CultureInfo.InvariantCulture)}"
+            + $"&plannedShippingDate={rateRequest.PlannedShippingDate}"
+            + $"&isCustomsDeclarable={rateRequest.IsCustomsDeclarable.ToString().ToLower()}"
+            + $"&unitOfMeasurement={rateRequest.UnitOfMeasurement}"
+            + $"&nextBusinessDay={rateRequest.NextBusinessDay.ToString().ToLower()}";
+        try
+        {
+            var response = await Http.GetAsync($"http://100.64.197.11:5000/api/dhl/rates{queryString}");
+            var json = await response.Content.ReadAsStringAsync();
+            _rates = JsonSerializer.Deserialize<DhlRateResponse>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+        }
+        catch (Exception ex)
+        {
+            _rates = new DhlRateResponse();
+        }
+    }
+}

@@ -1,0 +1,52 @@
+@page "/baja-sucursal"
+@using ManyBox.Models.Api
+
+<div class="mb-empleados">
+    <div class="mb-actions-bar mb-dark-bar">
+        <button class="mb-btn-dark mb-btn-sm" @onclick="NavigateBack">Volver</button>
+    </div>
+
+    <div class="mb-search-bar mb-search-bar-sep">
+        <div class="buscador-row mb-search-row-sep">
+            <input class="form-control" placeholder="Buscar sucursal..." @bind="busquedaSucursal" @oninput="OnBusquedaInput" />
+        </div>
+    </div>
+
+    <div class="mb-empleados-grid">
+        @foreach (var suc in sucursalesFiltradas)
+        {
+            <div class="mb-empleado-card">
+                <div class="mb-card-header">
+                    <div class="mb-empleado-info">
+                        <div class="mb-empleado-name">@suc.Nombre</div>
+                    </div>
+                </div>
+                <div class="mb-card-footer">
+                    <button class="mb-btn-dark mb-btn-sm" @onclick="() => AbrirConfirmacionBaja(suc)">Dar de baja</button>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (modalVisible && sucursalConfirmacionBaja != null)
+    {
+        <div class="modal-overlay">
+            <div class="modal-card modal-card-md">
+                <div class="modal-title">¿Seguro que deseas dar de baja la sucursal @sucursalConfirmacionBaja.Nombre?</div>
+                <div class="modal-actions modal-actions-center">
+                    <button class="mb-btn-dark" @onclick="ConfirmarDarDeBajaSucursal">Confirmar</button>
+                    <button class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                </div>
+                @if (!string.IsNullOrEmpty(errorMsg))
+                {
+                    <div class="alert alert-danger mt-2">@errorMsg</div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMsg) && (!modalVisible || sucursalConfirmacionBaja == null))
+    {
+        <div class="alert alert-danger mt-2">@errorMsg</div>
+    }
+</div>

@@ -1,0 +1,102 @@
+@page "/dhl/get-image/{ShipmentTrackingNumber}"
+@using ManyBox.Models.Dhl
+@using System.Net.Http
+@using System.Web
+@using ManyBox.Components.Shared
+@inject HttpClient Http
+
+@if (OperatingSystem.IsWindows())
+{
+<div class="main-content">
+    <div class="page-header">
+        <h1 class="page-title">DHL - Obtener Imagen</h1>
+        <p class="page-subtitle">Obtén una imagen de un envío de DHL.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <EditForm Model="@getImageRequest" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <div class="form-group">
+                    <label for="shipperAccountNumber">Número de Cuenta del Remitente</label>
+                    <InputText id="shipperAccountNumber" class="form-control" @bind-Value="getImageRequest.ShipperAccountNumber" />
+                </div>
+                <div class="form-group">
+                    <label for="typeCode">Código de Tipo</label>
+                    <InputText id="typeCode" class="form-control" @bind-Value="getImageRequest.TypeCode" placeholder="por ejemplo, waybill, commercial-invoice" />
+                </div>
+                <div class="form-group">
+                    <label for="pickupYearAndMonth">Año y Mes de Recogida</label>
+                    <InputText id="pickupYearAndMonth" class="form-control" @bind-Value="getImageRequest.PickupYearAndMonth" placeholder="YYYY-MM" />
+                </div>
+                <div class="form-group">
+                    <label for="encodingFormat">Formato de Codificación (Opcional)</label>
+                    <InputText id="encodingFormat" class="form-control" @bind-Value="getImageRequest.EncodingFormat" placeholder="por ejemplo, pdf, tiff" />
+                </div>
+                <div class="form-check">
+                    <InputCheckbox id="allInOnePDF" class="form-check-input" @bind-Value="allInOnePDF" />
+                    <label for="allInOnePDF" class="form-check-label">Todo en un PDF</label>
+                </div>
+                <div class="form-check">
+                    <InputCheckbox id="compressedPackage" class="form-check-input" @bind-Value="compressedPackage" />
+                    <label for="compressedPackage" class="form-check-label">Paquete Comprimido</label>
+                </div>
+                <button type="submit" class="btn btn-primary">Obtener Imagen</button>
+            </EditForm>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(apiResponse))
+    {
+        <ApiResponseViewer Title="Resultado Get Image" Json="@apiResponse" />
+    }
+</div>
+}
+
+@code {
+    [Parameter] public string ShipmentTrackingNumber { get; set; }
+
+    private DhlGetImageRequest getImageRequest = new DhlGetImageRequest {
+        ShipperAccountNumber = string.Empty,
+        TypeCode = string.Empty,
+        PickupYearAndMonth = string.Empty
+    };
+    private bool allInOnePDF = false;
+    private bool compressedPackage = false;
+    private string apiResponse = string.Empty;
+
+    private async Task HandleValidSubmit()
+    {
+        getImageRequest.AllInOnePDF = allInOnePDF;
+        getImageRequest.CompressedPackage = compressedPackage;
+
+        var builder = new UriBuilder($"http://100.64.197.11:5000/api/dhl/shipments/{ShipmentTrackingNumber}/get-image");
+        var query = HttpUtility.ParseQueryString(string.Empty);
+        query["shipperAccountNumber"] = getImageRequest.ShipperAccountNumber;
+        query["typeCode"] = getImageRequest.TypeCode;
+        query["pickupYearAndMonth"] = getImageRequest.PickupYearAndMonth;
+        if (!string.IsNullOrWhiteSpace(getImageRequest.EncodingFormat))
+        {
+            query["encodingFormat"] = getImageRequest.EncodingFormat;
+        }
+        if (getImageRequest.AllInOnePDF.HasValue)
+        {
+            query["allInOnePDF"] = getImageRequest.AllInOnePDF.Value.ToString();
+        }
+        if (getImageRequest.CompressedPackage.HasValue)
+        {
+            query["compressedPackage"] = getImageRequest.CompressedPackage.Value.ToString();
+        }
+        builder.Query = query.ToString();
+
+        try
+        {
+            var response = await Http.GetAsync(builder.ToString());
+            apiResponse = await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception ex)
+        {
+            apiResponse = $"Error: {ex.Message}";
+        }
+    }
+}

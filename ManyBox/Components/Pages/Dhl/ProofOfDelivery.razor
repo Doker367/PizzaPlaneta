@@ -1,0 +1,78 @@
+@page "/dhl/proof-of-delivery"
+@using System.Net.Http
+@using System.Web
+@using ManyBox.Components.Shared
+@inject HttpClient Http
+
+@if (OperatingSystem.IsWindows())
+{
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">DHL - Prueba de Entrega</h1>
+            <p class="page-subtitle">Obtén la prueba de entrega de un envío de DHL.</p>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <EditForm Model="@proofOfDeliveryModel" OnValidSubmit="HandleValidSubmit">
+                    <DataAnnotationsValidator />
+                    <div class="form-group">
+                        <label for="shipmentTrackingNumber">Número de Seguimiento del Envío</label>
+                        <InputText id="shipmentTrackingNumber" class="form-control" @bind-Value="proofOfDeliveryModel.ShipmentTrackingNumber" />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipperAccountNumber">Número de Cuenta del Remitente (Opcional)</label>
+                        <InputText id="shipperAccountNumber" class="form-control" @bind-Value="proofOfDeliveryModel.ShipperAccountNumber" />
+                    </div>
+                    <div class="form-group">
+                        <label for="content">Contenido (Opcional)</label>
+                        <InputText id="content" class="form-control" @bind-Value="proofOfDeliveryModel.Content" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Obtener Prueba de Entrega</button>
+                </EditForm>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(apiResponse))
+        {
+            <ApiResponseViewer Title="Resultado Proof Of Delivery" Json="@apiResponse" />
+        }
+    </div>
+}
+
+@code {
+    private ProofOfDeliveryModel proofOfDeliveryModel = new ProofOfDeliveryModel();
+    private string apiResponse = string.Empty;
+
+    private async Task HandleValidSubmit()
+    {
+        var builder = new UriBuilder($"http://100.64.197.11:5000/api/dhl/shipments/{proofOfDeliveryModel.ShipmentTrackingNumber}/proof-of-delivery");
+        var query = System.Web.HttpUtility.ParseQueryString(string.Empty);
+        if (!string.IsNullOrWhiteSpace(proofOfDeliveryModel.ShipperAccountNumber))
+        {
+            query["shipperAccountNumber"] = proofOfDeliveryModel.ShipperAccountNumber;
+        }
+        if (!string.IsNullOrWhiteSpace(proofOfDeliveryModel.Content))
+        {
+            query["content"] = proofOfDeliveryModel.Content;
+        }
+        builder.Query = query.ToString();
+
+        try
+        {
+            var response = await Http.GetAsync(builder.ToString());
+            apiResponse = await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception ex)
+        {
+            apiResponse = $"Error: {ex.Message}";
+        }
+    }
+
+    public class ProofOfDeliveryModel
+    {
+        public string ShipmentTrackingNumber { get; set; }
+        public string ShipperAccountNumber { get; set; }
+        public string Content { get; set; }
+    }
+}

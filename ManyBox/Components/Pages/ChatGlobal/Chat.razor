@@ -1,0 +1,289 @@
+﻿@page "/chat/{convId:int?}"
+@using ManyBox.Models.Custom
+@using ManyBox.Components.Pages
+
+<div class="mb-chat-container">
+    <div class="mb-chat-sidebar">
+        <div class="mb-chat-search" style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+            <input class="form-control" style="border-radius:8px;" placeholder="Buscar conversación..." @bind="searchSidebar" @bind:event="oninput" />
+            <button class="mb-btn-primary" style="border-radius:8px;z-index:2;position:relative;" @onclick="@MostrarFiltro"><i class="fas fa-filter"></i></button>
+        </div>
+        @if (mostrarFiltro)
+        {
+            <div class="mb-chat-filter-panel mb-chat-filter-panel--centered mb-chat-filter-panel--compact">
+                <button class="mb-btn-primary mb-btn-filter mb-btn-filter-small @(filtroConversacion=="todos" && !mostrarArchivados ? "mb-btn-active" : "")" @onclick="@(()=>{FiltrarConversaciones("todos"); MostrarNoArchivados();})">Todos</button>
+                <button class="mb-btn-primary mb-btn-filter mb-btn-filter-small @(filtroConversacion=="directo" && !mostrarArchivados ? "mb-btn-active" : "")" @onclick="@(()=>{FiltrarConversaciones("directo"); MostrarNoArchivados();})">Directos</button>
+                <button class="mb-btn-primary mb-btn-filter mb-btn-filter-small @(filtroConversacion=="grupo" && !mostrarArchivados ? "mb-btn-active" : "")" @onclick="@(()=>{FiltrarConversaciones("grupo"); MostrarNoArchivados();})">Grupos</button>
+                <button class="mb-btn-primary mb-btn-filter mb-btn-filter-small @(mostrarArchivados ? "mb-btn-active" : "")" style="background:#a259f7;" @onclick="@(()=>{FiltrarConversaciones("todos"); MostrarArchivados();})"><i class="fas fa-archive"></i></button>
+            </div>
+        }
+        <h2 class="mb-chat-title">Conversaciones</h2>
+        <ul class="mb-chat-list">
+            @if (ConversacionesFiltradas.Any())
+            {
+                foreach (var conv in ConversacionesFiltradas)
+                {
+                    <li class="mb-chat-list-item @(conv == seleccionada ? "mb-selected" : "")" @onclick="() => SeleccionarConversacion(conv)">
+                        <span class="mb-chat-avatar">
+                            @GetAvatarLetter(conv)
+                        </span>
+                        <span class="mb-chat-list-name">@GetConversacionNombre(conv)</span>
+                        <div class="mb-chat-options-dropdown" style="position:relative;display:inline-flex;align-items:center;gap:4px;">
+                            @if (mensajesPorConversacion.TryGetValue(conv.Id, out var count) && count > 0)
+                            {
+                                <span class="mb-chat-badge-mensajes">@count</span>
+                            }
+                            <button class="mb-chat-options-btn mb-btn-primary" style="border-radius:8px;padding:0 8px;min-width:32px;min-height:32px;" @onclick:stopPropagation="true" @onclick="() => ToggleDropdownConversacion(conv.Id)"><i class="fas fa-ellipsis-v"></i></button>
+                            @if (dropdownOpenConvId == conv.Id)
+                            {
+                                <div class="mb-chat-options-menu" style="position:absolute;z-index:10;background:#23243a;box-shadow:0 2px 8px #0002;padding:8px;min-width:150px;right:0;">
+                                    @if (conv.Archivada)
+                                    {
+                                        <button class="mb-btn-primary" style="width:100%;margin-bottom:4px;" @onclick:stopPropagation="true" @onclick="async () => await DesarchivarConversacion(conv.Id)"><i class="fas fa-archive"></i> Desarchivar</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="mb-btn-primary" style="width:100%;margin-bottom:4px;" @onclick:stopPropagation="true" @onclick="async () => await ArchivarConversacion(conv.Id)"><i class="fas fa-archive"></i> Archivar</button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </li>
+                }
+            }
+            else
+            {
+                <li class="mb-chat-placeholder" style="justify-content:center;text-align:center;">Selecciona una conversación para comenzar a chatear.</li>
+            }
+        </ul>
+        <div class="mb-chat-contactos-link" style="z-index:3;position:relative;">
+            <a class="mb-btn-primary mb-btn-gradient" style="border-radius:8px;" @onclick='@(() => NavigationMensajes.NavigateTo("/contactos"))'>Buscar Contactos</a>
+        </div>
+    </div>
+    <div class="mb-chat-main">
+        @if (seleccionada != null)
+        {
+            <div class="mb-chat-header-card">
+                <div class="mb-chat-header-title">@GetConversacionNombre(seleccionada)</div>
+                <button class="mb-chat-header-options-btn" @onclick="() => ToggleHeaderDropdown()"><i class="fas fa-ellipsis-v"></i></button>
+                @if (headerDropdownOpen)
+                {
+                    <div class="mb-chat-header-options-menu">
+                        <button class="mb-btn-primary mb-btn-gradient mb-chat-send-btn" @onclick="MostrarInfoChat"><i class="fas fa-info-circle"></i> Información</button>
+                        @if (seleccionada?.Tipo == "grupo")
+                        {
+                            <button class="mb-btn-primary mb-btn-gradient mb-chat-send-btn" @onclick="IrAgregarParticipantes"><i class="fas fa-user-plus"></i> Agregar participantes</button>
+                            <button class="mb-btn-primary mb-btn-gradient mb-chat-send-btn" @onclick="IrEliminarParticipantes"><i class="fas fa-user-minus"></i> Eliminar participantes</button>
+                            <button class="mb-btn-primary mb-btn-gradient mb-chat-send-btn" @onclick="IrAsignarAdmins"><i class="fas fa-user-shield"></i> Asignar administradores</button>
+                            <button class="mb-btn-primary mb-btn-gradient mb-chat-send-btn" @onclick="IrCambiarNombreGrupo"><i class="fas fa-pen"></i> Cambiar nombre</button>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="mb-chat-messages-area">
+                <ChatMessages Mensajes="mensajesbox" MyUserId="myUserIdInt" OnDeleteMensaje="EliminarMensaje" EsSuperAdmin="EsSuperAdmin" ConversacionParticipantes="@seleccionada?.Participantes" OnDeleteChat="EliminarChat" OnEditMensaje="EditarMensaje" OnReplyMensaje="PrepararResponderMensaje" OnConfirmReply="ConfirmarResponderMensaje" />
+            </div>
+            <div class="mb-chat-input-area">
+                <ChatInput OnSend="EnviarMensaje" MensajeAResponder="@mensajeAResponder" OnCancelarReply="CancelarResponderMensaje" />
+            </div>
+            @if (mostrarInfoChat && seleccionada != null)
+            {
+                <div class="mb-chat-info-panel">
+                    <div class="mb-chat-info-header">
+                        <span class="mb-chat-info-avatar">@GetAvatarLetter(seleccionada)</span>
+                        <span class="mb-chat-info-title">@GetTituloInfoChat(seleccionada)</span>
+                        <button class="mb-chat-info-close" style="border-radius:8px;" @onclick="@OcultarInfoChat"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="mb-chat-info-body">
+                        <div><b>Tipo:</b> @seleccionada.Tipo</div>
+                        <div><b>Creado:</b> @seleccionada.FechaCreacion.ToString("g")</div>
+                        <div><b>Miembros:</b></div>
+                        <ul>
+                            @foreach (var p in GetMiembrosInfo(seleccionada))
+                            {
+                                <li>@p.Nombre @p.Apellido <span style="color:#aaa">(@p.SucursalNombre)</span></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@if (mensajeEditandoId.HasValue)
+{
+    <div class="mb-chat-edit-modal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0008;z-index:1000;display:flex;align-items:center;justify-content:center;">
+        <div style="background:#23243a;padding:32px 24px;border-radius:16px;min-width:320px;max-width:90vw;box-shadow:0 2px 16px #0006;display:flex;flex-direction:column;gap:16px;">
+            <h4 style="margin:0 0 8px 0;">Editar mensaje</h4>
+            <textarea class="form-control" style="border-radius:8px;min-height:80px;" @bind="mensajeEditandoContenido"></textarea>
+            <div style="display:flex;gap:12px;justify-content:flex-end;">
+                <button class="mb-btn-primary mb-btn-gradient mb-chat-send-btn" style="border-radius:8px;" @onclick="GuardarEdicionMensaje">Guardar</button>
+                <button class="mb-btn-primary mb-btn-gradient mb-chat-send-btn" style="border-radius:8px;background:#444;" @onclick="CancelarEdicionMensaje">Cancelar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarAgregarParticipantes && seleccionada != null && seleccionada.Tipo == "grupo")
+{
+    <AgregarParticipantesGrupo ConversacionId="@seleccionada.Id" ParticipantesActuales="@seleccionada.Participantes.Select(p => p.Id).ToList()" OnClose="OcultarAgregarParticipantes" OnAgregado="OnParticipantesAgregados" />
+}
+
+@code {
+    private string GetConversacionNombre(ConversacionModel conv)
+    {
+        if (conv.Tipo == "grupo")
+            return conv.Nombre ?? "Grupo";
+        if (conv.Tipo == "directo" && conv.Participantes != null && conv.Participantes.Count > 1)
+        {
+            var otro = conv.Participantes.FirstOrDefault(p => p.Id != myUserIdInt);
+            return !string.IsNullOrWhiteSpace(otro?.Nombre) ? $"{otro.Nombre} {otro.Apellido}".Trim() : (otro?.Username ?? "Chat");
+        }
+        return conv.Nombre ?? "Chat";
+    }
+    private int GetNuevosMensajes(ConversacionModel conv)
+    {
+        if (conv is ConversacionModelExt ext)
+            return ext.NuevosMensajes;
+        return 0;
+    }
+    private void LimpiarNuevosMensajes(ConversacionModel conv)
+    {
+        if (conv is ConversacionModelExt ext)
+            ext.NuevosMensajes = 0;
+    }
+    private string GetTituloInfoChat(ConversacionModel conv)
+    {
+        if (conv.Tipo == "grupo")
+            return conv.Nombre ?? "Grupo";
+        if (conv.Tipo == "directo" && conv.Participantes != null && conv.Participantes.Count > 1)
+        {
+            var otro = conv.Participantes.FirstOrDefault(p => p.Id != myUserIdInt);
+            return !string.IsNullOrWhiteSpace(otro?.Nombre) ? $"{otro.Nombre} {otro.Apellido}".Trim() : (otro?.Username ?? "Chat");
+        }
+        return conv.Nombre ?? "Chat";
+    }
+    private IEnumerable<UsuarioContactoVM> GetMiembrosInfo(ConversacionModel conv)
+    {
+        // Para grupo: todos los participantes. Para directo: solo el otro participante.
+        if (conv.Tipo == "grupo")
+            return conv.Participantes.Where(p => !string.IsNullOrWhiteSpace(p.Nombre) || !string.IsNullOrWhiteSpace(p.Apellido));
+        if (conv.Tipo == "directo" && conv.Participantes != null && conv.Participantes.Count > 1)
+            return conv.Participantes.Where(p => p.Id != myUserIdInt);
+        return Enumerable.Empty<UsuarioContactoVM>();
+    }
+    private string GetAvatarLetter(ConversacionModel conv)
+    {
+        // Para grupo: solo la inicial del nombre del grupo, para directo: inicial del otro usuario
+        if (conv.Tipo == "grupo")
+        {
+            var nombre = conv.Nombre ?? "G";
+            // Eliminar espacios y tomar solo la primera letra real
+            var letra = nombre.Trim().FirstOrDefault(c => char.IsLetterOrDigit(c));
+            return letra != default ? letra.ToString().ToUpper() : "G";
+        }
+        if (conv.Tipo == "directo" && conv.Participantes != null && conv.Participantes.Count > 1)
+        {
+            var otro = conv.Participantes.FirstOrDefault(p => p.Id != myUserIdInt);
+            return !string.IsNullOrWhiteSpace(otro?.Nombre) ? otro.Nombre.Substring(0, 1).ToUpper() : (otro?.Username?.Substring(0, 1).ToUpper() ?? "C");
+        }
+        return "C";
+    }
+
+    // --- NUEVO: Refrescar conversaciones después de archivar/desarchivar ---
+    private async Task RefrescarConversaciones()
+    {
+        // Recarga la lista de conversaciones usando el método ya usado en OnInitializedAsync
+        var convs = await ApiServiceMensajes.GetMisConversacionesAsync();
+        var convsExt = new List<ConversacionModelExt>();
+        foreach (var c in convs)
+        {
+            var mensajes = await ApiServiceMensajes.GetMensajesAsync(c.Id, 1, 1); // Solo el último
+            var nuevos = await ApiServiceMensajes.GetMensajesAsync(c.Id, 1, 50);
+            var nuevosCount = nuevos.Count(m => m.UsuarioId != myUserIdInt && !m.LeidoPorMi);
+            var ultimo = mensajes.FirstOrDefault();
+            convsExt.Add(new ConversacionModelExt
+            {
+                Id = c.Id,
+                Tipo = c.Tipo,
+                Nombre = c.Nombre,
+                FechaCreacion = c.FechaCreacion,
+                Participantes = c.Participantes,
+                Archivada = c.Archivada,
+                FechaUltimoMensaje = ultimo?.FechaCreacion,
+                UsuarioUltimoMensajeId = ultimo?.UsuarioId,
+                NuevosMensajes = nuevosCount
+            });
+        }
+        conversaciones = convsExt.Select(c => (ConversacionModel)c).OrderByDescending(c => (c as ConversacionModelExt)?.FechaUltimoMensaje ?? c.FechaCreacion).ToList();
+        FiltrarConversaciones(filtroConversacion);
+        StateHasChanged();
+    }
+    private int? dropdownOpenConvId = null;
+    private void ToggleDropdownConversacion(int id)
+    {
+        dropdownOpenConvId = dropdownOpenConvId == id ? null : id;
+        StateHasChanged();
+    }
+    private async Task ArchivarConversacion(int id)
+    {
+        var ok = await ApiServiceMensajes.ArchivarConversacionAsync(id);
+        if (ok)
+        {
+            await RefrescarConversaciones();
+            if (seleccionada?.Id == id)
+            {
+                seleccionada = null;
+                mensajesbox.Clear();
+            }
+            StateHasChanged();
+        }
+        dropdownOpenConvId = null;
+    }
+    private async Task DesarchivarConversacion(int id)
+    {
+        var ok = await ApiServiceMensajes.DesarchivarConversacionAsync(id);
+        if (ok)
+        {
+            await RefrescarConversaciones();
+            if (seleccionada?.Id == id)
+            {
+                seleccionada = null;
+                mensajesbox.Clear();
+            }
+            StateHasChanged();
+        }
+        dropdownOpenConvId = null;
+    }
+    private bool headerDropdownOpen = false;
+    private void ToggleHeaderDropdown()
+    {
+        headerDropdownOpen = !headerDropdownOpen;
+        StateHasChanged();
+    }
+    private bool mostrarAgregarParticipantes = false;
+    private void MostrarAgregarParticipantes() { mostrarAgregarParticipantes = true; headerDropdownOpen = false; }
+    private void OcultarAgregarParticipantes() { mostrarAgregarParticipantes = false; }
+    private async Task OnParticipantesAgregados() { mostrarAgregarParticipantes = false; await RefrescarConversaciones(); }
+    private void IrAgregarParticipantes() {
+        if (seleccionada != null)
+            NavigationMensajes.NavigateTo($"/agregar-participantes/{seleccionada.Id}");
+        headerDropdownOpen = false;
+    }
+    private void IrEliminarParticipantes() {
+        if (seleccionada != null)
+            NavigationMensajes.NavigateTo($"/eliminar-participantes/{seleccionada.Id}");
+        headerDropdownOpen = false;
+    }
+    private void IrAsignarAdmins() {
+        if (seleccionada != null)
+            NavigationMensajes.NavigateTo($"/asignar-admins/{seleccionada.Id}");
+        headerDropdownOpen = false;
+    }
+    private void IrCambiarNombreGrupo() {
+        if (seleccionada != null)
+            NavigationMensajes.NavigateTo($"/cambiar-nombre-grupo/{seleccionada.Id}");
+        headerDropdownOpen = false;
+    }
+}

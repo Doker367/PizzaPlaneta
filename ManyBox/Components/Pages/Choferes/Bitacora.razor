@@ -1,0 +1,75 @@
+﻿@page "/bitacora"
+@using System.Globalization
+
+<div class="bitacora-main">
+    <header class="bitacora-header mb-flex mb-items-center mb-justify-between mb-mb-lg">
+        <div>
+            <h2 class="bitacora-title" aria-label="Bitácora de viajes">🧾 Bitácora de Viajes</h2>
+            <p class="bitacora-desc mb-text-muted">Aquí puedes revisar tu desempeño y entregas recientes.</p>
+        </div>
+        <div class="bitacora-avatar">
+            <img src="/img/driver-avatar.svg" alt="Foto" width="60" height="60" />
+        </div>
+    </header>
+
+    <section class="stats-container mb-mb-lg" aria-label="Resumen de desempeño">
+        <div class="stat-card" aria-label="Puntualidad total">
+            <div class="stat-label"><i class="fa fa-clock mb-mr-xs" aria-hidden="true"></i> Puntualidad</div>
+            <div class="stat-value">@puntualidadPorcentaje%</div>
+            <div class="stat-desc">Entregas a tiempo</div>
+        </div>
+        <div class="stat-card" aria-label="Eficiencia">
+            <div class="stat-label"><i class="fa fa-route mb-mr-xs" aria-hidden="true"></i> Eficiencia</div>
+            <div class="stat-value">@eficienciaPorcentaje%</div>
+            <div class="stat-desc">Optimización de rutas</div>
+        </div>
+    </section>
+
+    <section>
+        <h3 class="subsection-title mb-flex mb-items-center" aria-label="Entregas realizadas">
+            <i class="fa fa-truck mb-mr-xs" aria-hidden="true"></i> Entregas Realizadas
+        </h3>
+        @if (isLoading)
+        {
+            <div>Cargando...</div>
+        }
+        else if (!string.IsNullOrEmpty(errorMsg))
+        {
+            <div class="error-msg">@errorMsg</div>
+        }
+        else if (entregas.Count == 0)
+        {
+            <div>No hay entregas registradas.</div>
+        }
+        else
+        {
+            <div class="bitacora-table-wrapper">
+                <table class="bitacora-table" aria-label="Tabla de entregas realizadas">
+                    <thead>
+                        <tr>
+                            <th scope="col">Guía</th>
+                            <th scope="col">Destino</th>
+                            <th scope="col">Destinatario</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entrega in entregas)
+                        {
+                            <tr>
+                                <td data-label="Guía">@entrega.Guia</td>
+                                <td data-label="Destino">@entrega.Direccion</td>
+                                <td data-label="Destinatario">@entrega.Destinatario</td>
+                                <td data-label="Fecha">@entrega.Fecha.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</td>
+                                <td data-label="Estado">
+                                    <span class="estado @entrega.Estado.ToLower()">@entrega.Estado</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>

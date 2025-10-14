@@ -1,0 +1,190 @@
+/* TITULO */
+h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #ddd; /* color claro para fondo oscuro */
+}
+
+/* TABLA DE PAQUETES */
+.paquetes-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #2c2f33; /* gris oscuro */
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+    .paquetes-table thead {
+        background-color: #7289da; /* azul oscuro suave */
+        color: #f0f0f0;
+    }
+
+    .paquetes-table th,
+    .paquetes-table td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #444c56; /* línea separadora oscura */
+        color: #ddd;
+    }
+
+    .paquetes-table tr:hover {
+        background-color: #3a3f47; /* hover gris más claro */
+    }
+
+    /* BOTONES EN TABLA */
+    .paquetes-table button {
+        margin-right: 6px;
+        padding: 6px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: background-color 0.3s ease;
+        background-color: #404552; /* botón gris oscuro */
+        color: #ddd;
+    }
+
+        .paquetes-table button:hover {
+            background-color: #58606e; /* gris medio en hover */
+        }
+
+.btn-danger {
+    background-color: #b33939; /* rojo oscuro */
+    color: white;
+}
+
+    .btn-danger:hover {
+        background-color: #922626; /* rojo más intenso */
+    }
+
+/* TEXTO CUANDO NO HAY DATOS */
+.no-data {
+    font-style: italic;
+    color: #999;
+    margin-top: 1rem;
+}
+
+/* MODAL OVERLAY */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(20, 20, 20, 0.8); /* sombra negra translúcida */
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* CONTENIDO DEL MODAL */
+.modal-content {
+    background: #36393f; /* gris oscuro */
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 0 20px rgba(0,0,0,0.7);
+    color: #ddd;
+    overflow-y: auto;
+    max-height: 80vh;
+}
+
+    .modal-content h2 {
+        margin-top: 0;
+        color: #7289da; /* azul suave */
+        font-size: 1.5rem;
+    }
+
+    .modal-content ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 1rem 0;
+    }
+
+    .modal-content li {
+        margin-bottom: 0.5rem;
+    }
+
+    /* BOTÓN CERRAR DEL MODAL */
+    .modal-content button {
+        background-color: #7289da;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 1rem;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .modal-content button:hover {
+            background-color: #5b6eae;
+        }
+/* Contenedor filtros */
+.filter-section {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    background-color: #222831; /* gris oscuro */
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+}
+
+/* Inputs y select */
+.input-filter {
+    background-color: #393e46; /* gris medio oscuro */
+    border: 1.5px solid #00adb5; /* cian neón */
+    color: #eeeeee;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    min-width: 180px;
+}
+
+    .input-filter::placeholder {
+        color: #a1a1a1;
+    }
+
+    .input-filter:focus {
+        border-color: #00ffc3; /* verde neón */
+        outline: none;
+        box-shadow: 0 0 8px #00ffc3;
+    }
+
+/* Botón filtrar */
+.btn-filtrar {
+    background-color: #00adb5;
+    color: #222831;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    min-width: 100px;
+}
+
+    .btn-filtrar:hover {
+        background-color: #00ffc3;
+        color: #111;
+    }
+
+/* Para responsive pequeño */
+@media (max-width: 600px) {
+    .filter-section {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .input-filter, .btn-filtrar {
+        min-width: 100%;
+    }
+}

@@ -1,0 +1,313 @@
+﻿@page "/consultarcostos"
+@layout Layout.MainLayout
+
+<div class="consultar-costos-page">
+    <div class="page-header">
+        <div class="header-content">
+            <div class="title-section">
+                <div class="title-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13.5 6L15.5 8H14V10H10V8H8.5L10.5 6H13.5ZM6 14H18V16H6V14Z" fill="currentColor" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="page-title">Consultar Costos de Envío</h1>
+                    <p class="page-subtitle">Calcula el costo de envío para tus paquetes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="calculator-container">
+            <div class="calculator-panel">
+                <div class="panel-header">
+                    <h3>📦 Datos del Envío</h3>
+                    <div class="calculator-steps">
+                        <div class="step @(currentStep >= 1 ? "active" : "")">1</div>
+                        <div class="step @(currentStep >= 2 ? "active" : "")">2</div>
+                        <div class="step @(currentStep >= 3 ? "active" : "")">3</div>
+                    </div>
+                </div>
+
+                <div class="form-sections">
+                    <!-- Sección 1: Ubicaciones -->
+                    <div class="form-section @(currentStep == 1 ? "active" : "")">
+                        <h4 class="section-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="currentColor" />
+                            </svg>
+                            Ubicaciones
+                        </h4>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Origen</label>
+                                <div class="input-group">
+                                    <InputText class="form-input" @bind-Value="origen" placeholder="Ciudad de origen" />
+                                    <div class="input-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="currentColor" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Destino</label>
+                                <div class="input-group">
+                                    <InputText class="form-input" @bind-Value="destino" placeholder="Ciudad de destino" />
+                                    <div class="input-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="currentColor" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Distancia (km)</label>
+                            <div class="input-group">
+                                <InputNumber class="form-input" @bind-Value="distancia" placeholder="0" min="0" />
+                                <div class="input-suffix">km</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 2: Dimensiones -->
+                    <div class="form-section @(currentStep == 2 ? "active" : "")">
+                        <h4 class="section-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" />
+                                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" fill="none" />
+                                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" fill="none" />
+                            </svg>
+                            Dimensiones y Peso
+                        </h4>
+
+                        <div class="form-group">
+                            <label class="form-label">Peso real (kg)</label>
+                            <div class="input-group">
+                                <InputNumber class="form-input" @bind-Value="peso" placeholder="0.0" min="0" step="0.1" />
+                                <div class="input-suffix">kg</div>
+                            </div>
+                        </div>
+
+                        <div class="dimensions-container">
+                            <label class="form-label">Dimensiones (cm)</label>
+                            <div class="dimensions-grid">
+                                <div class="dimension-input">
+                                    <InputNumber class="form-input" placeholder="Largo" @bind-Value="largo" min="0" />
+                                    <label class="dimension-label">Largo</label>
+                                </div>
+                                <div class="dimension-input">
+                                    <InputNumber class="form-input" placeholder="Ancho" @bind-Value="ancho" min="0" />
+                                    <label class="dimension-label">Ancho</label>
+                                </div>
+                                <div class="dimension-input">
+                                    <InputNumber class="form-input" placeholder="Alto" @bind-Value="alto" min="0" />
+                                    <label class="dimension-label">Alto</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (pesoVolumetrico > 0)
+                        {
+                            <div class="weight-comparison">
+                                <div class="weight-info">
+                                    <span class="weight-label">Peso volumétrico:</span>
+                                    <span class="weight-value">@pesoVolumetrico.ToString("F2") kg</span>
+                                </div>
+                                <div class="weight-info">
+                                    <span class="weight-label">Peso a facturar:</span>
+                                    <span class="weight-value final">@Math.Max(peso, pesoVolumetrico).ToString("F2") kg</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Sección 3: Opciones -->
+                    <div class="form-section @(currentStep == 3 ? "active" : "")">
+                        <h4 class="section-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L13.09 8.26L22 9.27L17.82 13.14L19.09 18.99L12 15.77L4.91 18.99L6.18 13.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor" />
+                            </svg>
+                            Opciones de Servicio
+                        </h4>
+
+                        <div class="service-options">
+                            <div class="option-group">
+                                <label class="form-label">Tipo de servicio</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="servicio" value="Estándar" @onchange="@(() => tipoServicio = "Estándar")" checked="@(tipoServicio == "Estándar")" />
+                                        <div class="radio-content">
+                                            <span class="radio-title">Estándar</span>
+                                            <span class="radio-description">Entrega en 3-5 días</span>
+                                        </div>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="servicio" value="Exprés" @onchange="@(() => tipoServicio = "Exprés")" checked="@(tipoServicio == "Exprés")" />
+                                        <div class="radio-content">
+                                            <span class="radio-title">Exprés</span>
+                                            <span class="radio-description">Entrega en 1-2 días</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="option-group">
+                                <label class="form-label">Tipo de entrega</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="entrega" value="Domicilio" @onchange="@(() => tipoEntrega = "Domicilio")" checked="@(tipoEntrega == "Domicilio")" />
+                                        <div class="radio-content">
+                                            <span class="radio-title">A domicilio</span>
+                                            <span class="radio-description">Entrega en la dirección</span>
+                                        </div>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="entrega" value="Ocurre" @onchange="@(() => tipoEntrega = "Ocurre")" checked="@(tipoEntrega == "Ocurre")" />
+                                        <div class="radio-content">
+                                            <span class="radio-title">Ocurre</span>
+                                            <span class="radio-description">Recoger en sucursal</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="checkbox-group">
+                                <label class="checkbox-option">
+                                    <InputCheckbox @bind-Value="conSeguro" />
+                                    <div class="checkbox-content">
+                                        <span class="checkbox-title">Incluir seguro</span>
+                                        <span class="checkbox-description">Protege tu envío (+$50)</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    @if (currentStep > 1)
+                    {
+                        <button class="btn btn-secondary" @onclick="PreviousStep">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            Anterior
+                        </button>
+                    }
+
+                    @if (currentStep < 3)
+                    {
+                        <button class="btn btn-primary" @onclick="NextStep">
+                            Siguiente
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-success" @onclick="CalcularCosto">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            Calcular Costo
+                        </button>
+                    }
+                </div>
+            </div>
+
+            @if (costo > 0)
+            {
+                <div class="result-panel">
+                    <div class="result-header">
+                        <h3>💰 Resultado del Cálculo</h3>
+                        <div class="result-amount">@costo.ToString("C")</div>
+                    </div>
+
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Peso a facturar:</span>
+                            <span class="detail-value">@Math.Max(peso, pesoVolumetrico).ToString("F2") kg</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Peso volumétrico:</span>
+                            <span class="detail-value">@pesoVolumetrico.ToString("F2") kg</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Tipo de servicio:</span>
+                            <span class="detail-value">@tipoServicio</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Tipo de entrega:</span>
+                            <span class="detail-value">@tipoEntrega</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Seguro incluido:</span>
+                            <span class="detail-value">@(conSeguro ? "Sí" : "No")</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Distancia:</span>
+                            <span class="detail-value">@distancia km</span>
+                        </div>
+                    </div>
+
+                    <div class="result-breakdown">
+                        <h4>Desglose del costo:</h4>
+                        <div class="breakdown-item">
+                            <span>Tarifa base (@tipoServicio):</span>
+                            <span>@((tipoServicio == "Exprés" ? 20m : 10m) * Math.Max(peso, pesoVolumetrico)).ToString("C")</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span>Costo por distancia:</span>
+                            <span>@(distancia * 2m).ToString("C")</span>
+                        </div>
+                        @if (conSeguro)
+                        {
+                            <div class="breakdown-item">
+                                <span>Seguro:</span>
+                                <span>$50.00</span>
+                            </div>
+                        }
+                        @if (tipoEntrega == "Ocurre")
+                        {
+                            <div class="breakdown-item discount">
+                                <span>Descuento ocurre:</span>
+                                <span>-$10.00</span>
+                            </div>
+                        }
+                        <div class="breakdown-total">
+                            <span>Total:</span>
+                            <span>@costo.ToString("C")</span>
+                        </div>
+                    </div>
+
+                    <div class="result-actions">
+                        <button class="btn btn-outline" @onclick="GuardarCotizacion">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 21H5C4.45 21 4 20.55 4 20V4C4 3.45 4.45 3 5 3H16L20 7V20C20 20.55 19.55 21 19 21Z" fill="currentColor" />
+                                <path d="M17 21V13H7V21" fill="currentColor" />
+                                <path d="M7 3V7H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            Guardar Cotización
+                        </button>
+                        <button class="btn btn-primary" @onclick="IrARegistro">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" />
+                                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" fill="none" />
+                                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" fill="none" />
+                            </svg>
+                            Crear Envío
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+

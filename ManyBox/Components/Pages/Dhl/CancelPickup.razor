@@ -1,0 +1,78 @@
+@page "/dhl/cancel-pickup"
+@using System.Net.Http
+@using System.Web
+@inject HttpClient Http
+
+@if (OperatingSystem.IsWindows())
+{
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">DHL - Cancelar Recogida</h1>
+            <p class="page-subtitle">Cancela una recogida de DHL.</p>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <EditForm Model="@cancelPickupModel" OnValidSubmit="HandleValidSubmit">
+                    <DataAnnotationsValidator />
+                    <div class="form-group">
+                        <label for="dispatchConfirmationNumber">Número de Confirmación de Despacho</label>
+                        <InputText id="dispatchConfirmationNumber" class="form-control" @bind-Value="cancelPickupModel.DispatchConfirmationNumber" />
+                    </div>
+                    <div class="form-group">
+                        <label for="requestorName">Nombre del Solicitante</label>
+                        <InputText id="requestorName" class="form-control" @bind-Value="cancelPickupModel.RequestorName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="reason">Razón</label>
+                        <InputText id="reason" class="form-control" @bind-Value="cancelPickupModel.Reason" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Cancelar Recogida</button>
+                </EditForm>
+            </div>
+        </div>
+
+        @if (apiResponse != null)
+        {
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title">Respuesta de la API</h3>
+                </div>
+                <div class="card-body">
+                    <pre>@apiResponse</pre>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private CancelPickupModel cancelPickupModel = new CancelPickupModel();
+    private string apiResponse;
+
+    private async Task HandleValidSubmit()
+    {
+        var builder = new UriBuilder($"http://100.64.197.11:5000/api/dhl/pickups/{cancelPickupModel.DispatchConfirmationNumber}");
+        var query = HttpUtility.ParseQueryString(string.Empty);
+        query["requestorName"] = cancelPickupModel.RequestorName;
+        query["reason"] = cancelPickupModel.Reason;
+        builder.Query = query.ToString();
+
+        try
+        {
+            var response = await Http.DeleteAsync(builder.ToString());
+            apiResponse = await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception ex)
+        {
+            apiResponse = $"Error: {ex.Message}";
+        }
+    }
+
+    public class CancelPickupModel
+    {
+        public string DispatchConfirmationNumber { get; set; }
+        public string RequestorName { get; set; }
+        public string Reason { get; set; }
+    }
+}

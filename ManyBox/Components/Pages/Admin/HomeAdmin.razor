@@ -1,0 +1,220 @@
+﻿@page "/admin-dashboard"
+
+<div class="admin-dashboard">
+    <div class="dashboard-header">
+        <div class="welcome-panel">
+            <h1>Panel de Control</h1>
+            <p>Bienvenido, @(usuario ?? "Administrador")</p>
+            <div class="date-display">
+                @DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))
+            </div>
+        </div>
+        <div class="quick-actions">
+            <button class="action-button refresh" @onclick="RecargarDashboardAsync">
+                <i class="fas fa-sync-alt"></i>
+                Actualizar
+            </button>
+            <button class="action-button notifications" @onclick="ToggleNotifications">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">@notifications.Count</span>
+            </button>
+            <button class="action-button" @onclick="NavigateToSettings">
+                <i class="fas fa-cog"></i>
+                Configuración
+            </button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        @foreach (var stat in dashboardStats)
+        {
+            <div class="stat-card @(stat.Class)">
+                <div class="stat-icon">
+                    <i class="@stat.Icon"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>@stat.Title</h3>
+                    <div class="stat-value">@stat.Value @stat.Unit</div>
+                    <div class="stat-change @stat.TrendClass">
+                        <i class="@stat.TrendIcon"></i>
+                        @stat.Change
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="charts-container">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>Entregas Mensuales</h3>
+                <div class="chart-controls">
+                    <select @bind="selectedPeriod" class="period-selector">
+                        <option value="week">Esta semana</option>
+                        <option value="month">Este mes</option>
+                        <option value="year">Este año</option>
+                    </select>
+                </div>
+            </div>
+            <div class="chart-area">
+                <div class="area-chart">
+                    <svg width="100%" height="300" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="gradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.6" />
+                                <stop offset="100%" style="stop-color:#4facfe;stop-opacity:0" />
+                            </linearGradient>
+                            <linearGradient id="gradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#84fab0;stop-opacity:0.6" />
+                                <stop offset="100%" style="stop-color:#84fab0;stop-opacity:0" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Grid lines -->
+                        <g class="grid-lines">
+                            @for (int i = 0; i <= 4; i++)
+                            {
+                                <line x1="0" y1="@(i * 75)" x2="100%" y2="@(i * 75)" class="grid-lines" />
+                            }
+                        </g>
+                        <path class="area-path area1" d="@GetAreaPath(monthlyData, 0)" fill="url(#gradient1)" />
+                        <path class="area-path area2" d="@GetAreaPath(monthlyData, 1)" fill="url(#gradient2)" />
+                        <path class="line-path line1" d="@GetLinePath(monthlyData, 0)" />
+                        <path class="line-path line2" d="@GetLinePath(monthlyData, 1)" />
+
+                        @for (int i = 0; i < monthlyData.Count; i++)
+                        {
+                            var x = i * (100.0 / (monthlyData.Count - 1));
+                            var y1 = 300 - (monthlyData[i].DeliveredValue * 3);
+                            <circle class="data-point line1" cx="@x" cy="@y1" r="4" />
+                        }
+
+                        @for (int i = 0; i < monthlyData.Count; i++)
+                        {
+                            var x = i * (100.0 / (monthlyData.Count - 1));
+                            var y1 = 300 - (monthlyData[i].DeliveredValue * 3);
+                            <g class="value-container">
+                                <circle cx="@x" cy="@(y1 - 10)" r="0.1" fill="transparent" />
+                                <foreignObject x="@(x - 15)" y="@(y1 - 25)" width="30" height="20">
+                                    <div xmlns="http://www.w3.org/1999/xhtml" class="svg-text-value">
+                                        @monthlyData[i].DeliveredValue
+                                    </div>
+                                </foreignObject>
+                            </g>
+                        }
+
+                        @for (int i = 0; i < monthlyData.Count; i++)
+                        {
+                            var x = i * (100.0 / (monthlyData.Count - 1));
+                            var y2 = 300 - (monthlyData[i].PendingValue * 3);
+                            <circle class="data-point line2" cx="@x" cy="@y2" r="4" />
+                        }
+
+                        @for (int i = 0; i < monthlyData.Count; i++)
+                        {
+                            var x = i * (100.0 / (monthlyData.Count - 1));
+                            var y2 = 300 - (monthlyData[i].PendingValue * 3);
+                            <g class="value-container">
+                                <circle cx="@x" cy="@(y2 - 10)" r="0.1" fill="transparent" />
+                                <foreignObject x="@(x - 15)" y="@(y2 - 25)" width="30" height="20">
+                                    <div xmlns="http://www.w3.org/1999/xhtml" class="svg-text-value">
+                                        @monthlyData[i].PendingValue
+                                    </div>
+                                </foreignObject>
+                            </g>
+                        }
+                    </svg>
+                    <div class="chart-labels">
+                        @foreach (var data in monthlyData)
+                        {
+                            <div class="label">@data.Label</div>
+                        }
+                    </div>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-color line1"></div>
+                        <div class="legend-text">Entregados</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color line2"></div>
+                        <div class="legend-text">Pendientes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="metrics-card">
+            <h3>Rendimiento por Sucursal</h3>
+            <div class="metrics-grid">
+                @foreach (var metric in branchMetrics)
+                {
+                    <div class="metric-item">
+                        <div class="metric-header">
+                            <span class="metric-name">@metric.Name</span>
+                            <span class="metric-value">@metric.Value%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: @(metric.Value)%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="activity-panel">
+        <h3>Actividad Reciente</h3>
+        <div class="activity-list">
+            @foreach (var activity in recentActivity)
+            {
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="@activity.Icon"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-header">
+                            <span class="activity-title">@activity.Title</span>
+                            <span class="activity-time">@activity.Time</span>
+                        </div>
+                        <p class="activity-description">@activity.Description</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (showNotifications)
+    {
+        <div class="notifications-panel">
+            <div class="notifications-header">
+                <h3>Notificaciones</h3>
+                <button class="close-notifications" @onclick="ToggleNotifications">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="notifications-list">
+                @foreach (var notification in notifications)
+                {
+                    <div class="notification-item @notification.Priority">
+                        <div class="notification-icon">
+                            <i class="@notification.Icon"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">@notification.Title</div>
+                            <div class="notification-message">@notification.Message</div>
+                            <div class="notification-time">@notification.Time</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(dashboardError))
+    {
+        <div class="mb-alert mb-alert-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            @dashboardError
+        </div>
+    }
+</div>

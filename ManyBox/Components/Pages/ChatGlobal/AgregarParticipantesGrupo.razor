@@ -1,0 +1,116 @@
+@using ManyBox.Models.Custom
+@inject ManyBox.Services.ChatApiService ChatService
+@inject NavigationManager Navigation
+
+@if (mostrarModal)
+{
+    <div class="contactos-modal-overlay">
+        <div class="contactos-modal-card">
+            <div class="contactos-header">
+                <h2>Agregar participantes</h2>
+            </div>
+            <div class="contactos-modal" style="max-width: 480px; margin: 0 auto;">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: flex; gap: 8px; align-items: flex-end;">
+                        <div style="flex: 2;">
+                            <label>Buscar contacto:</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input class="form-control" placeholder="Buscar..." @bind="modalSearchTerm" @bind:event="oninput" />
+                                <button class="mb-btn-primary" @onclick="BuscarContactos" style="border-radius: 8px;">Buscar</button>
+                            </div>
+                        </div>
+                        <div style="flex: 1;">
+                            <label>Sucursal:</label>
+                            <select class="form-control" @bind="modalSelectedSucursalId">
+                                <option value="">Todas</option>
+                                @foreach (var suc in sucursales)
+                                {
+                                    <option value="@suc.Id">@suc.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div style="max-height: 260px; overflow-y: auto; margin-top: 8px;">
+                        @foreach (var contact in modalContactos)
+                        {
+                            <label class="miembro-item" style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <input type="checkbox" @bind="contact.Selected" />
+                                <span style="font-weight: 500;">@contact.Nombre @contact.Apellido</span>
+                                <span style="color:#aaa; font-size:0.95em;">(@contact.SucursalNombre)</span>
+                            </label>
+                        }
+                    </div>
+                    <div style="font-size:0.95em; color:#888; margin-bottom: 4px;">@modalContactos.Count(c => c.Selected) miembros seleccionados</div>
+                    <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 12px;">
+                        <button class="btn btn-secondary" @onclick="CerrarModal" style="border-radius: 8px;">Cancelar</button>
+                        <button class="mb-btn-primary mb-btn-gradient" @onclick="AgregarSeleccionados" disabled="@(modalContactos.Count(c => c.Selected) == 0)" style="border-radius: 8px;">Agregar</button>
+                    </div>
+                    @if (showValidationError)
+                    {
+                        <div style="color: #e74c3c; font-size: 0.95em;">Debes seleccionar al menos un usuario.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int ConversacionId { get; set; }
+    [Parameter] public List<int> ParticipantesActuales { get; set; } = new();
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnAgregado { get; set; }
+
+    private List<SucursalModel> sucursales = new();
+    private string modalSearchTerm = "";
+    private int? modalSelectedSucursalId;
+    private List<UsuarioContactoVM> modalContactos = new();
+    private bool showValidationError = false;
+    private bool mostrarModal = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarSucursales();
+        await CargarContactosModal();
+    }
+
+    private async Task CargarSucursales()
+    {
+        sucursales = await ChatService.GetSucursalesAsync();
+    }
+
+    private async Task CargarContactosModal()
+    {
+        var allContacts = await ChatService.BuscarContactosAsync(modalSearchTerm, modalSelectedSucursalId);
+        // Excluir los que ya están en el grupo
+        modalContactos = allContacts.Where(c => !ParticipantesActuales.Contains(c.Id)).ToList();
+        StateHasChanged();
+    }
+
+    private async Task BuscarContactos()
+    {
+        await CargarContactosModal();
+    }
+
+    private async Task AgregarSeleccionados()
+    {
+        showValidationError = false;
+        var seleccionados = modalContactos.Where(c => c.Selected).Select(c => c.Id).ToList();
+        if (seleccionados.Count == 0)
+        {
+            showValidationError = true;
+            return;
+        }
+        var res = await ChatService.AgregarParticipantesGrupoAsync(ConversacionId, seleccionados);
+        if (res)
+        {
+            mostrarModal = false;
+            await OnAgregado.InvokeAsync();
+        }
+    }
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        OnClose.InvokeAsync();
+    }
+}

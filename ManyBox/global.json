@@ -1,0 +1,14 @@
+{
+  "sdk": {
+    "version": "8.0.411",
+    "rollForward": "latestFeature"
+  },
+  "exclude": [
+    "**/bin",
+    "**/bower_components",
+    "**/jspm_packages",
+    "**/node_modules",
+    "**/obj",
+    "**/platforms"
+  ]
+}

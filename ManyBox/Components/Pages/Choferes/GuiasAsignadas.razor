@@ -1,0 +1,93 @@
+﻿@page "/chofer-guias"
+
+@using ManyBox.Services
+
+<div class="chofer-dashboard">
+    <div class="dashboard-header">
+        <h1>📊 Panel del Chofer</h1>
+        <p>Guías asignadas y herramientas de entrega</p>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>📦 Guías Asignadas</h2>
+        @if (guiasAsignadas.Any())
+        {
+            <ul class="guias-list">
+                @foreach (var guia in guiasAsignadas)
+                {
+                    <li class="guia-item">
+                        <div class="guia-header" @onclick="() => ToggleExpand(guia)">
+                            <span class="guia-codigo">@guia.GuiaRastreo</span>
+                            <span class="guia-nombre">@guia.Destinatario</span>
+                            <button class="expand-btn" aria-label="Ver detalles">
+                                <span>@(guia.Expandido ? "▲" : "▼")</span>
+                            </button>
+                        </div>
+                        @if (guia.Expandido)
+                        {
+                            <div class="timeline-card">
+                                <ul class="timeline">
+                                    @for (int i = 0; i < guia.Estados.Count; i++)
+                                    {
+                                        var estado = guia.Estados[i];
+                                        <li class="timeline-step @(i < guia.EstadoActual ? "completed" : (i == guia.EstadoActual ? "actual" : ""))">
+                                            <div class="timeline-dot"></div>
+                                            <div class="timeline-content">
+                                                <div class="timeline-title">@estado.Titulo</div>
+                                                <div class="timeline-desc">@estado.Descripcion</div>
+                                                <div class="timeline-date">@(estado.FechaHora.Year > 2000 ? estado.FechaHora.ToString("dd MMM, HH:mm") : "")</div>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                                @if (guia.EstadoActual == 0)
+                                {
+                                    <button class="btn-entregar" @onclick="async () => await CambiarEstado(guia, 1)">Recoger paquete (En camino)</button>
+                                }
+                                else if (guia.EstadoActual == 1)
+                                {
+                                    <button class="btn-entregar" @onclick="async () => await CambiarEstado(guia, 2)">Iniciar entrega (Último tramo)</button>
+                                }
+                                else if (guia.EstadoActual == 2)
+                                {
+                                    <button class="btn-entregar" @onclick="() => MostrarEntrega(guia)">Entregar</button>
+                                }
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p>No tienes guías asignadas actualmente.</p>
+        }
+    </div>
+
+    <div class="dashboard-section">
+        <h2>📷 Escanear Código QR</h2>
+        <p>Usa tu cámara para registrar entregas de forma rápida.</p>
+        <button class="btn-escanear" @onclick="EscanearQR">Iniciar Escaneo</button>
+    </div>
+
+    @if (modalFirmaVisible)
+    {
+        <div class="firma-modal-backdrop">
+            <div class="firma-modal">
+                <h3>Firma del destinatario</h3>
+                <canvas id="firmaCanvas" width="300" height="120"
+                        @onpointerdown="StartDraw"
+                        @onpointerup="EndDraw"
+                        @onpointerleave="EndDraw"
+                        @onpointermove="Draw"
+                        style="touch-action:none; border:1.5px solid #2943d1; border-radius:7px; background:#fff; box-shadow:0 2px 12px #2943d122;">
+                </canvas>
+                <div class="firma-modal-btns">
+                    <button class="btn-firma" @onclick="ClearCanvas">Limpiar</button>
+                    <button class="btn-firma" @onclick="async () => await AceptarFirma()">Aceptar</button>
+                    <button class="btn-cerrar" @onclick="CerrarModalFirma">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>

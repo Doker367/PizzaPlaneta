@@ -1,0 +1,43 @@
+@page "/registrar-cliente"
+
+<div class="mb-form-centered">
+    <div class="mb-actions-bar">
+        <NavLink class="mb-btn-dark mb-btn-sm" href="/cliente">Volver a Clientes</NavLink>
+    </div>
+    <div class="modal-card modal-card-md">
+        <div class="modal-title">?? Registrar Cliente</div>
+        <EditForm Model="@nuevoCliente" OnValidSubmit="RegistrarClienteAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="modal-form-responsive">
+                <div class="form-group">
+                    <label>Nombre:</label>
+                    <InputText class="form-control" @bind-Value="nuevoCliente.Nombre" />
+                </div>
+                <div class="form-group">
+                    <label>Apellido:</label>
+                    <InputText class="form-control" @bind-Value="nuevoCliente.Apellido" />
+                </div>
+                <div class="form-group">
+                    <label>Teléfono:</label>
+                    <InputText class="form-control" @bind-Value="nuevoCliente.Telefono" />
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <InputText class="form-control" @bind-Value="nuevoCliente.Correo" />
+                </div>
+            </div>
+            <div class="modal-actions modal-actions-center">
+                <button type="submit" class="mb-btn-dark mb-btn-sm" disabled="@isGuardandoCliente">
+                    @(isGuardandoCliente ? "Guardando..." : "Registrar Cliente")
+                </button>
+            </div>
+        </EditForm>
+        @if (clienteRegistradoId != null)
+        {
+            <div class="alert alert-success mt-3">
+                <h5>Cliente registrado correctamente.</h5>
+            </div>
+        }
+    </div>
+</div>

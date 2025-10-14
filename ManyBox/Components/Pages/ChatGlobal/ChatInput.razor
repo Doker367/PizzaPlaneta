@@ -1,0 +1,159 @@
+@using Microsoft.AspNetCore.Components
+@using ManyBox.Models.Custom
+@inject ManyBox.Services.ChatApiService ChatService
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
+@using System.IO
+@using System.Linq
+
+@if (MensajeAResponder != null)
+{
+    <div class="mb-chat-reply-preview-bar">
+        <div class="mb-chat-reply-bar-color"></div>
+        <div class="mb-chat-reply-bar-content">
+            <span class="mb-chat-reply-bar-user">@MensajeAResponder.UsuarioNombre</span>
+            <div class="mb-chat-reply-bar-text">@MensajeAResponder.Contenido</div>
+        </div>
+        <button class="mb-chat-reply-bar-close" @onclick="OnCancelarReply" aria-label="Cancelar respuesta">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+}
+
+<div class="mb-chat-input-wrapper">
+    @if (!string.IsNullOrEmpty(archivoNombreOriginal))
+    {
+        <div class="mb-attach-preview" role="status" aria-live="polite">
+            <div class="mb-attach-chip">
+                <span class="mb-attach-icon @archivoIconColor"><i class="@archivoIconClass"></i></span>
+                <div class="mb-attach-text">
+                    <span class="mb-attach-name" title="@archivoNombreOriginal">@archivoNombreOriginal</span>
+                    @if (!string.IsNullOrEmpty(archivoSize))
+                    {
+                        <span class="mb-attach-meta">@archivoSize</span>
+                    }
+                </div>
+                <button class="mb-attach-remove" @onclick="QuitarArchivo" title="Quitar archivo" aria-label="Quitar archivo"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+    }
+
+    <div class="mb-chat-input">
+        <button class="mb-chat-attach-btn" title="Adjuntar archivo" type="button" @onclick="AbrirFileInput" aria-label="Adjuntar archivo (Word, Excel, PowerPoint, PDF, TXT, Imágenes)">
+            <i class="fas fa-paperclip"></i>
+        </button>
+        <InputFile style="display:none" data-fileinput accept=".pdf,.txt,.csv,.rtf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp,.bmp,.tif,.tiff,.svg,.zip,.rar,.7z,.mp3,.wav,.mp4,.mov" OnChange="OnFileSelected" />
+        <input class="mb-chat-input-box" @bind="input" placeholder="Escribe tu mensaje..." @onkeydown="OnKeyDown" />
+        <button class="mb-btn-primary mb-btn-gradient mb-chat-send-btn" @onclick="Send">
+            <span>Enviar</span>
+        </button>
+    </div>
+</div>
+
+@code {
+    private string input = string.Empty;
+    private string? archivoUrl;
+    private string? archivoNombreOriginal;
+    private string? archivoSize;
+    private string archivoIconClass = "fas fa-file";
+    private string archivoIconColor = "mb-file-default";
+
+    [Parameter] public EventCallback<(string, string?, string?)> OnSend { get; set; }
+    [Parameter] public MensajeModel? MensajeAResponder { get; set; }
+    [Parameter] public EventCallback OnCancelarReply { get; set; }
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    private async Task AbrirFileInput()
+    {
+        await JS.InvokeVoidAsync("mbClickFileInput");
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            // Manejar cancelación de forma segura
+            var file = e.GetMultipleFiles(1).FirstOrDefault();
+            if (file == null)
+            {
+                QuitarArchivo();
+                return;
+            }
+
+            archivoNombreOriginal = file.Name;
+            archivoSize = ToReadableSize(file.Size);
+            var (icon, color) = GetIconByExtension(Path.GetExtension(file.Name));
+            archivoIconClass = icon;
+            archivoIconColor = color;
+
+            using var stream = file.OpenReadStream(50 * 1024 * 1024); // 50MB max
+            var result = await ChatService.SubirArchivoAsync(stream, file.Name);
+            archivoUrl = result.url;
+            archivoNombreOriginal = result.nombreOriginal ?? archivoNombreOriginal;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al seleccionar archivo: {ex.Message}");
+            QuitarArchivo();
+        }
+        StateHasChanged();
+    }
+
+    private void QuitarArchivo()
+    {
+        archivoUrl = null;
+        archivoNombreOriginal = null;
+        archivoSize = null;
+        archivoIconClass = "fas fa-file";
+        archivoIconColor = "mb-file-default";
+    }
+
+    private async Task Send()
+    {
+        if (!string.IsNullOrWhiteSpace(input) || archivoUrl != null)
+        {
+            await OnSend.InvokeAsync((input, archivoUrl, archivoNombreOriginal));
+            input = string.Empty;
+            QuitarArchivo();
+        }
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Send();
+        }
+    }
+
+    private static string ToReadableSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.#} {sizes[order]}";
+    }
+
+    private static (string icon, string colorClass) GetIconByExtension(string? ext)
+    {
+        ext = (ext ?? string.Empty).ToLowerInvariant();
+        return ext switch
+        {
+            ".pdf" => ("fas fa-file-pdf", "mb-file-pdf"),
+            ".doc" or ".docx" => ("fas fa-file-word", "mb-file-word"),
+            ".xls" or ".xlsx" or ".csv" => ("fas fa-file-excel", "mb-file-excel"),
+            ".ppt" or ".pptx" => ("fas fa-file-powerpoint", "mb-file-ppt"),
+            ".txt" or ".rtf" => ("fas fa-file-alt", "mb-file-txt"),
+            ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".bmp" or ".tif" or ".tiff" or ".svg" => ("fas fa-file-image", "mb-file-image"),
+            ".mp3" or ".wav" => ("fas fa-file-audio", "mb-file-audio"),
+            ".mp4" or ".mov" => ("fas fa-file-video", "mb-file-video"),
+            ".zip" or ".rar" or ".7z" => ("fas fa-file-archive", "mb-file-archive"),
+            _ => ("fas fa-file", "mb-file-default")
+        };
+    }
+}

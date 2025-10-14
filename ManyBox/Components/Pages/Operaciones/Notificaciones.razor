@@ -1,0 +1,78 @@
+@page "/notificaciones"
+
+<PageTitle>Notificaciones</PageTitle>
+
+<div class="mb-notificaciones">
+    <div class="mb-actions-bar mb-dark-bar">
+        @if ((ManyBox.Utils.SessionState.Rol?.ToLower() ?? "") == "superadmin")
+        {
+            <button class="mb-btn-dark mb-btn-sm" @onclick='() => Navigation.NavigateTo("/crear-notificacion")'>+ Nueva notificación</button>
+        }
+    </div>
+
+    <div class="mb-search-bar mb-search-bar-sep">
+        <div class="buscador-row mb-search-row-sep">
+            <input class="form-control" placeholder="Buscar notificación..." @bind="filtroBusqueda" @oninput="OnFiltroChanged" />
+            <button class="btn btn-outline-primary buscador-btn" @onclick="AplicarFiltros">Buscar</button>
+        </div>
+        <div class="mb-search-select-sep">
+            <select class="form-control" @bind="filtroEstado">
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="leida">Leída</option>
+                <option value="eliminada">Eliminada</option>
+            </select>
+            <select class="form-control" @bind="filtroPrioridad">
+                <option value="">Todas las prioridades</option>
+                <option value="Alta">Alta</option>
+                <option value="Media">Media</option>
+                <option value="Baja">Baja</option>
+            </select>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="notificaciones-loading">Cargando notificaciones...</div>
+    }
+    else if (notificacionesFiltradas.Count == 0)
+    {
+        <div class="notificaciones-vacio">No hay notificaciones para mostrar.</div>
+    }
+    else
+    {
+        <div class="mb-notificaciones-grid">
+            @foreach (var noti in notificacionesFiltradas)
+            {
+                <div class="mb-notificacion-card mb-glass-card @(noti.Leido ? "leida" : "pendiente") @(noti.Prioridad?.ToLower())">
+                    <div class="mb-card-header">
+                        <div class="mb-notificacion-info">
+                            <div class="mb-notificacion-title">@noti.Titulo</div>
+                            <div class="mb-notificacion-meta mb-detail-text">
+                                <span>@noti.FechaCreacion.ToString("g")</span>
+                                <span class="mb-notificacion-prioridad">@noti.Prioridad</span>
+                                <span class="mb-notificacion-estado">@noti.Estado</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-notificacion-body">@noti.Mensaje</div>
+                    <div class="mb-card-footer">
+                        @if (!noti.Leido && noti.Estado != "eliminada")
+                        {
+                            <button class="mb-btn-dark mb-btn-sm" @onclick="() => MarcarComoLeida(noti)">Marcar como leída</button>
+                        }
+                        @if (noti.Estado != "eliminada")
+                        {
+                            <button class="mb-btn-dark mb-btn-sm" style="margin-left:8px;" @onclick="() => EliminarNotificacion(noti)">Eliminar</button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(mensajeFeedback))
+    {
+        <div class="notificaciones-feedback">@mensajeFeedback</div>
+    }
+</div>

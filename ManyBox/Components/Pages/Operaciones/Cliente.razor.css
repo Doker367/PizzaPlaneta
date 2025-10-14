@@ -1,0 +1,152 @@
+/* SOLO ESTILOS NECESARIOS PARA CLIENTES, IGUAL QUE VENTAS */
+.mb-actions-bar {
+    display: flex;
+    gap: 1.8rem;
+    justify-content: flex-start;
+    margin-bottom: 2.2rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0.5rem 0;
+}
+.btn-dark-card {
+    background: #23243a;
+    color: #fff;
+    border: 1.5px solid #35365a;
+    border-radius: 14px;
+    font-size: 1.08rem;
+    padding: 0.7rem 2.2rem;
+    font-weight: 600;
+    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    box-shadow: 0 2px 12px #23243a33;
+    cursor: pointer;
+    outline: none;
+}
+.btn-dark-card:hover {
+    background: #35365a;
+    color: #7b5cff;
+    box-shadow: 0 2px 12px #23243a55;
+}
+.mb-search-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    margin-bottom: 2.5rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+.mb-search-row-sep {
+    display: flex;
+    gap: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+.mb-clientes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2.2rem;
+    margin-bottom: 2.2rem;
+}
+.mb-cliente-card {
+    background: rgba(44, 48, 80, 0.55);
+    border-radius: 22px;
+    box-shadow: 0 2px 8px #4f8cff22;
+    border: 1.5px solid #7b5cff33;
+    padding: 0;
+}
+.mb-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1.5rem 1.5rem 0.7rem 1.5rem;
+    background: transparent;
+    border-bottom: none;
+}
+.mb-cliente-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, #7b5cff 0%, #4f8cff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.7rem;
+    box-shadow: 0 2px 8px #7b5cff33;
+}
+.mb-avatar-text {
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.mb-cliente-info {
+    flex: 1;
+}
+.mb-cliente-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 0.2rem 0;
+}
+.mb-detail-text {
+    color: #a0aec0;
+    font-size: 0.95rem;
+}
+.mb-card-footer {
+    padding: 1.2rem 1.5rem;
+    background: transparent;
+    border-top: none;
+    display: flex;
+    justify-content: flex-end;
+}
+.mb-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(34,36,58,0.72);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.mb-modal-card {
+    background: #23243a;
+    border-radius: 22px;
+    box-shadow: 0 8px 32px #23243a88;
+    padding: 2.5rem 2.5rem 1.5rem 2.5rem;
+    min-width: 340px;
+    max-width: 420px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.mb-modal-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    color: #7b5cff;
+    text-align: center;
+}
+.mb-modal-form-responsive {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    align-items: flex-start;
+}
+.mb-modal-actions {
+    display: flex;
+    gap: 1.2rem;
+    justify-content: center;
+    width: 100%;
+}
+.mb-modal-actions-center {
+    justify-content: center;
+}
+@media screen and (max-width: 700px) {
+    .mb-clientes-grid {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+    }
+}

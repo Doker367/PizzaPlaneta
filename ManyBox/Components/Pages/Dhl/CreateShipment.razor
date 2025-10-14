@@ -1,0 +1,366 @@
+@page "/dhl/create-shipment"
+@using ManyBox.Models.Dhl
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using ManyBox.Components.Shared
+@using Microsoft.JSInterop
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+@if (OperatingSystem.IsWindows())
+{
+<div class="main-content">
+    <div class="page-header">
+        <h1 class="page-title">DHL - Crear Envío</h1>
+        <p class="page-subtitle">Crea un nuevo envío con DHL.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <EditForm Model="@createShipmentRequest" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="plannedShippingDate">Fecha y Hora de Envío</label>
+                            <InputText id="plannedShippingDate" class="form-control" @bind-Value="createShipmentRequest.PlannedShippingDateAndTime" placeholder="YYYY-MM-DDTHH:MM:SS GMT+00:00" />
+                        </div>
+                        <div class="form-group">
+                            <label for="productCode">Código de Producto</label>
+                            <InputText id="productCode" class="form-control" @bind-Value="createShipmentRequest.ProductCode" />
+                        </div>
+                        <h5>Cuenta DHL</h5>
+                        <div class="form-group">
+                            <label>Tipo de Cuenta</label>
+                            <InputText class="form-control" @bind-Value="account.TypeCode" />
+                        </div>
+                        <div class="form-group">
+                            <label>Número de Cuenta</label>
+                            <InputText class="form-control" @bind-Value="account.Number" />
+                        </div>
+                        <h5>Remitente</h5>
+                        <div class="form-group">
+                            <label>Nombre Completo</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ShipperDetails.ContactInformation.FullName" />
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ShipperDetails.ContactInformation.Phone" />
+                        </div>
+                        <div class="form-group">
+                            <label>Empresa/Persona</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ShipperDetails.ContactInformation.CompanyName" />
+                        </div>
+                        <div class="form-group">
+                            <label>Dirección</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ShipperDetails.PostalAddress.AddressLine1" />
+                        </div>
+                        <div class="form-group">
+                            <label>Ciudad</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ShipperDetails.PostalAddress.CityName" />
+                        </div>
+                        <div class="form-group">
+                            <label>Código Postal</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ShipperDetails.PostalAddress.PostalCode" />
+                        </div>
+                        <div class="form-group">
+                            <label>Código de País</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ShipperDetails.PostalAddress.CountryCode" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Destinatario</h5>
+                        <div class="form-group">
+                            <label>Nombre Completo</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ReceiverDetails.ContactInformation.FullName" />
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ReceiverDetails.ContactInformation.Phone" />
+                        </div>
+                        <div class="form-group">
+                            <label>Empresa/Persona</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ReceiverDetails.ContactInformation.CompanyName" />
+                        </div>
+                        <div class="form-group">
+                            <label>Dirección</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ReceiverDetails.PostalAddress.AddressLine1" />
+                        </div>
+                        <div class="form-group">
+                            <label>Ciudad</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ReceiverDetails.PostalAddress.CityName" />
+                        </div>
+                        <div class="form-group">
+                            <label>Código Postal</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ReceiverDetails.PostalAddress.PostalCode" />
+                        </div>
+                        <div class="form-group">
+                            <label>Código de País</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.CustomerDetails.ReceiverDetails.PostalAddress.CountryCode" />
+                        </div>
+                        <h5>Detalles del Contenido</h5>
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.Content.Description" />
+                        </div>
+                        <div class="form-group">
+                            <label>Incoterm</label>
+                            <InputText class="form-control" @bind-Value="createShipmentRequest.Content.Incoterm" />
+                        </div>
+                        <div class="form-group">
+                            <label>Unidad de Medida</label>
+                            <InputSelect TValue="string" class="form-control" @bind-Value="createShipmentRequest.Content.UnitOfMeasurement">
+                                <option value="metric">Métrico</option>
+                                <option value="imperial">Imperial</option>
+                            </InputSelect>
+                        </div>
+                        <div class="form-check">
+                            <InputCheckbox class="form-check-input" @bind-Value="createShipmentRequest.Content.IsCustomsDeclarable" />
+                            <label class="form-check-label">Declarable en Aduana</label>
+                        </div>
+                    </div>
+                </div>
+
+                <h5>Paquete</h5>
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>Peso (kg)</label>
+                            <InputNumber TValue="decimal" class="form-control" @bind-Value="package.Weight" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Largo (cm)</label>
+                            <InputNumber TValue="decimal" class="form-control" @bind-Value="package.Dimensions.Length" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Ancho (cm)</label>
+                            <InputNumber TValue="decimal" class="form-control" @bind-Value="package.Dimensions.Width" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Alto (cm)</label>
+                            <InputNumber TValue="decimal" class="form-control" @bind-Value="package.Dimensions.Height" />
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Crear Envío</button>
+            </EditForm>
+        </div>
+    </div>
+
+    @if (shipmentResult is not null)
+    {
+        <section class="tracking-card" style="margin-top:1rem;">
+            <header class="tracking-header">
+                <div>
+                    <div class="tracking-number">AWB: <strong>@shipmentResult.ShipmentTrackingNumber</strong></div>
+                    @if (!string.IsNullOrWhiteSpace(shipmentResult.TrackingUrl))
+                    {
+                        <div class="tracking-sub"><a href="@shipmentResult.TrackingUrl" target="_blank">Ver seguimiento en DHL</a></div>
+                    }
+                </div>
+                <div class="tracking-status">
+                    <span class="badge badge-success">Creado</span>
+                </div>
+            </header>
+            <div class="tracking-body">
+                @if (shipmentResult.Packages?.Count > 0)
+                {
+                    <div class="label" style="margin-bottom:.25rem;">Piezas</div>
+                    <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+                        @foreach (var p in shipmentResult.Packages)
+                        {
+                            <span class="badge badge-secondary">@p.TrackingNumber</span>
+                        }
+                    </div>
+                }
+
+                @if (shipmentResult.Documents?.Count > 0)
+                {
+                    <div style="margin-top:1rem;">
+                        <div class="label" style="margin-bottom:.25rem;">Documentos</div>
+                        <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+                            @for (int i = 0; i < shipmentResult.Documents.Count; i++)
+                            {
+                                var d = shipmentResult.Documents[i];
+                                <button type="button" class="btn btn-secondary" @onclick="(() => DownloadDocument(d, i))">
+                                    Descargar @((d.TypeCode ?? "doc").ToUpper()) (@(d.ImageFormat ?? ""))
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(apiResponse))
+    {
+        <ApiResponseViewer Title="Resultado Create Shipment" Json="@apiResponse" />
+    }
+</div>
+}
+
+@code {
+    private DhlCreateShipmentRequest createShipmentRequest = new DhlCreateShipmentRequest
+    {
+        PlannedShippingDateAndTime = string.Empty,
+        Pickup = new ShipmentPickup { IsRequested = false },
+        ProductCode = string.Empty,
+        Accounts = new List<Account>(),
+        CustomerDetails = new CustomerDetails
+        {
+            ShipperDetails = new PartyDetails
+            {
+                PostalAddress = new Address
+                {
+                    PostalCode = string.Empty,
+                    CityName = string.Empty,
+                    CountryCode = string.Empty,
+                    AddressLine1 = string.Empty
+                },
+                ContactInformation = new Contact
+                {
+                    Phone = string.Empty,
+                    CompanyName = string.Empty,
+                    FullName = string.Empty
+                }
+            },
+            ReceiverDetails = new PartyDetails
+            {
+                PostalAddress = new Address
+                {
+                    PostalCode = string.Empty,
+                    CityName = string.Empty,
+                    CountryCode = string.Empty,
+                    AddressLine1 = string.Empty
+                },
+                ContactInformation = new Contact
+                {
+                    Phone = string.Empty,
+                    CompanyName = string.Empty,
+                    FullName = string.Empty
+                }
+            }
+        },
+        Content = new Content
+        {
+            Packages = new List<DhlPackage>(),
+            IsCustomsDeclarable = false,
+            Description = string.Empty,
+            Incoterm = string.Empty,
+            UnitOfMeasurement = "metric"
+        }
+    };
+
+    private Account account = new Account { TypeCode = "shipper", Number = string.Empty };
+    private DhlPackage package = new DhlPackage { Weight = 0, Dimensions = new DhlDimensionsDecimal { Length = 0, Width = 0, Height = 0 } };
+    private string apiResponse = string.Empty;
+    private ShipmentCreatedResponse? shipmentResult;
+
+    private static readonly JsonSerializerOptions JsonOpts = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    protected override void OnInitialized()
+    {
+        createShipmentRequest.Accounts.Clear();
+        createShipmentRequest.Accounts.Add(account);
+        createShipmentRequest.Content.Packages.Clear();
+        createShipmentRequest.Content.Packages.Add(package);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        shipmentResult = null;
+        apiResponse = string.Empty;
+
+        // Validaciones mínimas para evitar campos vacíos
+        if (string.IsNullOrWhiteSpace(createShipmentRequest.Content.Description))
+            createShipmentRequest.Content.Description = "Contenido del paquete";
+        if (string.IsNullOrWhiteSpace(createShipmentRequest.CustomerDetails.ShipperDetails.ContactInformation.CompanyName))
+            createShipmentRequest.CustomerDetails.ShipperDetails.ContactInformation.CompanyName = createShipmentRequest.CustomerDetails.ShipperDetails.ContactInformation.FullName;
+        if (string.IsNullOrWhiteSpace(createShipmentRequest.CustomerDetails.ReceiverDetails.ContactInformation.CompanyName))
+            createShipmentRequest.CustomerDetails.ReceiverDetails.ContactInformation.CompanyName = createShipmentRequest.CustomerDetails.ReceiverDetails.ContactInformation.FullName;
+        if (string.IsNullOrWhiteSpace(createShipmentRequest.Content.UnitOfMeasurement))
+            createShipmentRequest.Content.UnitOfMeasurement = "metric";
+        if (createShipmentRequest.Accounts.Count == 0)
+            createShipmentRequest.Accounts.Add(account);
+        if (createShipmentRequest.Content.Packages.Count == 0)
+            createShipmentRequest.Content.Packages.Add(package);
+        try
+        {
+            var response = await Http.PostAsJsonAsync("http://100.64.197.11:5000/api/dhl/shipments", createShipmentRequest);
+            apiResponse = await response.Content.ReadAsStringAsync();
+
+            try
+            {
+                shipmentResult = JsonSerializer.Deserialize<ShipmentCreatedResponse>(apiResponse, JsonOpts);
+            }
+            catch
+            {
+                shipmentResult = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            apiResponse = $"Error: {ex.Message}";
+            shipmentResult = null;
+        }
+    }
+
+    private async Task DownloadDocument(DhlDocument doc, int index)
+    {
+        if (doc?.Content is null || doc.Content.Length == 0) return;
+        try
+        {
+            var bytes = Convert.FromBase64String(doc.Content);
+            await using var ms = new MemoryStream(bytes);
+            var fileName = $"DHL_{(doc.TypeCode ?? "doc")}_{shipmentResult?.ShipmentTrackingNumber}_{index + 1}.{GetExtension(doc.ImageFormat)}";
+            using var streamRef = new DotNetStreamReference(ms);
+            await JS.InvokeVoidAsync("descargarArchivo", fileName, streamRef);
+        }
+        catch
+        {
+            // Ignora errores de base64
+        }
+    }
+
+    private static string GetExtension(string? imageFormat)
+        => (imageFormat ?? string.Empty).ToLowerInvariant() switch
+        {
+            "pdf" => "pdf",
+            "zpl" => "zpl",
+            "png" => "png",
+            _ => "bin"
+        };
+
+    private sealed class ShipmentCreatedResponse
+    {
+        [JsonPropertyName("shipmentTrackingNumber")] public string ShipmentTrackingNumber { get; set; } = string.Empty;
+        [JsonPropertyName("trackingUrl")] public string? TrackingUrl { get; set; }
+        [JsonPropertyName("packages")] public List<DhlPiece> Packages { get; set; } = new();
+        [JsonPropertyName("documents")] public List<DhlDocument> Documents { get; set; } = new();
+    }
+    private sealed class DhlPiece
+    {
+        [JsonPropertyName("trackingNumber")] public string? TrackingNumber { get; set; }
+    }
+    private sealed class DhlDocument
+    {
+        [JsonPropertyName("imageFormat")] public string? ImageFormat { get; set; }
+        [JsonPropertyName("content")] public string? Content { get; set; }
+        [JsonPropertyName("typeCode")] public string? TypeCode { get; set; }
+        [JsonPropertyName("trackingNumber")] public string? TrackingNumber { get; set; }
+    }
+}
