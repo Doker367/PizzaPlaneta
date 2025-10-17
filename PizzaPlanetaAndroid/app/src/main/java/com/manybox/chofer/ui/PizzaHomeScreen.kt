@@ -16,10 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.manybox.chofer.R
 import com.manybox.chofer.api.PizzaApiService
 import com.manybox.chofer.api.PizzaLoginRequest
 import com.manybox.chofer.api.PizzaLoginResponse
@@ -51,56 +55,127 @@ fun PizzaHomeScreen() {
     var isLoggingIn by remember { mutableStateOf(false) }
     var loginError by remember { mutableStateOf<String?>(null) }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(Color(0xFF0F1419))) {
+    // Palette
+    val Navy = Color(0xFF1D3557)
+    val Orange = Color(0xFFF77F00)
+    val OnNavy = Color(0xFFEAEAEA)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Navy)
+    ) {
 
         Column(modifier = Modifier.fillMaxSize()) {
-            // Header
-            Row(
+            // Header: small white circular hamburger button at top-left
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(horizontal = 12.dp, vertical = 16.dp)
             ) {
-                IconButton(onClick = { showSideMenu = true; sideType = "default" }) {
-                    Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
-                }
-                // Decoración
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF6C63FF)),
+                        .background(Color.White)
+                        .align(Alignment.CenterStart)
+                        .clickable { showSideMenu = true; sideType = "default" },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = Color.White)
+                    Icon(
+                        Icons.Default.Menu,
+                        contentDescription = "Menu",
+                        tint = Navy
+                    )
                 }
             }
 
             // Logo
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("Pizza Planet", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                Image(
+                    painter = painterResource(id = R.drawable.pizza_logo),
+                    contentDescription = "Logo",
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(72.dp)
+                )
             }
 
             Spacer(Modifier.height(8.dp))
-            Text("Bienvenido", color = Color.White, fontSize = 20.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
+            Text(
+                "Bienvenido",
+                color = OnNavy,
+                fontSize = 20.sp,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+
+            // Centered decorative image (from PNG il1)
+            Spacer(Modifier.height(12.dp))
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Image(
+                    painter = painterResource(id = R.drawable.il1),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(120.dp)
+                )
+            }
 
             Spacer(Modifier.weight(1f))
+        }
 
-            // Bottom bar
+        // Bottom orange action bar overlay (Cuenta / Ordenar)
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(110.dp)
+                .background(Orange, RectangleShape)
+        ) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
-                    onClick = { showLogin = true; showRegister = false; showForgot = false; forgotStep = 0 },
-                    modifier = Modifier.weight(1f)
-                ) { Text("Cuenta") }
-                Button(onClick = { showOrderSelector = true }, modifier = Modifier.weight(1f)) { Text("Ordenar") }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { showLogin = true; showRegister = false; showForgot = false; forgotStep = 0 }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFEEBD7)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Person, contentDescription = null, tint = Navy)
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text("Cuenta", color = Color.Black, fontWeight = FontWeight.Medium)
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { showOrderSelector = true }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFEEBD7)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Navy)
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text("Ordenar", color = Color.Black, fontWeight = FontWeight.Medium)
+                }
             }
         }
 
@@ -245,24 +320,24 @@ fun PizzaHomeScreen() {
                     .fillMaxHeight()
                     .width(300.dp)
                     .align(Alignment.CenterStart),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1F29)),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
                 shape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp)
             ) {
                 if (sideType == "order") {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("JOSE TADEO", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("JOSE TADEO", color = Navy, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(12.dp))
-                        SideOption("Método de pago")
-                        SideOption("Carrito")
-                        SideOption("Direcciones")
-                        SideOption("Lugares favoritos")
+                        SideOption("Método de pago", color = Color.Black)
+                        SideOption("Carrito", color = Color.Black)
+                        SideOption("Direcciones", color = Color.Black)
+                        SideOption("Lugares favoritos", color = Color.Black)
                     }
                 } else {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Hola, Usuario!", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Hola, Usuario!", color = Navy, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(12.dp))
-                        SideOption("Mi cuenta")
-                        SideOption("Más cercano")
+                        SideOption("Mi cuenta", color = Color.Black)
+                        SideOption("Más cercano", color = Color.Black)
                     }
                 }
             }
@@ -271,8 +346,8 @@ fun PizzaHomeScreen() {
 }
 
 @Composable
-private fun SideOption(text: String) {
-    Text(text, color = Color(0xFFB0B3B8), modifier = Modifier
+private fun SideOption(text: String, color: Color = Color(0xFFB0B3B8)) {
+    Text(text, color = color, modifier = Modifier
         .fillMaxWidth()
         .padding(vertical = 10.dp))
 }
