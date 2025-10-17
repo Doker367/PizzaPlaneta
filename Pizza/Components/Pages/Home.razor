@@ -1,0 +1,266 @@
+﻿@page "/"
+
+<div class="home-container">
+    <div class="header-bar">
+        <button class="menu-btn" @onclick="ShowSideMenu">
+            <i class="fi fi-rr-menu-burger"></i>
+        </button>
+        <div class="decoracion-img">
+            <img src="images/icono.jpg" alt="Decoración Pizza" width="48" />
+        </div>
+    </div>
+
+    <div class="logo">
+        <img src="images/pizzaPlaneta.png" alt="Pizza Planet" width="180" />
+    </div>
+
+    <div class="welcome">
+        Bienvenido
+    </div>
+    <div class="bottom-bar">
+        <a href="#" class="bottom-btn" @onclick="ShowLoginModal">
+            <i class="fi fi-rs-user"></i>
+            <span>Cuenta</span>
+        </a>
+        <a href="#" class="bottom-btn" @onclick="ShowOrderSelector">
+            <i class="fi fi-rr-document"></i>
+            <span>Ordenar</span>
+        </a>
+    </div>
+
+    @if (showOrderSelector)
+    {
+        <div class="order-selector-overlay">
+            <div class="order-selector-modal">
+                <h2 class="order-selector-title">Selecciona tu restaurante</h2>
+                <div class="order-selector-map">
+                    <img src="images/mapa.png" alt="Mapa ciudad" />
+                </div>
+                <div class="order-selector-search">
+                    <input class="order-selector-input" placeholder="Ciudad y estado o CP" />
+                    <button class="order-selector-search-btn"><i class="fi fi-rr-search"></i></button>
+                </div>
+                <div class="order-selector-list">
+                    <div class="order-selector-branch">
+                        <img src="images/pizzzza.jpg" class="branch-img" />
+                        <div class="branch-info">
+                            <div class="branch-title">Pizza Planet Centro</div>
+                            <div class="branch-address">Av. Ira poniente #2396</div>
+                        </div>
+                        <button class="branch-choose">ELEGIR</button>
+                    </div>
+                    <div class="order-selector-branch">
+                        <img src="images/pizzzza.jpg" class="branch-img" />
+                        <div class="branch-info">
+                            <div class="branch-title">Pizza Planet Norte</div>
+                            <div class="branch-address">Av. Ira poniente #2396</div>
+                        </div>
+                        <button class="branch-choose">ELEGIR</button>
+                    </div>
+                    <div class="order-selector-branch">
+                        <img src="images/pizzzza.jpg" class="branch-img" />
+                        <div class="branch-info">
+                            <div class="branch-title">Pizza Planet Sur</div>
+                            <div class="branch-address">Av. Ira poniente #2396</div>
+                        </div>
+                        <button class="branch-choose">ELEGIR</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showLogin)
+    {
+        <div class="login-modal-overlay">
+            <div class="login-modal">
+                <div class="login-img-container">
+                    <img src="images/pizzzza.jpg" alt="Pizza login" class="login-img" />
+                    <button class="back-btn" @onclick="HideLoginModal">
+                        <i class="fi fi-rr-arrow-left"></i>
+                    </button>
+                </div>
+                <div class="login-content">
+                    @if (showForgotPassword)
+                    {
+                        @if (forgotStep == 0)
+                        {
+                            <div class="forgot-icon-title">
+                                <span class="forgot-icon">🔑</span>
+                                <h2 class="login-title">RESTABLECER<br/>CONTRASEÑA</h2>
+                            </div>
+                            <div class="forgot-desc">
+                                Ingresa tu correo electrónico y te enviaremos un enlace para confirmar y crear una nueva contraseña.
+                            </div>
+                            <label class="login-label">CORREO</label>
+                            <input class="login-input" type="email" />
+                            <button class="create-btn" @onclick="()=>forgotStep=1">ENVIAR</button>
+                        }
+                        else if (forgotStep == 1)
+                        {
+                            <div class="forgot-icon-title">
+                                <span class="forgot-icon">🔒</span>
+                                <h2 class="login-title">Verificación de<br/>código</h2>
+                            </div>
+                            <div class="forgot-desc">
+                                Hemos enviado un código de 4 dígitos a tu correo electrónico.<br />Por favor, introdúcelo y continúa para continuar con el restablecimiento de tu contraseña.
+                            </div>
+                            <div class="code-inputs">
+                                <input maxlength="1" class="code-input" type="text" />
+                                <input maxlength="1" class="code-input" type="text" />
+                                <input maxlength="1" class="code-input" type="text" />
+                                <input maxlength="1" class="code-input" type="text" />
+                            </div>
+                            <button class="create-btn" @onclick="()=>forgotStep=2">VERIFICAR</button>
+                        }
+                        else if (forgotStep == 2)
+                        {
+                            <div class="forgot-icon-title">
+                                <span class="forgot-icon">🔑</span>
+                                <h2 class="login-title">Nueva<br/>contraseña</h2>
+                            </div>
+                            <div class="forgot-desc">
+                                Ingresa tu nueva contraseña y confírmala para completar el proceso de restablecimiento.
+                            </div>
+                            <label class="login-label">NUEVA CONTRASEÑA</label>
+                            <input class="login-input" type="password" />
+                            <label class="login-label">REPETIR CONTRASEÑA</label>
+                            <input class="login-input" type="password" />
+                            <button class="create-btn" @onclick="HideLoginModal">CONFIRMAR</button>
+                        }
+                    }
+                    else if (!showRegister)
+                    {
+                        <h2 class="login-title">LOGIN</h2>
+                        <label class="login-label">USUARIO</label>
+                        <input class="login-input" type="text" />
+                        <label class="login-label">CONTRASEÑA</label>
+                        <input class="login-input" type="password" />
+                        <a href="#" class="forgot-link" @onclick="ShowForgotPassword">¿Olvidó su contraseña?</a>
+                        <button class="login-btn">INICIAR SESIÓN</button>
+                        <button class="create-btn" @onclick="ShowRegisterModal">CREAR CUENTA</button>
+                        <button class="google-btn">
+                            <img src="images/google.png" alt="Google" class="google-icon" />
+                        </button>
+                    }
+                    else
+                    {
+                        <h2 class="login-title">CREAR CUENTA</h2>
+                        <label class="login-label">Nombre</label>
+                        <input class="login-input" type="text" />
+                        <label class="login-label">CORREO</label>
+                        <input class="login-input" type="email" />
+                        <label class="login-label">CONTRASEÑA</label>
+                        <input class="login-input" type="password" />
+                        <label class="login-label">CONFIRMAR CONTRASEÑA</label>
+                        <input class="login-input" type="password" />
+                        <button class="create-btn">CREAR CUENTA</button>
+                        <button class="google-btn">
+                            <img src="images/google.png" alt="Google" class="google-icon" />
+                        </button>
+                        <span class="register-link">¿Ya tienes una cuenta? <a href="#" @onclick="ShowLoginForm">Iniciar sesión</a></span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="side-menu-overlay @(showSideMenu ? "show" : "")" @onclick="HideSideMenu"></div>
+    <div class="side-menu @(showSideMenu ? "open" : "")">
+        @if (sideMenuType == "order")
+        {
+            <div class="side-menu-order">
+                <div class="side-menu-header">
+                    <div class="side-menu-header-bg">
+                        <img src="images/pizzzza.jpg" alt="Pizza" class="side-menu-logo" />
+                        <div class="side-menu-username">JOSE TADEO</div>
+                    </div>
+                </div>
+                <div class="side-menu-options side-menu-options-order">
+                    <a href="#" class="side-menu-option"><i class="fi fi-rr-money"></i><span>Método de pago</span></a>
+                    <a href="#" class="side-menu-option"><i class="fi fi-rr-shopping-cart"></i><span>Carrito</span></a>
+                    <a href="#" class="side-menu-option"><i class="fi fi-rr-marker"></i><span>Direcciones</span></a>
+                    <a href="#" class="side-menu-option"><i class="fi fi-rr-heart"></i><span>Lugares favoritos</span></a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="side-menu-content">
+                <img src="images/pizzita.png" alt="Pizza" class="side-menu-logo" />
+                <div class="side-menu-hello">Hola, Usuario!</div>
+                <div class="side-menu-options">
+                    <a href="#" class="side-menu-option">
+                        <i class="fi fi-rr-user"></i>
+                        <span>Mi cuenta</span>
+                    </a>
+                    <a href="#" class="side-menu-option">
+                        <i class="fi fi-rr-marker"></i>
+                        <span>Más cercano</span>
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private bool showLogin = false;
+    private bool showRegister = false;
+    private bool showSideMenu = false;
+    private bool showForgotPassword = false;
+    private int forgotStep = 0;
+    private string sideMenuType = "default";
+    private bool showOrderSelector = false;
+
+    private void ShowLoginModal()
+    {
+        showLogin = true;
+        showRegister = false;
+        showForgotPassword = false;
+        forgotStep = 0;
+    }
+    private void HideLoginModal()
+    {
+        showLogin = false;
+        showRegister = false;
+        showForgotPassword = false;
+        forgotStep = 0;
+    }
+    private void ShowRegisterModal()
+    {
+        showRegister = true;
+        showForgotPassword = false;
+        forgotStep = 0;
+    }
+    private void ShowLoginForm()
+    {
+        showRegister = false;
+        showForgotPassword = false;
+        forgotStep = 0;
+    }
+    private void ShowSideMenu()
+    {
+        showSideMenu = true;
+        sideMenuType = "default";
+    }
+    private void ShowOrderMenu()
+    {
+        showSideMenu = true;
+        sideMenuType = "order";
+    }
+    private void HideSideMenu()
+    {
+        showSideMenu = false;
+    }
+    private void ShowForgotPassword()
+    {
+        showForgotPassword = true;
+        showRegister = false;
+        forgotStep = 0;
+    }
+    private void ShowOrderSelector()
+    {
+        showOrderSelector = true;
+    }
+}
