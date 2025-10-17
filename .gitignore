@@ -1,0 +1,30 @@
+# General
+.DS_Store
+Thumbs.db
+*.user
+*.suo
+*.iml
+
+# Dotenv
+.env
+**/.env
+
+# VS / .NET
+.vs/
+**/bin/
+**/obj/
+
+# Android/Gradle (PizzaPlanetaAndroid)
+PizzaPlanetaAndroid/.gradle/
+PizzaPlanetaAndroid/.idea/
+PizzaPlanetaAndroid/local.properties
+PizzaPlanetaAndroid/build/
+PizzaPlanetaAndroid/app/build/
+**/build/
+
+# APK / AAB outputs
+*.apk
+*.aab
+
+# Logs
+*.log
