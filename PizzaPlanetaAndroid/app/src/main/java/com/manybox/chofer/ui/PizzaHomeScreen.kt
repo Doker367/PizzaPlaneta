@@ -15,19 +15,28 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import com.manybox.chofer.R
 import com.manybox.chofer.api.PizzaApiService
 import com.manybox.chofer.api.PizzaLoginRequest
 import com.manybox.chofer.api.PizzaLoginResponse
 import com.manybox.chofer.api.SucursalDto
+import com.manybox.chofer.api.RetrofitProvider
+import com.manybox.chofer.api.TokenStore
+import com.manybox.chofer.api.AuthTokenHolder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
@@ -42,9 +51,15 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 import android.os.Build
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.zIndex
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun PizzaHomeScreen() {
+    val context = LocalContext.current
     var showLogin by remember { mutableStateOf(false) }
     var showRegister by remember { mutableStateOf(false) }
     var showForgot by remember { mutableStateOf(false) }
@@ -75,8 +90,8 @@ fun PizzaHomeScreen() {
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(Color.White)
                         .align(Alignment.CenterStart)
                         .clickable { showSideMenu = true; sideType = "default" },
@@ -90,39 +105,49 @@ fun PizzaHomeScreen() {
                 }
             }
 
-            // Logo
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            // Bloque: Logo + "Bienvenido" más abajo (padding solo afecta a este bloque)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 72.dp), // mueve ambos más abajo (ajusta aquí)
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Image(
-                    painter = painterResource(id = R.drawable.pizza_logo),
+                    painter = painterResource(id = R.drawable.il1_alt),
                     contentDescription = "Logo",
                     modifier = Modifier
-                        .fillMaxWidth(0.7f)
-                        .height(72.dp)
-                )
-            }
-
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Bienvenido",
-                color = OnNavy,
-                fontSize = 20.sp,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-
-            // Centered decorative image (from PNG il1)
-            Spacer(Modifier.height(12.dp))
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Image(
-                    painter = painterResource(id = R.drawable.il1),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth(0.7f)
+                        .fillMaxWidth(0.9f)
                         .height(120.dp)
                 )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "Bienvenido",
+                    color = OnNavy,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             }
+
+            // Se elimina la imagen decorativa inferior para que se vea como en el mock
 
             Spacer(Modifier.weight(1f))
         }
+
+        // Imagen decorativa fija arriba a la derecha (sin offset)
+        Image(
+            painter = painterResource(id = R.drawable.il1),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(y = (-20).dp)   // empuja hacia arriba para eliminar el gap del PNG
+                .padding(end = 0.dp)
+                .width(180.dp)
+                .height(140.dp)
+                .alpha(0.75f),          // sin zIndex (el drawer sigue encima)
+            contentScale = ContentScale.Fit
+        )
+
+
 
         // Bottom orange action bar overlay (Cuenta / Ordenar)
         Box(
@@ -135,46 +160,82 @@ fun PizzaHomeScreen() {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { showLogin = true; showRegister = false; showForgot = false; forgotStep = 0 }
-                ) {
-                    Box(
+                run {
+                    val interaction = remember { MutableInteractionSource() }
+                    val pressed by interaction.collectIsPressedAsState()
+                    val scale by animateFloatAsState(targetValue = if (pressed) 1.06f else 1f, label = "cuentaScale")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFFEEBD7)),
-                        contentAlignment = Alignment.Center
+                            .weight(1f)
+                            .offset(y = (-35).dp)
+                            .zIndex(2f)
+                            .clickable(interactionSource = interaction, indication = null) { showLogin = true; showRegister = false; showForgot = false; forgotStep = 0 }
                     ) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = Navy)
+                        Box(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (pressed) Color.White.copy(alpha = 0.12f) else Color.Transparent)
+                                .graphicsLayer(scaleX = scale, scaleY = scale),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.i2l),
+                                contentDescription = "Cuenta",
+                                modifier = Modifier.size(56.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "Cuenta",
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
                     }
-                    Spacer(Modifier.height(6.dp))
-                    Text("Cuenta", color = Color.Black, fontWeight = FontWeight.Medium)
                 }
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { showOrderSelector = true }
-                ) {
-                    Box(
+                run {
+                    val interaction = remember { MutableInteractionSource() }
+                    val pressed by interaction.collectIsPressedAsState()
+                    val scale by animateFloatAsState(targetValue = if (pressed) 1.06f else 1f, label = "ordenarScale")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFFEEBD7)),
-                        contentAlignment = Alignment.Center
+                            .weight(1f)
+                            .offset(y = (-35).dp)
+                            .zIndex(2f)
+                            .clickable(interactionSource = interaction, indication = null) { showOrderSelector = true }
                     ) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Navy)
+                        Box(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (pressed) Color.White.copy(alpha = 0.12f) else Color.Transparent)
+                                .graphicsLayer(scaleX = scale, scaleY = scale),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.i3l),
+                                contentDescription = "Ordenar",
+                                modifier = Modifier.size(56.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "Ordenar",
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    )
                     }
-                    Spacer(Modifier.height(6.dp))
-                    Text("Ordenar", color = Color.Black, fontWeight = FontWeight.Medium)
                 }
             }
         }
@@ -217,19 +278,18 @@ fun PizzaHomeScreen() {
                             onLogin = { email, pass ->
                                 isLoggingIn = true
                                 loginError = null
-                                val retrofit = Retrofit.Builder()
-                                    .baseUrl(getPizzaBaseUrl())
-                                    .addConverterFactory(GsonConverterFactory.create())
-                                    .client(buildDevHttpsClient())
-                                    .build()
-                                val api = retrofit.create(PizzaApiService::class.java)
+                                val api = RetrofitProvider.api(context)
                                 api.login(PizzaLoginRequest(email, pass)).enqueue(object: Callback<PizzaLoginResponse> {
                                     override fun onResponse(call: Call<PizzaLoginResponse>, response: Response<PizzaLoginResponse>) {
                                         isLoggingIn = false
                                         if (response.isSuccessful) {
-                                            val token = "Bearer ${response.body()?.token ?: ""}"
-                                            // Cargar sucursales como prueba de endpoint protegido
-                                            api.getSucursales(token).enqueue(object: Callback<List<SucursalDto>> {
+                                            val rawToken = response.body()?.token ?: ""
+                                            // Persist token and keep it in memory
+                                            CoroutineScope(Dispatchers.IO).launch {
+                                                TokenStore.saveToken(context, rawToken)
+                                            }
+                                            // Cargar sucursales como prueba de endpoint protegido (header via interceptor)
+                                            api.getSucursales().enqueue(object: Callback<List<SucursalDto>> {
                                                 override fun onResponse(call: Call<List<SucursalDto>>, response: Response<List<SucursalDto>>) {
                                                     if (response.isSuccessful) {
                                                         showLogin = false
@@ -308,24 +368,37 @@ fun PizzaHomeScreen() {
             }
         }
 
-        // Side menu overlay
+        // Side menu overlay (siempre por encima)
         AnimatedVisibility(visible = showSideMenu) {
-            Surface(color = Color(0x66000000), modifier = Modifier
-                .fillMaxSize()
-                .clickable { showSideMenu = false }) {}
+            Surface(
+                color = Color(0x66000000),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { showSideMenu = false }
+                    .zIndex(10f) // encima de todo
+            ) {}
         }
         AnimatedVisibility(visible = showSideMenu) {
             Card(
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(300.dp)
-                    .align(Alignment.CenterStart),
+                    .align(Alignment.CenterStart)
+                    .zIndex(11f), // encima del scrim
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 shape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp)
-            ) {
+            )  {
                 if (sideType == "order") {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("JOSE TADEO", color = Navy, fontWeight = FontWeight.Bold)
+                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(Modifier.height(8.dp))
+                        Image(
+                            painter = painterResource(id = R.drawable.im1),
+                            contentDescription = "Decorativo menú",
+                            modifier = Modifier.size(88.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Text("JOSE TADEO", color = Navy, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Spacer(Modifier.height(12.dp))
                         SideOption("Método de pago", color = Color.Black)
                         SideOption("Carrito", color = Color.Black)
@@ -333,11 +406,19 @@ fun PizzaHomeScreen() {
                         SideOption("Lugares favoritos", color = Color.Black)
                     }
                 } else {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Hola, Usuario!", color = Navy, fontWeight = FontWeight.Bold)
+                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(Modifier.height(8.dp))
+                        Image(
+                            painter = painterResource(id = R.drawable.im1),
+                            contentDescription = "Decorativo menú",
+                            modifier = Modifier.size(88.dp),
+                            contentScale = ContentScale.Fit
+                        )
                         Spacer(Modifier.height(12.dp))
-                        SideOption("Mi cuenta", color = Color.Black)
-                        SideOption("Más cercano", color = Color.Black)
+                        Text("Hola, Usuario!", color = Navy, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Spacer(Modifier.height(12.dp))
+                        DrawerOptionWithIcon(text = "Mi cuenta", iconRes = R.drawable.cuenta, color = Color.Black)
+                        DrawerOptionWithIcon(text = "Más cercano", iconRes = R.drawable.cercano, color = Color.Black)
                     }
                 }
             }
@@ -350,6 +431,26 @@ private fun SideOption(text: String, color: Color = Color(0xFFB0B3B8)) {
     Text(text, color = color, modifier = Modifier
         .fillMaxWidth()
         .padding(vertical = 10.dp))
+}
+
+@Composable
+private fun DrawerOptionWithIcon(text: String, iconRes: Int, color: Color = Color.Black) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painter = painterResource(id = iconRes),
+            contentDescription = text,
+            modifier = Modifier
+                .size(24.dp)
+                .padding(end = 12.dp),
+            contentScale = ContentScale.Fit
+        )
+        Text(text, color = color, fontSize = 16.sp)
+    }
 }
 
 @Composable
