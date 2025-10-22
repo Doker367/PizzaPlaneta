@@ -243,88 +243,99 @@ fun PizzaHomeScreen() {
 
         // Login / Register modal
         if (showLogin) {
-            Surface(
-                color = Color(0xCC000000),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable { /* backdrop, ignore */ },
-            ) {}
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .align(Alignment.Center),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1F29)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { showLogin = false; showRegister = false; showForgot = false; forgotStep = 0 }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        Text(if (!showRegister && !showForgot) "LOGIN" else if (showRegister) "CREAR CUENTA" else "RESTABLECER", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    if (showForgot) {
-                        when (forgotStep) {
-                            0 -> ForgotStepEmail(onNext = { forgotStep = 1 })
-                            1 -> ForgotStepCode(onNext = { forgotStep = 2 })
-                            2 -> ForgotStepNewPassword(onConfirm = { showLogin = false; showForgot = false; forgotStep = 0 })
-                        }
-                    } else if (!showRegister) {
-                        LoginForm(
-                            onForgot = { showForgot = true; forgotStep = 0 },
-                            onRegister = { showRegister = true },
-                            onLogin = { email, pass ->
-                                isLoggingIn = true
-                                loginError = null
-                                val api = RetrofitProvider.api(context)
-                                api.login(PizzaLoginRequest(email, pass)).enqueue(object: Callback<PizzaLoginResponse> {
-                                    override fun onResponse(call: Call<PizzaLoginResponse>, response: Response<PizzaLoginResponse>) {
-                                        isLoggingIn = false
-                                        if (response.isSuccessful) {
-                                            val rawToken = response.body()?.token ?: ""
-                                            // Persist token and keep it in memory
-                                            CoroutineScope(Dispatchers.IO).launch {
-                                                TokenStore.saveToken(context, rawToken)
-                                            }
-                                            // Cargar sucursales como prueba de endpoint protegido (header via interceptor)
-                                            api.getSucursales().enqueue(object: Callback<List<SucursalDto>> {
-                                                override fun onResponse(call: Call<List<SucursalDto>>, response: Response<List<SucursalDto>>) {
-                                                    if (response.isSuccessful) {
-                                                        showLogin = false
-                                                        showSideMenu = true
-                                                        sideType = "order"
-                                                    } else {
-                                                        loginError = "No se pudieron cargar sucursales (${response.code()})"
-                                                    }
-                                                }
-                                                override fun onFailure(call: Call<List<SucursalDto>>, t: Throwable) {
-                                                    loginError = "Error al cargar sucursales: ${t.message}"
-                                                }
-                                            })
-                                        } else {
-                                            loginError = "Usuario o contraseña incorrectos"
-                                        }
-                                    }
-                                    override fun onFailure(call: Call<PizzaLoginResponse>, t: Throwable) {
-                                        isLoggingIn = false
-                                        loginError = "Error de red: ${t.message}"
-                                    }
-                                })
+            if (showRegister) {
+                // Pantalla de registro a pantalla completa, con imagen superior
+                RegistroScreen(
+                    headerImageRes = R.drawable.pizzorra,
+                    onBack = { showRegister = false },
+                    onSubmit = { _, _, _, _ ->
+                        // TODO: Integración con API de registro
+                        showRegister = false
+                    },
+                    onLoginClick = { showRegister = false }
+                )
+            } else {
+                Surface(
+                    color = Color(0xCC000000),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable { /* backdrop, ignore */ },
+                ) {}
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .align(Alignment.Center),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1F29)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { showLogin = false; showRegister = false; showForgot = false; forgotStep = 0 }) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
                             }
-                        )
-                        if (isLoggingIn) {
-                            Spacer(Modifier.height(12.dp))
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (!showRegister && !showForgot) "LOGIN" else if (showRegister) "CREAR CUENTA" else "RESTABLECER", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
-                        if (!loginError.isNullOrBlank()) {
-                            Spacer(Modifier.height(8.dp))
-                            Text(loginError!!, color = Color(0xFFFF6B6B))
+                        Spacer(Modifier.height(12.dp))
+                        if (showForgot) {
+                            when (forgotStep) {
+                                0 -> ForgotStepEmail(onNext = { forgotStep = 1 })
+                                1 -> ForgotStepCode(onNext = { forgotStep = 2 })
+                                2 -> ForgotStepNewPassword(onConfirm = { showLogin = false; showForgot = false; forgotStep = 0 })
+                            }
+                        } else if (!showRegister) {
+                            LoginForm(
+                                onForgot = { showForgot = true; forgotStep = 0 },
+                                onRegister = { showRegister = true },
+                                onLogin = { email, pass ->
+                                    isLoggingIn = true
+                                    loginError = null
+                                    val api = RetrofitProvider.api(context)
+                                    api.login(PizzaLoginRequest(email, pass)).enqueue(object: Callback<PizzaLoginResponse> {
+                                        override fun onResponse(call: Call<PizzaLoginResponse>, response: Response<PizzaLoginResponse>) {
+                                            isLoggingIn = false
+                                            if (response.isSuccessful) {
+                                                val rawToken = response.body()?.token ?: ""
+                                                // Persist token and keep it in memory
+                                                CoroutineScope(Dispatchers.IO).launch {
+                                                    TokenStore.saveToken(context, rawToken)
+                                                }
+                                                // Cargar sucursales como prueba de endpoint protegido (header via interceptor)
+                                                api.getSucursales().enqueue(object: Callback<List<SucursalDto>> {
+                                                    override fun onResponse(call: Call<List<SucursalDto>>, response: Response<List<SucursalDto>>) {
+                                                        if (response.isSuccessful) {
+                                                            showLogin = false
+                                                            showSideMenu = true
+                                                            sideType = "order"
+                                                        } else {
+                                                            loginError = "No se pudieron cargar sucursales (${response.code()})"
+                                                        }
+                                                    }
+                                                    override fun onFailure(call: Call<List<SucursalDto>>, t: Throwable) {
+                                                        loginError = "Error al cargar sucursales: ${t.message}"
+                                                    }
+                                                })
+                                            } else {
+                                                loginError = "Usuario o contraseña incorrectos"
+                                            }
+                                        }
+                                        override fun onFailure(call: Call<PizzaLoginResponse>, t: Throwable) {
+                                            isLoggingIn = false
+                                            loginError = "Error de red: ${t.message}"
+                                        }
+                                    })
+                                }
+                            )
+                            if (isLoggingIn) {
+                                Spacer(Modifier.height(12.dp))
+                                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                            }
+                            if (!loginError.isNullOrBlank()) {
+                                Spacer(Modifier.height(8.dp))
+                                Text(loginError!!, color = Color(0xFFFF6B6B))
+                            }
                         }
-                    } else {
-                        RegisterForm(onLoginClick = { showRegister = false })
                     }
                 }
             }
@@ -499,23 +510,7 @@ private fun LoginForm(onForgot: () -> Unit, onRegister: () -> Unit, onLogin: (St
     OutlinedButton(onClick = { /* Google Sign-In */ }, modifier = Modifier.fillMaxWidth()) { Text("Continuar con Google") }
 }
 
-@Composable
-private fun RegisterForm(onLoginClick: () -> Unit) {
-    var nombre by remember { mutableStateOf("") }
-    var correo by remember { mutableStateOf("") }
-    var pass1 by remember { mutableStateOf("") }
-    var pass2 by remember { mutableStateOf("") }
-    Text("CREAR CUENTA", color = Color.White, fontWeight = FontWeight.SemiBold)
-    Spacer(Modifier.height(8.dp))
-    OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre", color = Color.White) }, singleLine = true)
-    OutlinedTextField(value = correo, onValueChange = { correo = it }, label = { Text("CORREO", color = Color.White) }, singleLine = true)
-    OutlinedTextField(value = pass1, onValueChange = { pass1 = it }, label = { Text("CONTRASEÑA", color = Color.White) }, singleLine = true, visualTransformation = PasswordVisualTransformation())
-    OutlinedTextField(value = pass2, onValueChange = { pass2 = it }, label = { Text("CONFIRMAR CONTRASEÑA", color = Color.White) }, singleLine = true, visualTransformation = PasswordVisualTransformation())
-    Spacer(Modifier.height(8.dp))
-    Button(onClick = { /* Registrar */ }, modifier = Modifier.fillMaxWidth()) { Text("CREAR CUENTA") }
-    Spacer(Modifier.height(8.dp))
-    TextButton(onClick = onLoginClick) { Text("¿Ya tienes cuenta? Iniciar sesión", color = Color(0xFF6C63FF)) }
-}
+// RegisterForm fue movido a un archivo dedicado (`RegistroUI.kt`) como `RegistroScreen`.
 
 @Composable
 private fun ForgotStepEmail(onNext: () -> Unit) {
