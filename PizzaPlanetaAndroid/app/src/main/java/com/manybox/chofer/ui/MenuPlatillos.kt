@@ -94,13 +94,14 @@ fun MenuPlatillos(
                         .fillMaxWidth()
                         .height(280.dp) 
                 ) {
-                    // Placeholder para la Imagen de Fondo (parte superior)
-                    Box(
+                    // Imagen de fondo
+                    Image(
+                        painter = painterResource(id = R.drawable.pm1),
+                        contentDescription = null,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp) 
-                            // Color oscuro del fondo de la pizza
-                            .background(DarkBackground) 
+                            .height(200.dp),
+                        contentScale = ContentScale.Crop
                     )
 
                     // Botones de Regreso y Favoritos
@@ -154,7 +155,12 @@ fun MenuPlatillos(
                                     .background(RedBrand.copy(alpha = 0.1f)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("🍕", fontSize = 20.sp)
+                                Image(
+                                    painter = painterResource(id = R.drawable.i4m),
+                                    contentDescription = "Logo restaurante",
+                                    modifier = Modifier.size(32.dp),
+                                    contentScale = ContentScale.Fit
+                                )
                             }
 
                             Spacer(Modifier.width(12.dp))
