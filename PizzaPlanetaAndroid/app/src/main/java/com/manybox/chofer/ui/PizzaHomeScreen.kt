@@ -69,6 +69,7 @@ fun PizzaHomeScreen() {
     var showOrderSelector by remember { mutableStateOf(false) }
     var isLoggingIn by remember { mutableStateOf(false) }
     var loginError by remember { mutableStateOf<String?>(null) }
+    var showMenu by remember { mutableStateOf(false) }
 
     // Palette
     val Navy = Color(0xFF1D3557)
@@ -341,7 +342,24 @@ fun PizzaHomeScreen() {
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Selecciona tu restaurante", color = Color.White, fontWeight = FontWeight.Bold)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        IconButton(onClick = { showOrderSelector = false }) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Regresar",
+                                tint = Color.White
+                            )
+                        }
+                        Text(
+                            "Selecciona tu restaurante", 
+                            color = Color.White, 
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
                     Spacer(Modifier.height(12.dp))
                     Text("(Mapa)", color = Color(0xFF8E8E93))
                     Spacer(Modifier.height(12.dp))
@@ -361,11 +379,22 @@ fun PizzaHomeScreen() {
                                 Text("Pizza Planet ${listOf("Centro","Norte","Sur")[idx]}", color = Color.White)
                                 Text("Av. Ejemplo 123", color = Color(0xFF8E8E93), fontSize = 12.sp)
                             }
-                            Button(onClick = { showOrderSelector = false; showSideMenu = true; sideType = "order" }) { Text("ELEGIR") }
+                            Button(onClick = { 
+                                showOrderSelector = false
+                                showMenu = true 
+                            }) { Text("ELEGIR") }
                         }
                     }
                 }
             }
+        }
+
+        // Menu de platillos (nuevo componente)
+        if (showMenu) {
+            MenuPlatillos(
+                onBackClick = { showMenu = false },
+                onMenuClick = { showSideMenu = true; sideType = "order" }
+            )
         }
 
         // Side menu overlay (siempre por encima)
