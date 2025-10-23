@@ -241,7 +241,7 @@ fun PizzaHomeScreen() {
             }
         }
 
-        // Login / Register modal
+        // Login / Register / Forgot
         if (showLogin) {
             if (showRegister) {
                 // Pantalla de registro a pantalla completa, con imagen superior
@@ -254,6 +254,37 @@ fun PizzaHomeScreen() {
                     },
                     onLoginClick = { showRegister = false }
                 )
+            } else if (showForgot) {
+                // Flujo de restablecer a pantalla completa con pasos (email -> código -> nueva contraseña)
+                if (forgotStep == 0) {
+                    RestablecerContrasenaScreen(
+                        headerImageRes = R.drawable.pizzorra,
+                        onBack = { showForgot = false; forgotStep = 0 },
+                        onSubmitEmail = { _ ->
+                            // TODO: Integración con backend (enviar correo)
+                            forgotStep = 1
+                        }
+                    )
+                } else if (forgotStep == 1) {
+                    VerificarCodigoScreen(
+                        headerImageRes = R.drawable.pizzorra,
+                        onBack = { forgotStep = 0 },
+                        onVerify = { _ ->
+                            // TODO: Validar código con backend
+                            forgotStep = 2
+                        }
+                    )
+                } else {
+                    NuevaContrasenaScreen(
+                        headerImageRes = R.drawable.pizzorra,
+                        onBack = { forgotStep = 1 },
+                        onConfirm = { pass1, pass2 ->
+                            // TODO: Validar y enviar al backend para establecer la nueva contraseña
+                            showForgot = false
+                            forgotStep = 0
+                        }
+                    )
+                }
             } else {
                 Surface(
                     color = Color(0xCC000000),
@@ -278,15 +309,15 @@ fun PizzaHomeScreen() {
                             Text(if (!showRegister && !showForgot) "LOGIN" else if (showRegister) "CREAR CUENTA" else "RESTABLECER", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
                         Spacer(Modifier.height(12.dp))
-                        if (showForgot) {
-                            when (forgotStep) {
-                                0 -> ForgotStepEmail(onNext = { forgotStep = 1 })
-                                1 -> ForgotStepCode(onNext = { forgotStep = 2 })
-                                2 -> ForgotStepNewPassword(onConfirm = { showLogin = false; showForgot = false; forgotStep = 0 })
-                            }
-                        } else if (!showRegister) {
+                        if (!showRegister) {
                             LoginForm(
-                                onForgot = { showForgot = true; forgotStep = 0 },
+                                onForgot = {
+                                    // Fuerza navegación a la pantalla full-screen de restablecer
+                                    showRegister = false
+                                    showForgot = true
+                                    forgotStep = 0
+                                    showLogin = true
+                                },
                                 onRegister = { showRegister = true },
                                 onLogin = { email, pass ->
                                     isLoggingIn = true
@@ -502,7 +533,7 @@ private fun LoginForm(onForgot: () -> Unit, onRegister: () -> Unit, onLogin: (St
     OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("USUARIO", color = Color.White) }, singleLine = true)
     Spacer(Modifier.height(8.dp))
     OutlinedTextField(value = pass, onValueChange = { pass = it }, label = { Text("CONTRASEÑA", color = Color.White) }, singleLine = true, visualTransformation = PasswordVisualTransformation())
-    TextButton(onClick = onForgot) { Text("¿Olvidó su contraseña?", color = Color(0xFF6C63FF)) }
+    TextButton(onClick = onForgot) { Text("¿Olvidaste tu contraseña?", color = Color(0xFF6C63FF)) }
     Button(onClick = { onLogin(email, pass) }, modifier = Modifier.fillMaxWidth()) { Text("INICIAR SESIÓN") }
     Spacer(Modifier.height(8.dp))
     Button(onClick = onRegister, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853))) { Text("CREAR CUENTA") }
