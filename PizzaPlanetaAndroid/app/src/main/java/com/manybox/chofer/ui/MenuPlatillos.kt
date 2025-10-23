@@ -50,29 +50,29 @@ fun MenuPlatillos(
     // Datos originales de las Pizzas
     val pizzaItems = remember {
         listOf(
-            MenuItem(1, "Clásica Pepperoni", "Salsa de tomate, queso mozzarella y pepperoni.", 149.0, R.drawable.im1),
-            MenuItem(2, "Cuatro Quesos", "Mezcla de mozzarella, parmesano, gorgonzola y cheddar.", 169.0, R.drawable.im1),
-            MenuItem(3, "Hawaiana Galáctica", "Jamón, piña y mozzarella.", 159.0, R.drawable.im1),
-            MenuItem(4, "Otro ítem", "Descripción del otro ítem.", 179.0, R.drawable.im1),
-            MenuItem(5, "Especial Espacial", "Salsa BBQ, pollo y cebolla morada.", 169.0, R.drawable.im1) 
+            MenuItem(1, "Clásica Pepperoni", "Salsa de tomate, queso mozzarella y pepperoni.", 149.0, R.drawable.pp1),
+            MenuItem(2, "Cuatro Quesos", "Mezcla de mozzarella, parmesano, gorgonzola y cheddar.", 169.0, R.drawable.p4q),
+            MenuItem(3, "Hawaiana Galáctica", "Jamón, piña y mozzarella.", 159.0, R.drawable.ph),
+            MenuItem(4, "Peperoni con champiños", "Salsa de tomate, queso mozzarella, peperoni y champiñones.", 179.0, R.drawable.ppch),
+            MenuItem(5, "Especial Espacial", "Salsa BBQ, pollo y cebolla morada.", 169.0, R.drawable.pe) 
         )
     }
 
     // NUEVOS DATOS DE SNACKS Y BEBIDAS
     val snackItems = remember {
         listOf(
-            MenuItem(6, "Alitas de Meteoro", "Alitas de pollo con salsa búfalo.", 89.0, R.drawable.im1),
-            MenuItem(7, "Asteroides de Queso", "Palitos de queso empanizados con salsa marinara.", 79.0, R.drawable.im1),
-            MenuItem(8, "Papas Nebulosas", "Papas a la francesa con toque de especias.", 65.0, R.drawable.im1),
-            MenuItem(9, "Pan Ajo Orbital", "Pan con mantequilla de ajo y queso.", 59.0, R.drawable.im1)
+            MenuItem(6, "Alitas de Meteoro", "Alitas de pollo con salsa búfalo.", 89.0, R.drawable.ab),
+            MenuItem(7, "Asteroides de Queso", "Palitos de queso empanizados con salsa marinara.", 79.0, R.drawable.aq),
+            MenuItem(8, "Papas Nebulosas", "Papas a la francesa con toque de especias.", 65.0, R.drawable.pn),
+            MenuItem(9, "Pan Ajo Orbital", "Pan con mantequilla de ajo y queso.", 59.0, R.drawable.pao)
         )
     }
 
     val drinkItems = remember {
         listOf(
-            MenuItem(10, "Refrescos clásicos", "(Cola, Naranja, Limón).", 25.0, R.drawable.im1),
-            MenuItem(11, "Agua mineral planetaria.", "", 22.0, R.drawable.im1),
-            MenuItem(12, "Malteadas cósmicas", "(Choco, Vainilla, Fresa)", 49.0, R.drawable.im1) // Agrego un precio de ejemplo
+            MenuItem(10, "Refrescos clásicos", "(Cola, Naranja, Limón).", 25.0, R.drawable.rcnl),
+            MenuItem(11, "Agua mineral planetaria.", "", 22.0, R.drawable.am),
+            MenuItem(12, "Malteadas cósmicas", "(Choco, Vainilla, Fresa)", 49.0, R.drawable.mvcf)
         )
     }
 
@@ -328,18 +328,15 @@ fun MenuItemRow(item: MenuItem) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Placeholder de la Imagen del ítem
-            Box(
+            // Reemplazar el Box placeholder con una Image real
+            Image(
+                painter = painterResource(id = item.imageRes),
+                contentDescription = item.name,
                 modifier = Modifier
                     .size(90.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    // Color de placeholder
-                    .background(Color(0xFFE0E0E0)), 
-                contentAlignment = Alignment.Center
-            ) {
-                // Placeholder temporal
-                Text("📷", fontSize = 30.sp)
-            }
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
 
             Spacer(Modifier.width(16.dp))
 
