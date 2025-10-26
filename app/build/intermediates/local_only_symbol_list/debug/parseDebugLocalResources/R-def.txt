@@ -1,0 +1,37 @@
+R_DEF: Internal format may change without notice
+local
+color black
+color purple_500
+color purple_700
+color teal_200
+color teal_700
+color white
+drawable ab
+drawable am
+drawable aq
+drawable cercano
+drawable cuenta
+drawable i2l
+drawable i3l
+drawable i4m
+drawable il1
+drawable il1_alt
+drawable im1
+drawable mvcf
+drawable p4q
+drawable pao
+drawable pe
+drawable ph
+drawable pizza_logo
+drawable pizzorra
+drawable pm1
+drawable pn
+drawable pp1
+drawable ppch
+drawable rcnl
+mipmap ic_launcher
+mipmap ic_launcher_round
+string app_name
+style Theme.ManyBoxAndroid
+xml backup_rules
+xml data_extraction_rules

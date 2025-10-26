@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="64dp"
+    android:viewportWidth="200"
+    android:viewportHeight="64">
+    <!-- Simple placeholder logo: orange slice on navy background -->
+    <path
+        android:fillColor="#1D3557"
+        android:pathData="M0,0h200v64h-200z"/>
+    <path
+        android:fillColor="#F77F00"
+        android:pathData="M24,52 L100,12 L176,52 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,40a4,4 0 1,0 0.01,0z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M100,34a4,4 0 1,0 0.01,0z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M140,40a4,4 0 1,0 0.01,0z"/>
+</vector>
