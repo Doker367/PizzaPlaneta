@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -374,16 +375,53 @@ fun PizzaHomeScreen() {
 
         // Order selector
         if (showOrderSelector) {
-            Surface(color = Color(0xCC000000), modifier = Modifier.fillMaxSize()) {}
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .align(Alignment.Center),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1F29)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+            Scaffold(
+                containerColor = Color.White,
+                bottomBar = {
+                    BottomAppBar(
+                        containerColor = RedBrand,
+                        contentColor = Color.White,
+                        modifier = Modifier.height(70.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Icono de menú
+                            IconButton(
+                                onClick = { 
+                                    showSideMenu = true
+                                    sideType = "order"
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.Menu,
+                                    contentDescription = "Menú",
+                                    tint = Color.White
+                                )
+                            }
+
+                            // Texto centrado
+                            Text(
+                                "BIENVENIDO, TADEO",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+            ) { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                ) {
+                    // Header con flecha de regreso y título
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
@@ -392,40 +430,110 @@ fun PizzaHomeScreen() {
                             Icon(
                                 Icons.Default.ArrowBack,
                                 contentDescription = "Regresar",
-                                tint = Color.White
+                                tint = Color(0xFF1D3557)
                             )
                         }
                         Text(
-                            "Selecciona tu restaurante", 
-                            color = Color.White, 
-                            fontWeight = FontWeight.Bold
+                            "Selecciona tu restaurante",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = Color(0xFF1D3557)
                         )
                     }
-                    
-                    Spacer(Modifier.height(12.dp))
-                    Text("(Mapa)", color = Color(0xFF8E8E93))
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(value = "", onValueChange = {}, label = { Text("Ciudad/CP", color = Color.White) })
-                    Spacer(Modifier.height(12.dp))
-                    // Lista mock de sucursales
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Mapa con imagen real
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.map1),
+                            contentDescription = "Mapa",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Buscador de CP o Ciudad
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = {},
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Ciudad y estado o CP") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = "Buscar",
+                                tint = Color.Gray
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF1D3557),
+                            unfocusedBorderColor = Color.LightGray
+                        ),
+                        singleLine = true
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Lista de sucursales
                     repeat(3) { idx ->
-                        Row(
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(vertical = 4.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(2.dp)
                         ) {
-                            Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF2D3748)))
-                            Spacer(Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("Pizza Planet ${listOf("Centro","Norte","Sur")[idx]}", color = Color.White)
-                                Text("Av. Ejemplo 123", color = Color(0xFF8E8E93), fontSize = 12.sp)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Imagen del restaurante
+                                Image(
+                                    painter = painterResource(id = R.drawable.i4m),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                )
+                                
+                                Spacer(Modifier.width(12.dp))
+                                
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "Pizza Planet ${listOf("Centro","Norte","Sur")[idx]}",
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "Av. 1ra poniente #2396",
+                                        color = Color.Gray,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                
+                                Button(
+                                    onClick = { 
+                                        showOrderSelector = false
+                                        showMenu = true 
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF1D3557)
+                                    )
+                                ) {
+                                    Text("ELEGIR")
+                                }
                             }
-                            Button(onClick = { 
-                                showOrderSelector = false
-                                showMenu = true 
-                            }) { Text("ELEGIR") }
                         }
+                        Spacer(Modifier.height(8.dp))
                     }
                 }
             }
