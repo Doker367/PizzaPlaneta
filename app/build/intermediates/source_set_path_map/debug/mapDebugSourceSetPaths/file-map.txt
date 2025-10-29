@@ -62,10 +62,10 @@ com.manybox.chofer.app-profileinstaller-1.3.0-60 C:\Users\josed\.gradle\caches\8
 com.manybox.chofer.app-foundation-release-61 C:\Users\josed\.gradle\caches\8.13\transforms\ef7175d6112eae0338911b585b5c4279\transformed\foundation-release\res
 com.manybox.chofer.app-appcompat-resources-1.6.1-62 C:\Users\josed\.gradle\caches\8.13\transforms\f42548a229074491b125ff2089d12a19\transformed\appcompat-resources-1.6.1\res
 com.manybox.chofer.app-savedstate-ktx-1.2.1-63 C:\Users\josed\.gradle\caches\8.13\transforms\fb5ea9a87c4a2e55621a8a42c82a03e9\transformed\savedstate-ktx-1.2.1\res
-com.manybox.chofer.app-resValues-64 C:\Users\josed\proyectosAndroid\PizzaPlanetaAndroid\app\build\generated\res\resValues\debug
-com.manybox.chofer.app-updated_navigation_xml-65 C:\Users\josed\proyectosAndroid\PizzaPlanetaAndroid\app\build\generated\updated_navigation_xml\debug
-com.manybox.chofer.app-packageDebugResources-66 C:\Users\josed\proyectosAndroid\PizzaPlanetaAndroid\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
-com.manybox.chofer.app-packageDebugResources-67 C:\Users\josed\proyectosAndroid\PizzaPlanetaAndroid\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
-com.manybox.chofer.app-debug-68 C:\Users\josed\proyectosAndroid\PizzaPlanetaAndroid\app\build\intermediates\merged_res\debug\mergeDebugResources
-com.manybox.chofer.app-debug-69 C:\Users\josed\proyectosAndroid\PizzaPlanetaAndroid\app\src\debug\res
-com.manybox.chofer.app-main-70 C:\Users\josed\proyectosAndroid\PizzaPlanetaAndroid\app\src\main\res
+com.manybox.chofer.app-resValues-64 C:\Users\josed\StudioProjects\PizzaPlanetav1\app\build\generated\res\resValues\debug
+com.manybox.chofer.app-updated_navigation_xml-65 C:\Users\josed\StudioProjects\PizzaPlanetav1\app\build\generated\updated_navigation_xml\debug
+com.manybox.chofer.app-packageDebugResources-66 C:\Users\josed\StudioProjects\PizzaPlanetav1\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.manybox.chofer.app-packageDebugResources-67 C:\Users\josed\StudioProjects\PizzaPlanetav1\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.manybox.chofer.app-debug-68 C:\Users\josed\StudioProjects\PizzaPlanetav1\app\build\intermediates\merged_res\debug\mergeDebugResources
+com.manybox.chofer.app-debug-69 C:\Users\josed\StudioProjects\PizzaPlanetav1\app\src\debug\res
+com.manybox.chofer.app-main-70 C:\Users\josed\StudioProjects\PizzaPlanetav1\app\src\main\res

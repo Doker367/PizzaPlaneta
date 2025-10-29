@@ -71,6 +71,7 @@ fun PizzaHomeScreen() {
     var loginError by remember { mutableStateOf<String?>(null) }
     var showMenu by remember { mutableStateOf(false) }
     var showAccount by remember { mutableStateOf(false) }
+    var selectedMenuItem by remember { mutableStateOf<com.manybox.chofer.ui.MenuItem?>(null) }
 
     // Palette
     val Navy = Color(0xFF1D3557)
@@ -436,7 +437,33 @@ fun PizzaHomeScreen() {
         if (showMenu) {
             MenuPlatillos(
                 onBackClick = { showMenu = false },
-                onMenuClick = { showSideMenu = true; sideType = "order" }
+                onMenuClick = { showSideMenu = true; sideType = "order" },
+                onItemSelected = { item ->
+                    // Guardamos el ítem seleccionado y cerramos el menú para mostrar detalles
+                    selectedMenuItem = item
+                    showMenu = false
+                }
+            )
+        }
+
+        // Pantalla de detalles cuando se selecciona un item
+        if (selectedMenuItem != null) {
+            OrderDetailsScreen(
+                item = selectedMenuItem!!,
+                onBack = {
+                    // Volver al menú
+                    selectedMenuItem = null
+                    showMenu = true
+                },
+                onConfirm = { _, _ ->
+                    // Confirmar cierra detalles (no reabre menú)
+                    selectedMenuItem = null
+                },
+                onAddMore = {
+                    // Añadir algo más: cerrar detalles y reabrir menú
+                    selectedMenuItem = null
+                    showMenu = true
+                }
             )
         }
 

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,7 +46,8 @@ data class MenuItem(
 @Composable
 fun MenuPlatillos(
     onBackClick: () -> Unit,
-    onMenuClick: () -> Unit // Nuevo parámetro
+    onMenuClick: () -> Unit, // Nuevo parámetro
+    onItemSelected: (MenuItem) -> Unit // Callback cuando el usuario selecciona un ítem
 ) {
     // Datos originales de las Pizzas
     val pizzaItems = remember {
@@ -193,7 +195,7 @@ fun MenuPlatillos(
             }
 
             items(pizzaItems) { item ->
-                MenuItemRow(item = item)
+                MenuItemRow(item = item, onItemClick = { onItemSelected(it) })
                 Spacer(Modifier.height(12.dp))
             }
             
@@ -207,7 +209,7 @@ fun MenuPlatillos(
             }
 
             items(snackItems) { item ->
-                MenuItemRow(item = item)
+                MenuItemRow(item = item, onItemClick = { onItemSelected(it) })
                 Spacer(Modifier.height(12.dp))
             }
 
@@ -221,7 +223,7 @@ fun MenuPlatillos(
             }
 
             items(drinkItems) { item ->
-                MenuItemRow(item = item)
+                MenuItemRow(item = item, onItemClick = { onItemSelected(it) })
                 Spacer(Modifier.height(12.dp))
             }
 
@@ -313,7 +315,7 @@ fun CategoryButton(text: String) {
 
 // Composable para cada elemento del menú (Pizza, Snack, Bebida)
 @Composable
-fun MenuItemRow(item: MenuItem) {
+fun MenuItemRow(item: MenuItem, onItemClick: (MenuItem) -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -369,7 +371,7 @@ fun MenuItemRow(item: MenuItem) {
 
             // Botón "agregar"
             OutlinedButton(
-                onClick = { /* TODO */ },
+                onClick = { onItemClick(item) },
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = BrownDark, 
                     containerColor = Color.White 
@@ -380,6 +382,92 @@ fun MenuItemRow(item: MenuItem) {
                 modifier = Modifier.height(35.dp) 
             ) {
                 Text("agregar", fontSize = 12.sp)
+            }
+        }
+    }
+}
+
+@Composable
+fun OrderDetailsScreen(
+    item: MenuItem,
+    onBack: () -> Unit,
+    onConfirm: (MenuItem, Int) -> Unit = { _, _ -> },
+    onAddMore: () -> Unit = {}
+) {
+    var quantity by remember { mutableStateOf(1) }
+
+    // Interceptar el botón físico de "back" para volver al menú
+    BackHandler {
+        onBack()
+    }
+
+    Scaffold(
+        topBar = {
+            SmallTopAppBar(
+                title = { Text("Detalle pedido") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Regresar")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = item.imageRes),
+                contentDescription = item.name,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            Text(item.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            if (item.description.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Text(item.description, color = Color.Gray)
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Cantidad:", fontWeight = FontWeight.Medium)
+                Spacer(Modifier.width(12.dp))
+                OutlinedButton(onClick = { if (quantity > 1) quantity-- }) { Text("-") }
+                Spacer(Modifier.width(8.dp))
+                Text(quantity.toString(), fontWeight = FontWeight.Bold)
+                Spacer(Modifier.width(8.dp))
+                OutlinedButton(onClick = { quantity++ }) { Text("+") }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Text("Total: $${"%.0f".format(item.price * quantity)}", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = BrownDark)
+
+            Spacer(Modifier.height(20.dp))
+
+            Button(onClick = { onConfirm(item, quantity) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Confirmar pedido")
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = { onAddMore() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = BrownDark)
+            ) {
+                Text("añadir algo más")
             }
         }
     }

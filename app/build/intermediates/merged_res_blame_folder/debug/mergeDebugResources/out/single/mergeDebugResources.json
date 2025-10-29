@@ -4,24 +4,40 @@
         "source": "com.manybox.chofer.app-main-70:/drawable/i4m.png"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\mipmap-xhdpi_ic_launcher_round.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\mipmap-xhdpi\\ic_launcher_round.png"
+        "merged": "com.manybox.chofer.app-debug-68:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/mipmap-xxhdpi/ic_launcher.png"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\drawable_cercano.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\drawable\\cercano.png"
+        "merged": "com.manybox.chofer.app-debug-68:/drawable_pizza_logo.xml.flat",
+        "source": "com.manybox.chofer.app-main-70:/drawable/pizza_logo.xml"
+    },
+    {
+        "merged": "com.manybox.chofer.app-debug-68:/drawable_im1.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/drawable/im1.png"
+    },
+    {
+        "merged": "com.manybox.chofer.app-debug-68:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.manybox.chofer.app-debug-68:/drawable_i2l.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/drawable/i2l.png"
     },
     {
         "merged": "com.manybox.chofer.app-debug-68:/drawable_pm1.jpg.flat",
         "source": "com.manybox.chofer.app-main-70:/drawable/pm1.jpg"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\drawable_pizza_logo.xml.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\drawable\\pizza_logo.xml"
+        "merged": "com.manybox.chofer.app-debug-68:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/mipmap-xxxhdpi/ic_launcher_round.png"
     },
     {
         "merged": "com.manybox.chofer.app-debug-68:/drawable_ppch.jpg.flat",
         "source": "com.manybox.chofer.app-main-70:/drawable/ppch.jpg"
+    },
+    {
+        "merged": "com.manybox.chofer.app-debug-68:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/mipmap-xhdpi/ic_launcher_round.png"
     },
     {
         "merged": "com.manybox.chofer.app-debug-68:/drawable_pe.jpg.flat",
@@ -32,24 +48,20 @@
         "source": "com.manybox.chofer.app-main-70:/drawable/pn.jpg"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\mipmap-xhdpi_ic_launcher.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\mipmap-xhdpi\\ic_launcher.png"
-    },
-    {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\drawable_il1.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\drawable\\il1.png"
+        "merged": "com.manybox.chofer.app-debug-68:/drawable_pizzorra.jpg.flat",
+        "source": "com.manybox.chofer.app-main-70:/drawable/pizzorra.jpg"
     },
     {
         "merged": "com.manybox.chofer.app-debug-68:/drawable_ab.jpg.flat",
         "source": "com.manybox.chofer.app-main-70:/drawable/ab.jpg"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\mipmap-mdpi_ic_launcher_round.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\mipmap-mdpi\\ic_launcher_round.png"
+        "merged": "com.manybox.chofer.app-debug-68:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/mipmap-hdpi/ic_launcher.png"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\mipmap-hdpi_ic_launcher.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\mipmap-hdpi\\ic_launcher.png"
+        "merged": "com.manybox.chofer.app-debug-68:/drawable_i3l.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/drawable/i3l.png"
     },
     {
         "merged": "com.manybox.chofer.app-debug-68:/drawable_mvcf.jpg.flat",
@@ -64,79 +76,67 @@
         "source": "com.manybox.chofer.app-main-70:/drawable/p4q.jpg"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\drawable_cuenta.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\drawable\\cuenta.png"
-    },
-    {
         "merged": "com.manybox.chofer.app-debug-68:/drawable_pp1.jpeg.flat",
         "source": "com.manybox.chofer.app-main-70:/drawable/pp1.jpeg"
+    },
+    {
+        "merged": "com.manybox.chofer.app-debug-68:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/mipmap-xhdpi/ic_launcher.png"
     },
     {
         "merged": "com.manybox.chofer.app-debug-68:/drawable_rcnl.jpg.flat",
         "source": "com.manybox.chofer.app-main-70:/drawable/rcnl.jpg"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\xml_data_extraction_rules.xml.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\xml\\data_extraction_rules.xml"
+        "merged": "com.manybox.chofer.app-debug-68:/drawable_il1.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/drawable/il1.png"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\drawable_i3l.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\drawable\\i3l.png"
+        "merged": "com.manybox.chofer.app-debug-68:/xml_backup_rules.xml.flat",
+        "source": "com.manybox.chofer.app-main-70:/xml/backup_rules.xml"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\mipmap-mdpi_ic_launcher.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\mipmap-mdpi\\ic_launcher.png"
+        "merged": "com.manybox.chofer.app-debug-68:/drawable_il1_alt.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/drawable/il1_alt.png"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\drawable_im1.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\drawable\\im1.png"
+        "merged": "com.manybox.chofer.app-debug-68:/xml_data_extraction_rules.xml.flat",
+        "source": "com.manybox.chofer.app-main-70:/xml/data_extraction_rules.xml"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\mipmap-xxhdpi_ic_launcher.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\mipmap-xxhdpi\\ic_launcher.png"
+        "merged": "com.manybox.chofer.app-debug-68:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/mipmap-xxxhdpi/ic_launcher.png"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\mipmap-xxxhdpi_ic_launcher_round.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\mipmap-xxxhdpi\\ic_launcher_round.png"
+        "merged": "com.manybox.chofer.app-debug-68:/drawable_cercano.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/drawable/cercano.png"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\drawable_pizzorra.jpg.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\drawable\\pizzorra.jpg"
-    },
-    {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\mipmap-hdpi_ic_launcher_round.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\mipmap-hdpi\\ic_launcher_round.png"
-    },
-    {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\drawable_il1_alt.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\drawable\\il1_alt.png"
-    },
-    {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\drawable_i2l.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\drawable\\i2l.png"
+        "merged": "com.manybox.chofer.app-debug-68:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/mipmap-xxhdpi/ic_launcher_round.png"
     },
     {
         "merged": "com.manybox.chofer.app-debug-68:/drawable_pao.jpg.flat",
         "source": "com.manybox.chofer.app-main-70:/drawable/pao.jpg"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\xml_backup_rules.xml.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\xml\\backup_rules.xml"
-    },
-    {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\mipmap-xxhdpi_ic_launcher_round.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\mipmap-xxhdpi\\ic_launcher_round.png"
+        "merged": "com.manybox.chofer.app-debug-68:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/mipmap-mdpi/ic_launcher_round.png"
     },
     {
         "merged": "com.manybox.chofer.app-debug-68:/drawable_am.jpg.flat",
         "source": "com.manybox.chofer.app-main-70:/drawable/am.jpg"
     },
     {
-        "merged": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-debug-68:\\mipmap-xxxhdpi_ic_launcher.png.flat",
-        "source": "C:\\Users\\josed\\.gradle\\daemon\\8.13\\com.manybox.chofer.app-main-70:\\mipmap-xxxhdpi\\ic_launcher.png"
+        "merged": "com.manybox.chofer.app-debug-68:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/mipmap-hdpi/ic_launcher_round.png"
     },
     {
         "merged": "com.manybox.chofer.app-debug-68:/drawable_ph.jpg.flat",
         "source": "com.manybox.chofer.app-main-70:/drawable/ph.jpg"
+    },
+    {
+        "merged": "com.manybox.chofer.app-debug-68:/drawable_cuenta.png.flat",
+        "source": "com.manybox.chofer.app-main-70:/drawable/cuenta.png"
     }
 ]
