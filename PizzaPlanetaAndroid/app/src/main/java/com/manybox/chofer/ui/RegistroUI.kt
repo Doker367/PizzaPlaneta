@@ -30,7 +30,9 @@ import androidx.compose.ui.unit.sp
 fun RegistroScreen(
 	headerImageRes: Int? = null,
 	onBack: (() -> Unit)? = null,
-	onSubmit: (nombre: String, correo: String, pass1: String, pass2: String) -> Unit = { _, _, _, _ -> },
+	isLoading: Boolean = false,
+	errorMessage: String? = null,
+	onSubmit: (nombre: String, correo: String, telefono: String, pass1: String, pass2: String) -> Unit = { _, _, _, _, _ -> },
 	onLoginClick: () -> Unit = {}
 ) {
 	val Navy = Color(0xFF1D3557)
@@ -39,6 +41,7 @@ fun RegistroScreen(
 
 	var nombre by remember { mutableStateOf("") }
 	var correo by remember { mutableStateOf("") }
+	var telefono by remember { mutableStateOf("") }
 	var pass1 by remember { mutableStateOf("") }
 	var pass2 by remember { mutableStateOf("") }
 
@@ -133,10 +136,22 @@ fun RegistroScreen(
 							)
 							Spacer(Modifier.height(8.dp))
 						}
+
 				Text(text = "Nombre", color = Color.Black, fontSize = 12.sp)
 				OutlinedTextField(
 					value = nombre,
 					onValueChange = { nombre = it },
+					singleLine = true,
+					modifier = Modifier.fillMaxWidth(),
+					shape = RoundedCornerShape(8.dp),
+					colors = tfColors
+				)
+
+				Spacer(Modifier.height(10.dp))
+				Text(text = "Teléfono", color = Color.Black, fontSize = 12.sp)
+				OutlinedTextField(
+					value = telefono,
+					onValueChange = { telefono = it },
 					singleLine = true,
 					modifier = Modifier.fillMaxWidth(),
 					shape = RoundedCornerShape(8.dp),
@@ -180,14 +195,33 @@ fun RegistroScreen(
 
 				Spacer(Modifier.height(14.dp))
 				Button(
-					onClick = { onSubmit(nombre, correo, pass1, pass2) },
+					onClick = { onSubmit(nombre, correo, telefono, pass1, pass2) },
 					modifier = Modifier
 						.fillMaxWidth()
 						.height(40.dp),
 					colors = ButtonDefaults.buttonColors(containerColor = ButtonRed),
-					shape = RoundedCornerShape(8.dp)
+					shape = RoundedCornerShape(8.dp),
+					enabled = !isLoading
 				) {
-					Text("CREAR CUENTA", color = Color.White, fontWeight = FontWeight.Medium)
+					if (isLoading) {
+						CircularProgressIndicator(
+							color = Color.White,
+							modifier = Modifier.size(22.dp),
+							strokeWidth = 2.dp
+						)
+					} else {
+						Text("CREAR CUENTA", color = Color.White, fontWeight = FontWeight.Medium)
+					}
+				}
+
+				if (errorMessage != null) {
+					Spacer(Modifier.height(8.dp))
+					Text(
+						text = errorMessage,
+						color = Color.Red,
+						fontSize = 14.sp,
+						modifier = Modifier.fillMaxWidth()
+					)
 				}
 
 				Spacer(Modifier.height(8.dp))

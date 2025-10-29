@@ -30,6 +30,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+import com.manybox.chofer.api.RetrofitProvider
+import com.manybox.chofer.api.TokenStore
+import com.manybox.chofer.api.EstadoRequest
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import com.manybox.chofer.model.GuiaAsignada
 import com.manybox.chofer.model.EstadoGuia
 import com.manybox.chofer.model.EmpleadoPerfil
@@ -54,12 +65,16 @@ fun DashboardScreen(
     onRecoger: (GuiaAsignada) -> Unit,
     onIniciarEntrega: (GuiaAsignada) -> Unit,
     onEntregar: (GuiaAsignada) -> Unit,
-    onScanBarcode: () -> Unit
+    onScanBarcode: () -> Unit,
+    onIncidencia: (GuiaAsignada, String) -> Unit = { _, _ -> }
 ) {
+    val context = LocalContext.current
     var selectedTab by remember { mutableStateOf(0) }
     var expandedGuiaId by remember { mutableStateOf<Int?>(null) }
     var showSignatureDialog by remember { mutableStateOf(false) }
     var currentGuiaForSignature by remember { mutableStateOf<GuiaAsignada?>(null) }
+    var showIncidentDialog by remember { mutableStateOf(false) }
+    var currentGuiaForIncident by remember { mutableStateOf<GuiaAsignada?>(null) }
 
     Scaffold(
     bottomBar = { BottomNavigationBar(selectedTab, notificacionesNoLeidas, notifsConectado) { selectedTab = it } },
@@ -82,6 +97,10 @@ fun DashboardScreen(
                         currentGuiaForSignature = guia
                         showSignatureDialog = true
                     },
+                    onReportIncident = { guia ->
+                        currentGuiaForIncident = guia
+                        showIncidentDialog = true
+                    },
                     onScanBarcode
                 )
                 2 -> BitacoraTab(bitacoraEntregas)
@@ -101,6 +120,34 @@ fun DashboardScreen(
                     showSignatureDialog = false
                     onEntregar(guia)
                     currentGuiaForSignature = null
+                }
+            )
+        }
+
+        if (showIncidentDialog && currentGuiaForIncident != null) {
+            IncidentDialog(
+                guia = currentGuiaForIncident!!,
+                onDismiss = { showIncidentDialog = false },
+                onConfirm = { guia, nota ->
+                    showIncidentDialog = false
+                    // Llamada directa para reportar incidencia
+                    val token = TokenStore.getTokenBlocking(context)
+                    val api = RetrofitProvider.apiService(context)
+                    val bearer = if (!token.isNullOrBlank()) "Bearer $token" else ""
+                    api.cambiarEstadoGuia(
+                        envioId = guia.envioId,
+                        body = EstadoRequest(status = "incidencia", notaEstado = nota),
+                        token = bearer
+                    ).enqueue(object: Callback<Void> {
+                        override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                            // Opcional: podríamos actualizar UI o mostrar snackbar
+                        }
+                        override fun onFailure(call: Call<Void>, t: Throwable) {
+                            // Opcional: registrar error o mostrar snackbar
+                        }
+                    })
+                    onIncidencia(guia, nota)
+                    currentGuiaForIncident = null
                 }
             )
         }
@@ -490,6 +537,7 @@ fun GuiasTab(
     onRecoger: (GuiaAsignada) -> Unit,
     onIniciarEntrega: (GuiaAsignada) -> Unit,
     onEntregar: (GuiaAsignada) -> Unit,
+    onReportIncident: (GuiaAsignada) -> Unit = { _ -> },
     onScanBarcode: () -> Unit
 ) {
     LazyColumn(
@@ -533,7 +581,8 @@ fun GuiasTab(
                     onToggleExpand = { onExpandGuia(guia.envioId) },
                     onRecoger,
                     onIniciarEntrega,
-                    onEntregar
+                    onEntregar,
+                    onReportIncident
                 )
             }
         }
@@ -563,7 +612,8 @@ fun GuiaCardExpanded(
     onToggleExpand: () -> Unit,
     onRecoger: (GuiaAsignada) -> Unit,
     onIniciarEntrega: (GuiaAsignada) -> Unit,
-    onEntregar: (GuiaAsignada) -> Unit
+    onEntregar: (GuiaAsignada) -> Unit,
+    onReportIncident: (GuiaAsignada) -> Unit = { _ -> }
 ) {
     val rotationAngle by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f, label = "rotation")
 
@@ -629,6 +679,18 @@ fun GuiaCardExpanded(
                             color = Color(0xFF00C853),
                             icon = Icons.Default.CheckCircle,
                             onClick = { onEntregar(guia) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Botón para reportar incidencia disponible en estados 1 y 2 (en ruta / antes de entregar)
+                    if (guia.estadoActual in listOf(1, 2)) {
+                        ActionButton(
+                            text = "Reportar incidencia",
+                            color = Color(0xFFFF5252),
+                            icon = Icons.Default.ReportProblem,
+                            onClick = { onReportIncident(guia) }
                         )
                     }
                 }
@@ -812,6 +874,56 @@ fun SignatureDialog(guia: GuiaAsignada, onDismiss: () -> Unit, onConfirm: (GuiaA
 }
 
 // Bitácora Tab
+@Composable
+fun IncidentDialog(guia: GuiaAsignada, onDismiss: () -> Unit, onConfirm: (GuiaAsignada, String) -> Unit) {
+    var nota by remember { mutableStateOf("") }
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1F29)),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    "Reportar incidencia",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                Text("Guía: ${'$'}{guia.guiaRastreo}", color = Color(0xFF8E8E93), fontSize = 12.sp)
+                Spacer(Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = nota,
+                    onValueChange = { nota = it },
+                    label = { Text("Describe la incidencia") },
+                    placeholder = { Text("Ej. Destinatario ausente, dirección incorrecta...") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 120.dp),
+                    maxLines = 4,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                )
+                Spacer(Modifier.height(16.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    TextButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
+                        Text("Cancelar", color = Color(0xFF8E8E93))
+                    }
+                    Button(
+                        onClick = { onConfirm(guia, nota.trim()) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252))
+                    ) {
+                        Text("Reportar")
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun BitacoraTab(entregas: List<BitacoraEntrega>) {
     var entregaSeleccionada by remember { mutableStateOf<BitacoraEntrega?>(null) }

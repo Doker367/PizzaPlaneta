@@ -245,131 +245,117 @@ fun PizzaHomeScreen() {
         // Login / Register / Forgot
         if (showLogin) {
             if (showRegister) {
-                // Pantalla de registro a pantalla completa, con imagen superior
+                var registroError by remember { mutableStateOf<String?>(null) }
+                var registroExito by remember { mutableStateOf(false) }
+                var isRegistering by remember { mutableStateOf(false) }
                 RegistroScreen(
                     headerImageRes = R.drawable.pizzorra,
                     onBack = { showRegister = false },
-                    onSubmit = { _, _, _, _ ->
-                        // TODO: Integración con API de registro
-                        showRegister = false
+                    isLoading = isRegistering,
+                    errorMessage = registroError,
+                    onSubmit = { nombre, correo, telefono, pass1, pass2 ->
+                        registroError = null
+                        registroExito = false
+                        if (nombre.isBlank() || correo.isBlank() || telefono.isBlank() || pass1.isBlank() || pass2.isBlank()) {
+                            registroError = "Completa todos los campos."
+                            return@RegistroScreen
+                        }
+                        if (pass1 != pass2) {
+                            registroError = "Las contraseñas no coinciden."
+                            return@RegistroScreen
+                        }
+                        isRegistering = true
+                        val api = RetrofitProvider.pizzaApi(context)
+                        val req = com.manybox.chofer.api.PizzaRegisterRequest(
+                            nombre = nombre,
+                            email = correo,
+                            password = pass1,
+                            telefono = telefono
+                        )
+                        api.register(req).enqueue(object: retrofit2.Callback<Void> {
+                            override fun onResponse(call: retrofit2.Call<Void>, response: retrofit2.Response<Void>) {
+                                isRegistering = false
+                                if (response.isSuccessful) {
+                                    registroExito = true
+                                    showRegister = false
+                                    showLogin = true
+                                } else {
+                                    val errorBody = response.errorBody()?.string()
+                                    registroError = errorBody ?: "Error en el registro: ${response.code()}"
+                                }
+                            }
+                            override fun onFailure(call: retrofit2.Call<Void>, t: Throwable) {
+                                isRegistering = false
+                                registroError = "Error de red: ${t.message}"
+                            }
+                        })
                     },
                     onLoginClick = { showRegister = false }
                 )
             } else if (showForgot) {
-                // Flujo de restablecer a pantalla completa con pasos (email -> código -> nueva contraseña)
                 if (forgotStep == 0) {
                     RestablecerContrasenaScreen(
                         headerImageRes = R.drawable.pizzorra,
                         onBack = { showForgot = false; forgotStep = 0 },
-                        onSubmitEmail = { _ ->
-                            // TODO: Integración con backend (enviar correo)
-                            forgotStep = 1
-                        }
+                        onSubmitEmail = { _ -> forgotStep = 1 }
                     )
                 } else if (forgotStep == 1) {
                     VerificarCodigoScreen(
                         headerImageRes = R.drawable.pizzorra,
                         onBack = { forgotStep = 0 },
-                        onVerify = { _ ->
-                            // TODO: Validar código con backend
-                            forgotStep = 2
-                        }
+                        onVerify = { _ -> forgotStep = 2 }
                     )
                 } else {
                     NuevaContrasenaScreen(
                         headerImageRes = R.drawable.pizzorra,
                         onBack = { forgotStep = 1 },
-                        onConfirm = { pass1, pass2 ->
-                            // TODO: Validar y enviar al backend para establecer la nueva contraseña
-                            showForgot = false
-                            forgotStep = 0
-                        }
+                        onConfirm = { _, _ -> showForgot = false; forgotStep = 0 }
                     )
                 }
             } else {
-                Surface(
-                    color = Color(0xCC000000),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable { /* backdrop, ignore */ },
-                ) {}
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .align(Alignment.Center),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1F29)),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { showLogin = false; showRegister = false; showForgot = false; forgotStep = 0 }) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
-                            }
-                            Spacer(Modifier.width(8.dp))
-                            Text(if (!showRegister && !showForgot) "LOGIN" else if (showRegister) "CREAR CUENTA" else "RESTABLECER", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        if (!showRegister) {
-                            LoginForm(
-                                onForgot = {
-                                    // Fuerza navegación a la pantalla full-screen de restablecer
-                                    showRegister = false
-                                    showForgot = true
-                                    forgotStep = 0
-                                    showLogin = true
-                                },
-                                onRegister = { showRegister = true },
-                                onLogin = { email, pass ->
-                                    isLoggingIn = true
-                                    loginError = null
-                                    val api = RetrofitProvider.api(context)
-                                    api.login(PizzaLoginRequest(email, pass)).enqueue(object: Callback<PizzaLoginResponse> {
-                                        override fun onResponse(call: Call<PizzaLoginResponse>, response: Response<PizzaLoginResponse>) {
-                                            isLoggingIn = false
+                LoginScreen(
+                    onLogin = { email, pass ->
+                        isLoggingIn = true
+                        loginError = null
+                        val api = RetrofitProvider.pizzaApi(context)
+                        api.login(PizzaLoginRequest(email, pass)).enqueue(object: Callback<PizzaLoginResponse> {
+                            override fun onResponse(call: Call<PizzaLoginResponse>, response: Response<PizzaLoginResponse>) {
+                                isLoggingIn = false
+                                if (response.isSuccessful) {
+                                    val rawToken = response.body()?.token ?: ""
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        TokenStore.saveToken(context, rawToken)
+                                    }
+                                    api.getSucursales().enqueue(object: Callback<List<SucursalDto>> {
+                                        override fun onResponse(call: Call<List<SucursalDto>>, response: Response<List<SucursalDto>>) {
                                             if (response.isSuccessful) {
-                                                val rawToken = response.body()?.token ?: ""
-                                                // Persist token and keep it in memory
-                                                CoroutineScope(Dispatchers.IO).launch {
-                                                    TokenStore.saveToken(context, rawToken)
-                                                }
-                                                // Cargar sucursales como prueba de endpoint protegido (header via interceptor)
-                                                api.getSucursales().enqueue(object: Callback<List<SucursalDto>> {
-                                                    override fun onResponse(call: Call<List<SucursalDto>>, response: Response<List<SucursalDto>>) {
-                                                        if (response.isSuccessful) {
-                                                            showLogin = false
-                                                            showSideMenu = true
-                                                            sideType = "order"
-                                                        } else {
-                                                            loginError = "No se pudieron cargar sucursales (${response.code()})"
-                                                        }
-                                                    }
-                                                    override fun onFailure(call: Call<List<SucursalDto>>, t: Throwable) {
-                                                        loginError = "Error al cargar sucursales: ${t.message}"
-                                                    }
-                                                })
+                                                showLogin = false
+                                                showSideMenu = true
+                                                sideType = "order"
                                             } else {
-                                                loginError = "Usuario o contraseña incorrectos"
+                                                loginError = "No se pudieron cargar sucursales (${response.code()})"
                                             }
                                         }
-                                        override fun onFailure(call: Call<PizzaLoginResponse>, t: Throwable) {
-                                            isLoggingIn = false
-                                            loginError = "Error de red: ${t.message}"
+                                        override fun onFailure(call: Call<List<SucursalDto>>, t: Throwable) {
+                                            loginError = "Error al cargar sucursales: ${t.message}"
                                         }
                                     })
+                                } else {
+                                    loginError = "Usuario o contraseña incorrectos"
                                 }
-                            )
-                            if (isLoggingIn) {
-                                Spacer(Modifier.height(12.dp))
-                                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                             }
-                            if (!loginError.isNullOrBlank()) {
-                                Spacer(Modifier.height(8.dp))
-                                Text(loginError!!, color = Color(0xFFFF6B6B))
+                            override fun onFailure(call: Call<PizzaLoginResponse>, t: Throwable) {
+                                isLoggingIn = false
+                                loginError = "Error de red: ${t.message}"
                             }
-                        }
-                    }
-                }
+                        })
+                    },
+                    isLoading = isLoggingIn,
+                    errorMessage = loginError,
+                    onBack = { showLogin = false; showRegister = false; showForgot = false; forgotStep = 0 },
+                    onRegisterClick = { showRegister = true },
+                    headerImageRes = R.drawable.pizzorra
+                )
             }
         }
 

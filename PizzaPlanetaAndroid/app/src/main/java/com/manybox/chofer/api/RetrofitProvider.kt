@@ -19,8 +19,11 @@ object RetrofitProvider {
     @Volatile
     private var retrofit: Retrofit? = null
 
-    fun api(context: Context): PizzaApiService =
+    fun pizzaApi(context: Context): PizzaApiService =
         getRetrofit(context).create(PizzaApiService::class.java)
+
+    fun apiService(context: Context): ApiService =
+        getRetrofit(context).create(ApiService::class.java)
 
     fun getRetrofit(context: Context): Retrofit {
         return retrofit ?: synchronized(this) {
@@ -95,7 +98,7 @@ object RetrofitProvider {
     }
 
     private fun getPizzaBaseUrl(): String {
-        // Usa HTTPS de desarrollo por defecto; si tu backend expone solo HTTP, cambia a 5000
-        return if (isEmulator()) "https://10.0.2.2:5001/" else "https://localhost:5001/"
+        // Siempre usa localhost para pruebas locales (solo funcionará en emulador Android)
+        return "http://10.0.2.2:80/"
     }
 }

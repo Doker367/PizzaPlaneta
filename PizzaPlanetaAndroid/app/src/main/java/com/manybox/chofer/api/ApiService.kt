@@ -67,7 +67,11 @@ interface ApiService {
     ): Call<Void>
 }
 
-data class EstadoRequest(val status: String)
+data class EstadoRequest(
+    val status: String,
+    // ASP.NET Core vincula en camelCase por defecto
+    @SerializedName("notaEstado") val notaEstado: String? = null
+)
 
 // ViewModel de notificación (api/notificaciones/usuario/{usuarioId})
 data class NotificacionUsuarioVM(
