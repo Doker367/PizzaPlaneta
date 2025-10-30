@@ -111,7 +111,7 @@ fun PizzaHomeScreen() {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 72.dp), // mueve ambos más abajo (ajusta aquí)
+                    .padding(top = 48.dp), // Reducido de 72.dp a 48.dp para subir todo el contenido
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
@@ -121,12 +121,19 @@ fun PizzaHomeScreen() {
                         .fillMaxWidth(0.9f)
                         .height(120.dp)
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))  // Reducido de 12.dp a 8.dp
                 Text(
                     "Bienvenido",
                     color = OnNavy,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
+                )
+                Spacer(Modifier.height(2.dp))  // Reducido de 4.dp a 2.dp
+                HotPizzaAnimation(
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    size = 600f,
+                    lineColor = Color.White.copy(alpha = 0.85f),
+                    strokeWidth = 8f
                 )
             }
 
