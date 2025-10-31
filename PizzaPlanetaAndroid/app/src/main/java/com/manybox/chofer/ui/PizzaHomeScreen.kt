@@ -1,4 +1,5 @@
 package com.manybox.chofer.ui
+import coil.compose.AsyncImage
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -9,6 +10,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -72,6 +81,8 @@ fun PizzaHomeScreen() {
     var isLoggingIn by remember { mutableStateOf(false) }
     var loginError by remember { mutableStateOf<String?>(null) }
     var showMenu by remember { mutableStateOf(false) }
+    var loginSuccess by remember { mutableStateOf(false) }
+    var sucursales by remember { mutableStateOf<List<SucursalDto>>(emptyList()) }
 
     // Palette
     val Navy = Color(0xFF1D3557)
@@ -256,50 +267,104 @@ fun PizzaHomeScreen() {
                 var registroError by remember { mutableStateOf<String?>(null) }
                 var registroExito by remember { mutableStateOf(false) }
                 var isRegistering by remember { mutableStateOf(false) }
-                RegistroScreen(
-                    headerImageRes = R.drawable.pizzorra,
-                    onBack = { showRegister = false },
-                    isLoading = isRegistering,
-                    errorMessage = registroError,
-                    onSubmit = { nombre, correo, telefono, pass1, pass2 ->
-                        registroError = null
-                        registroExito = false
-                        if (nombre.isBlank() || correo.isBlank() || telefono.isBlank() || pass1.isBlank() || pass2.isBlank()) {
-                            registroError = "Completa todos los campos."
-                            return@RegistroScreen
-                        }
-                        if (pass1 != pass2) {
-                            registroError = "Las contraseñas no coinciden."
-                            return@RegistroScreen
-                        }
-                        isRegistering = true
-                        val api = RetrofitProvider.pizzaApi(context)
-                        val req = com.manybox.chofer.api.PizzaRegisterRequest(
-                            nombre = nombre,
-                            email = correo,
-                            password = pass1,
-                            telefono = telefono
-                        )
-                        api.register(req).enqueue(object: retrofit2.Callback<Void> {
-                            override fun onResponse(call: retrofit2.Call<Void>, response: retrofit2.Response<Void>) {
-                                isRegistering = false
-                                if (response.isSuccessful) {
-                                    registroExito = true
-                                    showRegister = false
-                                    showLogin = true
-                                } else {
-                                    val errorBody = response.errorBody()?.string()
-                                    registroError = errorBody ?: "Error en el registro: ${response.code()}"
+                Box {
+                    RegistroScreen(
+                        headerImageRes = R.drawable.pizzorra,
+                        onBack = { showRegister = false },
+                        isLoading = isRegistering,
+                        errorMessage = registroError,
+                        onSubmit = { nombre, correo, telefono, pass1, pass2 ->
+                            registroError = null
+                            registroExito = false
+                            if (nombre.isBlank() || correo.isBlank() || telefono.isBlank() || pass1.isBlank() || pass2.isBlank()) {
+                                registroError = "Completa todos los campos."
+                                return@RegistroScreen
+                            }
+                            if (pass1 != pass2) {
+                                registroError = "Las contraseñas no coinciden."
+                                return@RegistroScreen
+                            }
+                            isRegistering = true
+                            val api = RetrofitProvider.pizzaApi(context)
+                            val req = com.manybox.chofer.api.PizzaRegisterRequest(
+                                nombre = nombre,
+                                email = correo,
+                                password = pass1,
+                                telefono = telefono
+                            )
+                            api.register(req).enqueue(object: retrofit2.Callback<Void> {
+                                override fun onResponse(call: retrofit2.Call<Void>, response: retrofit2.Response<Void>) {
+                                    isRegistering = false
+                                    if (response.isSuccessful) {
+                                        registroExito = true
+                                        // Espera 1.5s y regresa a login
+                                        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                                            kotlinx.coroutines.delay(1500)
+                                            showRegister = false
+                                            showLogin = true
+                                        }
+                                    } else {
+                                        val errorBody = response.errorBody()?.string()
+                                        registroError = errorBody ?: "Error en el registro: ${response.code()}"
+                                    }
+                                }
+                                override fun onFailure(call: retrofit2.Call<Void>, t: Throwable) {
+                                    isRegistering = false
+                                    registroError = "Error de red: ${t.message}"
+                                }
+                            })
+                        },
+                        onLoginClick = { showRegister = false }
+                    )
+                    // Mensaje de éxito animado
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = registroExito,
+                        modifier = Modifier.fillMaxSize(),
+                        enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandVertically(),
+                        exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.shrinkVertically()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0xAA1DE9B6)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Card(
+                                shape = RoundedCornerShape(24.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(12.dp),
+                                modifier = Modifier
+                                    .padding(32.dp)
+                                    .fillMaxWidth(0.85f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(32.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.CheckCircle,
+                                        contentDescription = "Éxito",
+                                        tint = Color(0xFF43A047),
+                                        modifier = Modifier.size(64.dp)
+                                    )
+                                    Spacer(Modifier.height(16.dp))
+                                    Text(
+                                        "¡Cuenta creada exitosamente!",
+                                        color = Color(0xFF43A047),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 22.sp
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        "Ahora puedes iniciar sesión",
+                                        color = Color.Gray,
+                                        fontSize = 16.sp
+                                    )
                                 }
                             }
-                            override fun onFailure(call: retrofit2.Call<Void>, t: Throwable) {
-                                isRegistering = false
-                                registroError = "Error de red: ${t.message}"
-                            }
-                        })
-                    },
-                    onLoginClick = { showRegister = false }
-                )
+                        }
+                    }
+                }
             } else if (showForgot) {
                 if (forgotStep == 0) {
                     RestablecerContrasenaScreen(
@@ -330,16 +395,24 @@ fun PizzaHomeScreen() {
                             override fun onResponse(call: Call<PizzaLoginResponse>, response: Response<PizzaLoginResponse>) {
                                 isLoggingIn = false
                                 if (response.isSuccessful) {
-                                    val rawToken = response.body()?.token ?: ""
+                                    val rawToken = response.body()?.token?.removePrefix("Bearer ")?.trim() ?: ""
                                     CoroutineScope(Dispatchers.IO).launch {
                                         TokenStore.saveToken(context, rawToken)
                                     }
-                                    api.getSucursales().enqueue(object: Callback<List<SucursalDto>> {
+                                    // Nueva instancia para asegurar que el interceptor use el token actualizado
+                                    val apiWithToken = RetrofitProvider.pizzaApi(context)
+                                    apiWithToken.getSucursales().enqueue(object: Callback<List<SucursalDto>> {
                                         override fun onResponse(call: Call<List<SucursalDto>>, response: Response<List<SucursalDto>>) {
                                             if (response.isSuccessful) {
-                                                showLogin = false
-                                                showSideMenu = true
-                                                sideType = "order"
+                                                loginSuccess = true
+                                                // Actualiza la lista de sucursales con la respuesta
+                                                sucursales = response.body() ?: emptyList()
+                                                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                                                    kotlinx.coroutines.delay(1200)
+                                                    showLogin = false
+                                                    showOrderSelector = true
+                                                    loginSuccess = false
+                                                }
                                             } else {
                                                 loginError = "No se pudieron cargar sucursales (${response.code()})"
                                             }
@@ -364,6 +437,82 @@ fun PizzaHomeScreen() {
                     onRegisterClick = { showRegister = true },
                     headerImageRes = R.drawable.pizzorra
                 )
+            }
+        }
+
+        // Mensaje de login exitoso futurista
+        androidx.compose.animation.AnimatedVisibility(
+            visible = loginSuccess,
+            modifier = Modifier.fillMaxSize(),
+            enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandIn(expandFrom = Alignment.Center),
+            exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.shrinkOut(shrinkTowards = Alignment.Center)
+        ) {
+            // Mostrar GIF del horno de leña (sin animación extra)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                            colors = listOf(Color(0xFFFFF3E0), Color(0xFFFFA726), Color(0xFF6D4C41)),
+                            center = androidx.compose.ui.geometry.Offset(0.5f, 0.5f),
+                            radius = 800f
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    shape = RoundedCornerShape(32.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.97f)),
+                    elevation = CardDefaults.cardElevation(18.dp),
+                    modifier = Modifier
+                        .padding(32.dp)
+                        .fillMaxWidth(0.85f)
+                        .graphicsLayer {
+                            shadowElevation = 24f
+                            shape = RoundedCornerShape(32.dp)
+                            clip = true
+                        }
+                ) {
+                    Column(
+                        modifier = Modifier.padding(36.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        AsyncImage(
+                            model = R.drawable.horno_de_lena,
+                            contentDescription = "Horno de leña animado",
+                            modifier = Modifier.size(110.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                        Spacer(Modifier.height(18.dp))
+                        Text(
+                            "¡Bienvenido a Pizza Planeta!",
+                            color = Color(0xFFD84315),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 26.sp,
+                            letterSpacing = 2.sp
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Has iniciado sesión con éxito",
+                            color = Color(0xFF6D4C41),
+                            fontSize = 16.sp
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = loginSuccess,
+                            enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.slideInVertically(),
+                            exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.slideOutVertically()
+                        ) {
+                            androidx.compose.material3.LinearProgressIndicator(
+                                color = Color(0xFFFFA726),
+                                trackColor = Color(0xFFFFF3E0),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 16.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -476,8 +625,8 @@ fun PizzaHomeScreen() {
 
                     Spacer(Modifier.height(16.dp))
 
-                    // Lista de sucursales
-                    repeat(3) { idx ->
+                    // Lista de sucursales dinámica
+                    sucursales.forEach { sucursal ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -499,21 +648,18 @@ fun PizzaHomeScreen() {
                                         .size(60.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                 )
-                                
                                 Spacer(Modifier.width(12.dp))
-                                
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        "Pizza Planet ${listOf("Centro","Norte","Sur")[idx]}",
+                                        sucursal.nombre,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        "Av. 1ra poniente #2396",
+                                        sucursal.direccion,
                                         color = Color.Gray,
                                         fontSize = 14.sp
                                     )
                                 }
-                                
                                 Button(
                                     onClick = { 
                                         showOrderSelector = false

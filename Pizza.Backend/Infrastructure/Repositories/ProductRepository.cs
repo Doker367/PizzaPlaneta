@@ -10,9 +10,9 @@ namespace Pizza.Backend.Infrastructure.Repositories;
 
 public class ProductRepository : IProductRepository
 {
-    private readonly PizzaPlanetaContext _context;
+    private readonly ProductsDbContext _context;
 
-    public ProductRepository(PizzaPlanetaContext context)
+    public ProductRepository(ProductsDbContext context)
     {
         _context = context;
     }

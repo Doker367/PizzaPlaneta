@@ -7,9 +7,9 @@ namespace Pizza.Backend.Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository
 {
-    private readonly PizzaPlanetaContext _context;
+    private readonly MainDbContext _context;
 
-    public UserRepository(PizzaPlanetaContext context)
+    public UserRepository(MainDbContext context)
     {
         _context = context;
     }

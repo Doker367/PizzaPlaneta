@@ -16,6 +16,7 @@ public partial class Producto
     public string? Categoria { get; set; }
 
     public bool? Activo { get; set; }
+    public int? Calorias { get; set; }
 
     public virtual ICollection<DetallePedido> DetallePedidos { get; set; } = new List<DetallePedido>();
 }

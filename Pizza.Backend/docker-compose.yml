@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "5200:5200"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - POSTGRES_CONNECTION_STRING=Host=postgres-db;Port=5432;Database=pizzaplaneta_main;Username=user;Password=password
+      - MYSQL_CONNECTION_STRING=server=mysql-db;port=3306;database=pizzaplaneta_inventory;user=root;password=root
+      - MARIADB_CONNECTION_STRING=server=mariadb-db;port=3306;database=pizzaplaneta_products;user=root;password=root
+      - JWT_SECRET=a-very-secure-secret-key-that-is-long-enough
+      - JWT_ISSUER=PizzaPlaneta
+      - JWT_AUDIENCE=PizzaPlanetaUsers
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      mysql-db:
+        condition: service_healthy
+      mariadb-db:
+        condition: service_healthy
+
+  postgres-db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=pizzaplaneta_main
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d pizzaplaneta_main"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=pizzaplaneta_inventory
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=root"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mariadb-db:
+    image: mariadb:10.11
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=pizzaplaneta_products
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=root"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  mysql_data:
+  mariadb_data:

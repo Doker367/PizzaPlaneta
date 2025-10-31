@@ -9,9 +9,9 @@ namespace Pizza.Backend.Infrastructure.Repositories;
 
 public class OrderRepository : IOrderRepository
 {
-    private readonly PizzaPlanetaContext _context;
+    private readonly InventoryDbContext _context;
 
-    public OrderRepository(PizzaPlanetaContext context)
+    public OrderRepository(InventoryDbContext context)
     {
         _context = context;
     }
@@ -36,10 +36,10 @@ public class OrderRepository : IOrderRepository
 public async Task<List<Pedido>> GetOrdersByUser(int userId)
 {
     return await _context.Pedidos
-        .Include(p => p.Sucursal)
+        // .Include(p => p.Sucursal) // In MainDbContext
         .Include(p => p.DetallePedidos)
-            .ThenInclude(d => d.Producto)
-        .Include(p => p.Calificaciones)
+            // .ThenInclude(d => d.Producto) // In ProductsDbContext
+        // .Include(p => p.Calificaciones) // In MainDbContext
         .Where(p => p.UsuarioId == userId)
         .OrderByDescending(p => p.Fecha)
         .ToListAsync();

@@ -98,7 +98,7 @@ object RetrofitProvider {
     }
 
     private fun getPizzaBaseUrl(): String {
-        // Siempre usa localhost para pruebas locales (solo funcionará en emulador Android)
-        return "http://10.0.2.2:80/"
+        // Usa el puerto correcto del backend local
+        return "http://10.0.2.2:5200/"
     }
 }

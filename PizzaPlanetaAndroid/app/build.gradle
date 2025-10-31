@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+
 // Provide a forwarding ':app:wrapper' task so IDEs calling :app:wrapper won't fail
 tasks.register('wrapper') {
     dependsOn(':wrapper')
@@ -57,6 +58,8 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.10.0'
+    // Coil para imágenes y GIFs animados en Compose
+    implementation 'io.coil-kt:coil-compose:2.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
     implementation 'androidx.activity:activity-compose:1.8.2'

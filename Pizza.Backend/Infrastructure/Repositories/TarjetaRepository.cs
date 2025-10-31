@@ -11,9 +11,9 @@ namespace Pizza.Backend.Infrastructure.Repositories
 {
     public class TarjetaRepository : ITarjetaRepository
     {
-        private readonly PizzaPlanetaContext _context;
+        private readonly MainDbContext _context;
 
-        public TarjetaRepository(PizzaPlanetaContext context)
+        public TarjetaRepository(MainDbContext context)
         {
             _context = context;
         }

@@ -228,3 +228,5 @@
 /home/doker/Descargas/Pizzeria/Pizza.Backend/obj/Debug/net8.0/Pizza.Backend.pdb
 /home/doker/Descargas/Pizzeria/Pizza.Backend/obj/Debug/net8.0/Pizza.Backend.genruntimeconfig.cache
 /home/doker/Descargas/Pizzeria/Pizza.Backend/obj/Debug/net8.0/ref/Pizza.Backend.dll
+/home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/Npgsql.dll
+/home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll

@@ -7,9 +7,9 @@ namespace Pizza.Backend.Infrastructure.Repositories;
 
 public class SucursalRepository : ISucursalRepository
 {
-    private readonly PizzaPlanetaContext _context;
+    private readonly MainDbContext _context;
 
-    public SucursalRepository(PizzaPlanetaContext context)
+    public SucursalRepository(MainDbContext context)
     {
         _context = context;
     }

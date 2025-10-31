@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Pizza.Backend.Application;
 using Pizza.Backend.Infrastructure.Data;
+using Pizza.Backend.Infrastructure.Data;
 using Pizza.Backend.Infrastructure.Repositories;
 using Pizza.Backend.Ports;
 
@@ -15,10 +16,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 // 1. Add services to the container.
 
-// Add DbContext
-var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
-builder.Services.AddDbContext<PizzaPlanetaContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+// Add DbContexts
+var postgresConnectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+builder.Services.AddDbContext<MainDbContext>(options =>
+    options.UseNpgsql(postgresConnectionString));
+
+var mysqlConnectionString = Environment.GetEnvironmentVariable("MYSQL_CONNECTION_STRING");
+builder.Services.AddDbContext<InventoryDbContext>(options =>
+    options.UseMySql(mysqlConnectionString, new MySqlServerVersion(new Version(8, 0, 21))));
+
+var mariadbConnectionString = Environment.GetEnvironmentVariable("MARIADB_CONNECTION_STRING");
+builder.Services.AddDbContext<ProductsDbContext>(options =>
+    options.UseMySql(mariadbConnectionString, new MySqlServerVersion(new Version(10, 11))));
 
 builder.Services.AddControllers();
 
@@ -65,6 +74,23 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Apply migrations
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    
+    var mainDbContext = services.GetRequiredService<MainDbContext>();
+    mainDbContext.Database.Migrate();
+
+    var inventoryDbContext = services.GetRequiredService<InventoryDbContext>();
+    inventoryDbContext.Database.Migrate();
+
+    var productsDbContext = services.GetRequiredService<ProductsDbContext>();
+    productsDbContext.Database.Migrate();
+
+    SeedData.Initialize(services);
+}
 
 // 2. Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

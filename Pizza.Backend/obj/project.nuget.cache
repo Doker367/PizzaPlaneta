@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "zygWmQvBPDd7AV4+kd5gr2jsOJbi61mZuD6LJxicKs0qY8DZeU9NvPBI4Ezed4xX0QiZ24B6t4s6CeN7MvaD0g==",
+  "dgSpecHash": "3ffIzmZIrE1qopmoiI9BNcYOXBojLuTjC8gHX465kMz74GTG5OYTWz/zbsdDM58aSyntajGd4ff3Rp5MbqnEfw==",
   "success": true,
   "projectFilePath": "/home/doker/Descargas/Pizzeria/Pizza.Backend/Pizza.Backend.csproj",
   "expectedPackageFiles": [
@@ -44,6 +44,8 @@
     "/home/doker/.nuget/packages/mono.texttemplating/2.2.1/mono.texttemplating.2.2.1.nupkg.sha512",
     "/home/doker/.nuget/packages/mysqlconnector/2.3.5/mysqlconnector.2.3.5.nupkg.sha512",
     "/home/doker/.nuget/packages/netstandard.library/1.6.1/netstandard.library.1.6.1.nupkg.sha512",
+    "/home/doker/.nuget/packages/npgsql/8.0.2/npgsql.8.0.2.nupkg.sha512",
+    "/home/doker/.nuget/packages/npgsql.entityframeworkcore.postgresql/8.0.2/npgsql.entityframeworkcore.postgresql.8.0.2.nupkg.sha512",
     "/home/doker/.nuget/packages/pomelo.entityframeworkcore.mysql/8.0.2/pomelo.entityframeworkcore.mysql.8.0.2.nupkg.sha512",
     "/home/doker/.nuget/packages/runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl/4.3.2/runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",
     "/home/doker/.nuget/packages/runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl/4.3.2/runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",

@@ -9,9 +9,9 @@ namespace Pizza.Backend.Infrastructure.Repositories
 {
     public class CarritoRepository : ICarritoRepository
     {
-        private readonly PizzaPlanetaContext _context;
+        private readonly InventoryDbContext _context;
 
-        public CarritoRepository(PizzaPlanetaContext context)
+        public CarritoRepository(InventoryDbContext context)
         {
             _context = context;
         }
@@ -20,7 +20,7 @@ namespace Pizza.Backend.Infrastructure.Repositories
         {
             return await _context.Carritos
                 .Include(c => c.Items)
-                .ThenInclude(i => i.Producto)
+                // .ThenInclude(i => i.Producto) // Removed due to multi-db architecture. The application layer will need to fetch product details separately.
                 .FirstOrDefaultAsync(c => c.UsuarioId == userId);
         }
 

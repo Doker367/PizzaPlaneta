@@ -22,4 +22,6 @@ public partial class Sucursale
     public virtual ICollection<Calificacione> Calificaciones { get; set; } = new List<Calificacione>();
 
     public virtual ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
+
+    public virtual ICollection<Menu> Menus { get; set; } = new List<Menu>();
 }

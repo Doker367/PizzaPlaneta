@@ -22,4 +22,11 @@ public class SucursalController : ControllerBase
         var sucursales = await _sucursalService.GetAllAsync();
         return Ok(sucursales);
     }
+
+    [HttpGet("{id}/menu")]
+    public async Task<IActionResult> GetMenu(int id)
+    {
+        var menu = await _sucursalService.GetMenuBySucursalId(id);
+        return Ok(menu);
+    }
 }
