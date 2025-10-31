@@ -67,6 +67,7 @@ fun PizzaHomeScreen() {
     var forgotStep by remember { mutableStateOf(0) }
     var showSideMenu by remember { mutableStateOf(false) }
     var sideType by remember { mutableStateOf("default") }
+    var showAccount by remember { mutableStateOf(false) }
     var showOrderSelector by remember { mutableStateOf(false) }
     var isLoggingIn by remember { mutableStateOf(false) }
     var loginError by remember { mutableStateOf<String?>(null) }
@@ -589,11 +590,28 @@ fun PizzaHomeScreen() {
                         Spacer(Modifier.height(12.dp))
                         Text("Hola, Usuario!", color = Navy, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Spacer(Modifier.height(12.dp))
-                        DrawerOptionWithIcon(text = "Mi cuenta", iconRes = R.drawable.cuenta, color = Color.Black)
+                        DrawerOptionWithIcon(text = "Mi cuenta", iconRes = R.drawable.cuenta, color = Color.Black, onClick = { showAccount = true; showSideMenu = false })
                         DrawerOptionWithIcon(text = "Más cercano", iconRes = R.drawable.cercano, color = Color.Black)
                     }
                 }
             }
+        }
+        // Mostrar pantalla de cuenta cuando se solicita
+        if (showAccount) {
+            CuentaUsuarioScreen(
+                fullname = "Usuario Ejemplo",
+                phone = "+51 900 000 000",
+                email = "usuario@example.com",
+                favorites = listOf("Margarita", "Pepperoni"),
+                favoriteBranch = "Sucursal Central",
+                paymentMethods = listOf("Tarjeta •••• 4242", "Efectivo"),
+                orders = listOf(),
+                headerImageRes = R.drawable.pizzorra,
+                onBack = { showAccount = false },
+                onEditProfile = { /* abrir edición */ },
+                onLogout = { showAccount = false },
+                onReorder = { orderId -> /* manejar reordenar */ }
+            )
         }
     }
 }
@@ -606,11 +624,12 @@ private fun SideOption(text: String, color: Color = Color(0xFFB0B3B8)) {
 }
 
 @Composable
-private fun DrawerOptionWithIcon(text: String, iconRes: Int, color: Color = Color.Black) {
+private fun DrawerOptionWithIcon(text: String, iconRes: Int, color: Color = Color.Black, onClick: (() -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp),
+            .padding(vertical = 10.dp)
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
