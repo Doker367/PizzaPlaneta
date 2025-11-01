@@ -7,4 +7,6 @@ public interface ISucursalService
 {
     Task<IEnumerable<Sucursale>> GetAllAsync();
     Task<IEnumerable<MenuItemDto>> GetMenuBySucursalId(int sucursalId);
+    Task<Sucursale> CreateAsync(CreateSucursalDto sucursalDto);
+    Task<Menu> AddMenuItemAsync(int sucursalId, AddMenuItemDto menuItemDto);
 }

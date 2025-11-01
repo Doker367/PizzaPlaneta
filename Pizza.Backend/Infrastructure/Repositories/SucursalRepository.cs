@@ -18,4 +18,11 @@ public class SucursalRepository : ISucursalRepository
     {
         return await _context.Sucursales.ToListAsync();
     }
+
+    public async Task<Sucursale> AddAsync(Sucursale sucursal)
+    {
+        _context.Sucursales.Add(sucursal);
+        await _context.SaveChangesAsync();
+        return sucursal;
+    }
 }

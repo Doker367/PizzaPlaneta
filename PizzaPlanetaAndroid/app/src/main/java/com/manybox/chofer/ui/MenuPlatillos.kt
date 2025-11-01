@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,7 +51,9 @@ data class MenuUiItem(
     val id: Int,
     val name: String,
     val description: String,
-    val price: Double
+    val price: Double,
+    val calories: Int?,
+    val category: String?
 )
 
 @Composable
@@ -65,6 +68,16 @@ fun MenuPlatillos(
     var items by remember { mutableStateOf<List<MenuUiItem>>(emptyList()) }
     var selected by remember { mutableStateOf<MenuUiItem?>(null) }
     var qty by remember { mutableStateOf(1) }
+    var search by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("Todos") }
+    var cartCount by remember { mutableStateOf(0) }
+    // Carrito local para mostrar "Ver pedido"
+    data class CartItem(val id: Int, val name: String, val unitPrice: Double, var qty: Int)
+    val cartItems = remember { mutableStateListOf<CartItem>() }
+    var showCartSheet by remember { mutableStateOf(false) }
+
+    // Categorías derivadas de los ítems (memoizadas por cambios en items)
+    val categories = remember(items) { items.mapNotNull { it.category?.ifBlank { null } }.distinct() }
 
     LaunchedEffect(sucursalId) {
         isLoading = true
@@ -81,7 +94,9 @@ fun MenuPlatillos(
                                 id = it.productoId,
                                 name = it.nombre,
                                 description = it.descripcion,
-                                price = it.precio.toDouble()
+                                price = it.precio.toDouble(),
+                                calories = it.calorias,
+                                category = it.categoria
                             )
                         }
                         isLoading = false
@@ -104,7 +119,7 @@ fun MenuPlatillos(
 
     Scaffold(
         containerColor = GrayBackground,
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { com.manybox.chofer.ui.components.SubtleSnackHost(snackbarHostState, bottomPadding = 90.dp) }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -225,16 +240,136 @@ fun MenuPlatillos(
                 }
             }
 
-            // Lista de productos del menú
-            item {
-                Spacer(Modifier.height(16.dp))
-                CategoryButton(text = "Menú")
-                Spacer(Modifier.height(16.dp))
+            // Buscador y filtros de categoría
+            if (!isLoading && error == null) {
+                item { Spacer(Modifier.height(8.dp)) }
+                item {
+                    OutlinedTextField(
+                        value = search,
+                        onValueChange = { search = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        singleLine = true,
+                        label = { Text("Buscar en el menú") }
+                    )
+                }
+                item { Spacer(Modifier.height(8.dp)) }
+                item {
+                    val all = listOf("Todos") + categories
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        all.forEach { cat ->
+                            val selectedChip = selectedCategory == cat
+                            FilterChip(
+                                selected = selectedChip,
+                                onClick = { selectedCategory = cat },
+                                label = { Text(cat) },
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                        }
+                    }
+                }
             }
 
-            items(items) { item ->
-                MenuItemRow(item = item, onView = { selected = item; qty = 1 })
-                Spacer(Modifier.height(12.dp))
+            // Lista de productos del menú agrupados por categoría
+            val filtered = items.filter { i ->
+                val q = search.trim().lowercase()
+                val byQuery = if (q.isBlank()) true else i.name.lowercase().contains(q) || i.description.lowercase().contains(q)
+                val byCat = selectedCategory == "Todos" || (i.category ?: "Otros") == selectedCategory
+                byQuery && byCat
+            }
+            if (!isLoading && error == null && filtered.isEmpty()) {
+                item {
+                    Spacer(Modifier.height(32.dp))
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("No hay productos en esta sucursal", fontWeight = FontWeight.SemiBold, color = BrownDark)
+                        Spacer(Modifier.height(6.dp))
+                        Text("Intenta seleccionar otra sucursal o refrescar.", color = Color.Gray, fontSize = 12.sp)
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedButton(onClick = {
+                            isLoading = true
+                            error = null
+                            RetrofitProvider.pizzaApi(context).getMenuBySucursalId(sucursalId)
+                                .enqueue(object : Callback<List<MenuItemDto>> {
+                                    override fun onResponse(call: Call<List<MenuItemDto>>, response: Response<List<MenuItemDto>>) {
+                                        if (response.isSuccessful) {
+                                            val body = response.body().orEmpty()
+                                            items = body.map {
+                                                MenuUiItem(
+                                                    id = it.productoId,
+                                                    name = it.nombre,
+                                                    description = it.descripcion,
+                                                    price = it.precio.toDouble(),
+                                                    calories = it.calorias,
+                                                    category = it.categoria
+                                                )
+                                            }
+                                            isLoading = false
+                                        } else {
+                                            error = "Error ${response.code()} al cargar menú"
+                                            isLoading = false
+                                        }
+                                    }
+                                    override fun onFailure(call: Call<List<MenuItemDto>>, t: Throwable) {
+                                        error = t.message
+                                        isLoading = false
+                                    }
+                                })
+                        }) { Text("Refrescar") }
+                    }
+                }
+            }
+            val grouped = filtered.groupBy { it.category?.ifBlank { "Otros" } ?: "Otros" }
+            grouped.forEach { (cat, list) ->
+                item {
+                    Spacer(Modifier.height(16.dp))
+                    CategoryHeader(cat)
+                    Spacer(Modifier.height(8.dp))
+                }
+                items(list) { item ->
+                    MenuItemRow(
+                        item = item,
+                        onView = { selected = item; qty = 1 },
+                        onQuickAdd = {
+                            // Agregar 1 unidad rápidamente
+                            isSubmitting = true
+                            val body = CreateOrderRequest(
+                                sucursalId = sucursalId,
+                                items = listOf(OrderItemRequest(productoId = item.id, cantidad = 1))
+                            )
+                            RetrofitProvider.pizzaApi(context).createOrder(body)
+                                .enqueue(object : Callback<Void> {
+                                    override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                                        isSubmitting = false
+                                        if (response.isSuccessful) {
+                                            // Actualiza carrito local
+                                            val existing = cartItems.indexOfFirst { it.id == item.id }
+                                            if (existing >= 0) cartItems[existing] = cartItems[existing].copy(qty = cartItems[existing].qty + 1)
+                                            else cartItems.add(CartItem(item.id, item.name, item.price, 1))
+                                            cartCount = cartItems.sumOf { it.qty }
+                                            scope.launch { snackbarHostState.showSnackbar("Agregado al pedido") }
+                                        } else {
+                                            scope.launch { snackbarHostState.showSnackbar("Error ${response.code()} al agregar") }
+                                        }
+                                    }
+                                    override fun onFailure(call: Call<Void>, t: Throwable) {
+                                        isSubmitting = false
+                                        scope.launch { snackbarHostState.showSnackbar("Error: ${t.message}") }
+                                    }
+                                })
+                        }
+                    )
+                    Spacer(Modifier.height(12.dp))
+                }
             }
 
             // Espaciador para el área del BottomBar flotante
@@ -266,44 +401,37 @@ fun MenuPlatillos(
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Modificar el Box del icono de menú para hacerlo clickeable
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clickable(onClick = onMenuClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("☰", fontSize = 20.sp, color = Color.White)
-                    }
-                    
-                    Spacer(Modifier.weight(1f)) 
-
-                    // Texto de bienvenida y perfil
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    ) {
-                        Text(
-                            "BIENVENIDO, TADEO",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center
+                    // Hamburguesa para abrir menú lateral (izquierda fija)
+                    IconButton(onClick = onMenuClick) {
+                        Icon(
+                            Icons.Default.Menu,
+                            contentDescription = "Menú",
+                            tint = Color.White
                         )
-
-                        Spacer(Modifier.width(8.dp))
-
-                        // Placeholder de la foto de perfil (círculo)
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color.Gray),
-                            contentAlignment = Alignment.Center
+                    }
+                    Spacer(Modifier.width(6.dp))
+                    // Texto + contador apilados
+                    Column {
+                        Text("Tu pedido", color = Color.White.copy(alpha = 0.95f), fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(2.dp))
+                        Surface(
+                            color = Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("👤", fontSize = 20.sp, color = Color.White)
+                            Text(
+                                "$cartCount",
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
+                    Spacer(Modifier.weight(1f))
+                    Button(
+                        onClick = { showCartSheet = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(10.dp)
+                    ) { Text("Ver pedido", color = RedBrand, fontWeight = FontWeight.Bold) }
                 }
             }
         }
@@ -324,6 +452,10 @@ fun MenuPlatillos(
                 }
                 Spacer(Modifier.height(10.dp))
                 Text("$" + "%.0f".format(current.price), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = BrownDark)
+                if (current.calories != null) {
+                    Spacer(Modifier.height(4.dp))
+                    Text("${current.calories} kcal", color = Color.Gray, fontSize = 12.sp)
+                }
 
                 Spacer(Modifier.height(16.dp))
                 Text("Cantidad", fontWeight = FontWeight.SemiBold)
@@ -348,16 +480,39 @@ fun MenuPlatillos(
                                     isSubmitting = false
                                     if (response.isSuccessful) {
                                         selected = null
+                                        // Actualiza carrito local
+                                        val existing = cartItems.indexOfFirst { it.id == current.id }
+                                        if (existing >= 0) cartItems[existing] = cartItems[existing].copy(qty = cartItems[existing].qty + qty)
+                                        else cartItems.add(CartItem(current.id, current.name, current.price, qty))
+                                        cartCount = cartItems.sumOf { it.qty }
                                         qty = 1
-                                        scope.launch { snackbarHostState.showSnackbar("Producto agregado al pedido") }
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = "Producto agregado al pedido",
+                                                withDismissAction = false,
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
                                     } else {
-                                        scope.launch { snackbarHostState.showSnackbar("Error ${response.code()} al agregar") }
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = "Error ${response.code()} al agregar",
+                                                withDismissAction = false,
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
                                     }
                                 }
 
                                 override fun onFailure(call: Call<Void>, t: Throwable) {
                                     isSubmitting = false
-                                    scope.launch { snackbarHostState.showSnackbar("Error: ${t.message}") }
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            message = "Error: ${t.message}",
+                                            withDismissAction = false,
+                                            duration = SnackbarDuration.Short
+                                        )
+                                    }
                                 }
                             })
                     },
@@ -383,6 +538,51 @@ fun MenuPlatillos(
             }
         }
     }
+
+    // Hoja con el carrito actual
+    if (showCartSheet) {
+        ModalBottomSheet(onDismissRequest = { showCartSheet = false }, containerColor = Color.White) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Tu pedido", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Spacer(Modifier.height(8.dp))
+                if (cartItems.isEmpty()) {
+                    Text("Aún no has agregado artículos.", color = Color.Gray)
+                } else {
+                    var total = 0.0
+                    cartItems.forEach { c ->
+                        val subtotal = c.unitPrice * c.qty
+                        total += subtotal
+                        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(c.name, fontWeight = FontWeight.SemiBold)
+                                Text("${c.qty} x $" + "%.0f".format(c.unitPrice), color = Color.Gray, fontSize = 12.sp)
+                            }
+                            Text("$" + "%.0f".format(subtotal), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Divider(Modifier.padding(vertical = 8.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Total", fontWeight = FontWeight.Bold)
+                        Text("$" + "%.0f".format(total), fontWeight = FontWeight.Bold)
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = { showCartSheet = false },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp)
+                    ) { Text("Cerrar") }
+                    Button(
+                        onClick = { showCartSheet = false; onMenuClick() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = RedBrand),
+                        shape = RoundedCornerShape(10.dp)
+                    ) { Text("Continuar", color = Color.White) }
+                }
+            }
+        }
+    }
 }
 
 // Composable para el botón de categoría (Pizzas, Snacks, Bebidas)
@@ -400,7 +600,7 @@ fun CategoryButton(text: String) {
 
 // Composable para cada elemento del menú (Pizza, Snack, Bebida)
 @Composable
-fun MenuItemRow(item: MenuUiItem, onView: () -> Unit) {
+fun MenuItemRow(item: MenuUiItem, onView: () -> Unit, onQuickAdd: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -443,31 +643,76 @@ fun MenuItemRow(item: MenuUiItem, onView: () -> Unit) {
                         modifier = Modifier.padding(vertical = 4.dp)
                     )
                 }
-                Text(
-                    "$" + "%.0f".format(item.price),
-                    fontWeight = FontWeight.ExtraBold,
-                    color = BrownDark, 
-                    fontSize = 16.sp
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "$" + "%.0f".format(item.price),
+                        fontWeight = FontWeight.ExtraBold,
+                        color = BrownDark, 
+                        fontSize = 16.sp
+                    )
+                    if (item.calories != null) {
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "• ${item.calories} kcal",
+                            color = Color.Gray,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
             }
 
             Spacer(Modifier.width(8.dp))
 
-            // Botón "agregar"
-            OutlinedButton(
-                onClick = onView,
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = BrownDark, 
-                    containerColor = Color.White 
-                ),
-                border = BorderStroke(1.dp, Color.LightGray), 
-                shape = RoundedCornerShape(8.dp), 
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                modifier = Modifier.height(35.dp) 
-            ) {
-                Text("ver", fontSize = 12.sp)
+            Column(horizontalAlignment = Alignment.End) {
+                // Ver detalles
+                OutlinedButton(
+                    onClick = onView,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = BrownDark,
+                        containerColor = Color.White
+                    ),
+                    border = BorderStroke(1.dp, Color.LightGray),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.height(32.dp)
+                ) { Text("Detalles", fontSize = 12.sp) }
+                Spacer(Modifier.height(6.dp))
+                // Agregar rápido
+                Button(
+                    onClick = onQuickAdd,
+                    colors = ButtonDefaults.buttonColors(containerColor = RedBrand),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.height(32.dp)
+                ) { Text("Agregar", color = Color.White, fontSize = 12.sp) }
             }
         }
+    }
+}
+
+@Composable
+private fun CategoryHeader(title: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .height(1.dp)
+                .weight(1f)
+                .background(Color(0xFFE0E0E0))
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(title, fontWeight = FontWeight.Bold, color = BrownDark)
+        Spacer(Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .height(1.dp)
+                .weight(1f)
+                .background(Color(0xFFE0E0E0))
+        )
     }
 }
 
@@ -493,7 +738,7 @@ private fun SuggestionRow(item: MenuUiItem, onClick: () -> Unit) {
             }
             Text("$" + "%.0f".format(item.price), fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(8.dp))
-            OutlinedButton(onClick = onClick) { Text("ver") }
+            OutlinedButton(onClick = onClick, shape = RoundedCornerShape(10.dp)) { Text("Ver") }
         }
     }
 }

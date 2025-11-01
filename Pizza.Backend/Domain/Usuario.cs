@@ -15,6 +15,8 @@ public partial class Usuario
 
     public string PasswordHash { get; set; } = null!;
 
+    public string Role { get; set; } = "Cliente";
+
     public DateTime? FechaRegistro { get; set; }
 
     public virtual ICollection<Calificacione> Calificaciones { get; set; } = new List<Calificacione>();

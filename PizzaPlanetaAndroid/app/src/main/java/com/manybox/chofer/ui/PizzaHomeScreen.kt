@@ -68,10 +68,16 @@ import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.manybox.chofer.ui.components.SubtleSnackHost
+import androidx.compose.runtime.LaunchedEffect
+import com.manybox.chofer.auth.JwtUtils
+import com.manybox.chofer.ui.admin.AdminDashboard
 
 @Composable
 fun PizzaHomeScreen() {
     val context = LocalContext.current
+    val rootSnackbarHost = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     var showLogin by remember { mutableStateOf(false) }
     var showRegister by remember { mutableStateOf(false) }
     var showForgot by remember { mutableStateOf(false) }
@@ -83,6 +89,8 @@ fun PizzaHomeScreen() {
     var isLoggingIn by remember { mutableStateOf(false) }
     var loginError by remember { mutableStateOf<String?>(null) }
     var showMenu by remember { mutableStateOf(false) }
+    var showAdmin by remember { mutableStateOf(false) }
+    var isAdmin by remember { mutableStateOf(false) }
     var loginSuccess by remember { mutableStateOf(false) }
     var sucursales by remember { mutableStateOf<List<SucursalDto>>(emptyList()) }
     var selectedSucursalId by remember { mutableStateOf<Int?>(null) }
@@ -315,52 +323,14 @@ fun PizzaHomeScreen() {
                         },
                         onLoginClick = { showRegister = false }
                     )
-                    // Mensaje de éxito animado
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = registroExito,
-                        modifier = Modifier.fillMaxSize(),
-                        enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandVertically(),
-                        exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.shrinkVertically()
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color(0xAA1DE9B6)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Card(
-                                shape = RoundedCornerShape(24.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                elevation = CardDefaults.cardElevation(12.dp),
-                                modifier = Modifier
-                                    .padding(32.dp)
-                                    .fillMaxWidth(0.85f)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(32.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.CheckCircle,
-                                        contentDescription = "Éxito",
-                                        tint = Color(0xFF43A047),
-                                        modifier = Modifier.size(64.dp)
-                                    )
-                                    Spacer(Modifier.height(16.dp))
-                                    Text(
-                                        "¡Cuenta creada exitosamente!",
-                                        color = Color(0xFF43A047),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 22.sp
-                                    )
-                                    Spacer(Modifier.height(8.dp))
-                                    Text(
-                                        "Ahora puedes iniciar sesión",
-                                        color = Color.Gray,
-                                        fontSize = 16.sp
-                                    )
-                                }
-                            }
+                    // Mensaje sutil de éxito en registro
+                    if (registroExito) {
+                        LaunchedEffect(Unit) {
+                            rootSnackbarHost.showSnackbar(
+                                message = "Cuenta creada exitosamente",
+                                withDismissAction = false,
+                                duration = SnackbarDuration.Short
+                            )
                         }
                     }
                 }
@@ -403,14 +373,25 @@ fun PizzaHomeScreen() {
                                     apiWithToken.getSucursales().enqueue(object: Callback<List<SucursalDto>> {
                                         override fun onResponse(call: Call<List<SucursalDto>>, response: Response<List<SucursalDto>>) {
                                             if (response.isSuccessful) {
-                                                loginSuccess = true
                                                 // Actualiza la lista de sucursales con la respuesta
                                                 sucursales = response.body() ?: emptyList()
-                                                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-                                                    kotlinx.coroutines.delay(1200)
-                                                    showLogin = false
+                                                // Snackbar sutil de éxito
+                                                scope.launch {
+                                                    rootSnackbarHost.showSnackbar(
+                                                        message = "Inicio de sesión exitoso",
+                                                        withDismissAction = false,
+                                                        duration = SnackbarDuration.Short
+                                                    )
+                                                }
+                                                // Detectar admin por JWT y navegar
+                                                val isAdminNow = JwtUtils.hasAdminRole(rawToken)
+                                                isAdmin = isAdminNow
+                                                showLogin = false
+                                                if (isAdminNow) {
+                                                    showAdmin = true
+                                                    showOrderSelector = false
+                                                } else {
                                                     showOrderSelector = true
-                                                    loginSuccess = false
                                                 }
                                             } else {
                                                 loginError = "No se pudieron cargar sucursales (${response.code()})"
@@ -439,81 +420,7 @@ fun PizzaHomeScreen() {
             }
         }
 
-        // Mensaje de login exitoso futurista
-        androidx.compose.animation.AnimatedVisibility(
-            visible = loginSuccess,
-            modifier = Modifier.fillMaxSize(),
-            enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandIn(expandFrom = Alignment.Center),
-            exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.shrinkOut(shrinkTowards = Alignment.Center)
-        ) {
-            // Mostrar GIF del horno de leña (sin animación extra)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = androidx.compose.ui.graphics.Brush.radialGradient(
-                            colors = listOf(Color(0xFFFFF3E0), Color(0xFFFFA726), Color(0xFF6D4C41)),
-                            center = androidx.compose.ui.geometry.Offset(0.5f, 0.5f),
-                            radius = 800f
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Card(
-                    shape = RoundedCornerShape(32.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.97f)),
-                    elevation = CardDefaults.cardElevation(18.dp),
-                    modifier = Modifier
-                        .padding(32.dp)
-                        .fillMaxWidth(0.85f)
-                        .graphicsLayer {
-                            shadowElevation = 24f
-                            shape = RoundedCornerShape(32.dp)
-                            clip = true
-                        }
-                ) {
-                    Column(
-                        modifier = Modifier.padding(36.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        AsyncImage(
-                            model = R.drawable.horno_de_lena,
-                            contentDescription = "Horno de leña animado",
-                            modifier = Modifier.size(110.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                        Spacer(Modifier.height(18.dp))
-                        Text(
-                            "¡Bienvenido a Pizza Planeta!",
-                            color = Color(0xFFD84315),
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 26.sp,
-                            letterSpacing = 2.sp
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "Has iniciado sesión con éxito",
-                            color = Color(0xFF6D4C41),
-                            fontSize = 16.sp
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = loginSuccess,
-                            enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.slideInVertically(),
-                            exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.slideOutVertically()
-                        ) {
-                            androidx.compose.material3.LinearProgressIndicator(
-                                color = Color(0xFFFFA726),
-                                trackColor = Color(0xFFFFF3E0),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 16.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        // Overlay de login exitoso eliminado: usamos snackbar sutil
 
         // Order selector
         if (showOrderSelector) {
@@ -685,9 +592,17 @@ fun PizzaHomeScreen() {
         // Menu de platillos (nuevo componente)
         if (showMenu) {
             MenuPlatillos(
-                onBackClick = { showMenu = false },
+                onBackClick = { showMenu = false; showOrderSelector = true; selectedSucursalId = null },
                 onMenuClick = { showSideMenu = true; sideType = "order" },
                 sucursalId = selectedSucursalId ?: 3
+            )
+        }
+
+        // Admin dashboard
+        if (showAdmin) {
+            AdminDashboard(
+                onBack = { showAdmin = false; showOrderSelector = true },
+                onLogout = { showAdmin = false; showLogin = true }
             )
         }
 
@@ -727,6 +642,15 @@ fun PizzaHomeScreen() {
                         SideOption("Carrito", color = Color.Black)
                         SideOption("Direcciones", color = Color.Black)
                         SideOption("Lugares favoritos", color = Color.Black)
+                        if (isAdmin) {
+                            Spacer(Modifier.height(8.dp))
+                            DrawerOptionWithIcon(
+                                text = "Panel admin",
+                                iconRes = R.drawable.cuenta,
+                                color = Color.Black,
+                                onClick = { showSideMenu = false; showAdmin = true }
+                            )
+                        }
                     }
                 } else {
                     Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -742,6 +666,14 @@ fun PizzaHomeScreen() {
                         Spacer(Modifier.height(12.dp))
                         DrawerOptionWithIcon(text = "Mi cuenta", iconRes = R.drawable.cuenta, color = Color.Black, onClick = { showAccount = true; showSideMenu = false })
                         DrawerOptionWithIcon(text = "Más cercano", iconRes = R.drawable.cercano, color = Color.Black)
+                        if (isAdmin) {
+                            DrawerOptionWithIcon(
+                                text = "Panel admin",
+                                iconRes = R.drawable.cuenta,
+                                color = Color.Black,
+                                onClick = { showSideMenu = false; showAdmin = true }
+                            )
+                        }
                     }
                 }
             }
@@ -763,6 +695,8 @@ fun PizzaHomeScreen() {
                 onReorder = { orderId -> /* manejar reordenar */ }
             )
         }
+        // Host global para snackbars sutiles
+        SubtleSnackHost(hostState = rootSnackbarHost, bottomPadding = 130.dp)
     }
 }
 

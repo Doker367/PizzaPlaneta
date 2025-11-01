@@ -11,12 +11,14 @@ public class SucursalService : ISucursalService
     private readonly ISucursalRepository _sucursalRepository;
     private readonly MainDbContext _mainDbContext;
     private readonly IProductRepository _productRepository;
+    private readonly IMenuRepository _menuRepository;
 
-    public SucursalService(ISucursalRepository sucursalRepository, MainDbContext mainDbContext, IProductRepository productRepository)
+    public SucursalService(ISucursalRepository sucursalRepository, MainDbContext mainDbContext, IProductRepository productRepository, IMenuRepository menuRepository)
     {
         _sucursalRepository = sucursalRepository;
         _mainDbContext = mainDbContext;
         _productRepository = productRepository;
+        _menuRepository = menuRepository;
     }
 
     public async Task<IEnumerable<Sucursale>> GetAllAsync()
@@ -38,7 +40,10 @@ public class SucursalService : ISucursalService
         var productIds = menuItems.Select(m => m.ProductoId).ToList();
         var products = await _productRepository.GetProductsByIds(productIds);
 
-        var productDict = products.ToDictionary(p => p.Id);
+        // Filtra la categoría "Extras" (temporalmente deshabilitado para depuración)
+        var filteredProducts = products; // products.Where(p => p.Categoria != "Extras");
+
+        var productDict = filteredProducts.ToDictionary(p => p.Id);
 
         var menuDto = menuItems.Select(mi =>
         {
@@ -49,6 +54,7 @@ public class SucursalService : ISucursalService
                     ProductoId = product.Id,
                     Nombre = product.Nombre,
                     Descripcion = product.Descripcion,
+                    Categoria = product.Categoria,
                     Precio = mi.PrecioEspecial ?? product.Precio,
                     Calorias = product.Calorias,
                     Disponible = mi.Disponible
@@ -58,5 +64,33 @@ public class SucursalService : ISucursalService
         }).Where(m => m != null);
 
         return menuDto;
+    }
+
+    public async Task<Sucursale> CreateAsync(CreateSucursalDto sucursalDto)
+    {
+        var newSucursal = new Sucursale
+        {
+            Nombre = sucursalDto.Nombre,
+            Direccion = sucursalDto.Direccion,
+            Ciudad = sucursalDto.Ciudad,
+            Estado = sucursalDto.Estado,
+            Telefono = sucursalDto.Telefono,
+            GoogleMapsUrl = sucursalDto.GoogleMapsUrl
+        };
+
+        return await _sucursalRepository.AddAsync(newSucursal);
+    }
+
+    public async Task<Menu> AddMenuItemAsync(int sucursalId, AddMenuItemDto menuItemDto)
+    {
+        var newMenuItem = new Menu
+        {
+            SucursalId = sucursalId,
+            ProductoId = menuItemDto.ProductoId,
+            PrecioEspecial = menuItemDto.PrecioEspecial,
+            Disponible = true
+        };
+
+        return await _menuRepository.AddAsync(newMenuItem);
     }
 }

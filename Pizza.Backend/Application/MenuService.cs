@@ -25,4 +25,29 @@ public class MenuService : IMenuService
             Disponible = menu.Disponible
         });
     }
+
+    public async Task<Menu?> GetByIdAsync(int id)
+    {
+        return await _menuRepository.GetByIdAsync(id);
+    }
+
+    public async Task<Menu> UpdateAsync(int id, UpdateMenuItemDto menuItemDto)
+    {
+        var existingMenuItem = await _menuRepository.GetByIdAsync(id);
+        if (existingMenuItem == null)
+        {
+            throw new KeyNotFoundException($"Item de menú con ID {id} no encontrado.");
+        }
+
+        existingMenuItem.PrecioEspecial = menuItemDto.PrecioEspecial ?? existingMenuItem.PrecioEspecial;
+        existingMenuItem.Disponible = menuItemDto.Disponible ?? existingMenuItem.Disponible;
+
+        await _menuRepository.UpdateAsync(existingMenuItem);
+        return existingMenuItem;
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        await _menuRepository.DeleteAsync(id);
+    }
 }

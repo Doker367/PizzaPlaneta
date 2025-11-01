@@ -5,4 +5,5 @@ namespace Pizza.Backend.Ports;
 public interface ISucursalRepository
 {
     Task<IEnumerable<Sucursale>> GetAllAsync();
+    Task<Sucursale> AddAsync(Sucursale sucursal);
 }

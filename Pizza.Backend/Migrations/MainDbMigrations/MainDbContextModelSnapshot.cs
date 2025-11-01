@@ -425,6 +425,10 @@ namespace Pizza.Backend.Migrations.MainDbMigrations
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Telefono")
                         .HasColumnType("text")
                         .HasColumnName("telefono");
