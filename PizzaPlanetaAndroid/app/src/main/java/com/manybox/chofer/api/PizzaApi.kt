@@ -26,6 +26,27 @@ data class SucursalDto(
     val googleMapsUrl: String
 )
 
+// Menu de una sucursal
+data class MenuItemDto(
+    val productoId: Int,
+    val nombre: String,
+    val descripcion: String,
+    val precio: Double,
+    val calorias: Int?,
+    val disponible: Boolean
+)
+
+// Crear pedido
+data class OrderItemRequest(
+    val productoId: Int,
+    val cantidad: Int
+)
+
+data class CreateOrderRequest(
+    val sucursalId: Int,
+    val items: List<OrderItemRequest>
+)
+
 
 interface PizzaApiService {
     @POST("api/auth/login")
@@ -36,4 +57,10 @@ interface PizzaApiService {
 
     @GET("api/sucursales")
     fun getSucursales(): Call<List<SucursalDto>>
+
+    @GET("api/sucursales/{id}/menu")
+    fun getMenuBySucursalId(@retrofit2.http.Path("id") sucursalId: Int): Call<List<MenuItemDto>>
+
+    @POST("api/orders")
+    fun createOrder(@Body body: CreateOrderRequest): Call<Void>
 }

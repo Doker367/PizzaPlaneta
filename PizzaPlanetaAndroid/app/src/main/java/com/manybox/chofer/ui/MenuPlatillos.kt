@@ -25,6 +25,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import com.manybox.chofer.R
+import android.content.Context
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.manybox.chofer.api.MenuItemDto
+import com.manybox.chofer.api.RetrofitProvider
+import com.manybox.chofer.api.CreateOrderRequest
+import com.manybox.chofer.api.OrderItemRequest
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import kotlinx.coroutines.launch
 
 // Definición de colores
 val OrangeBrand = Color(0xFFFF9800)
@@ -33,51 +45,66 @@ val GrayBackground = Color(0xFFF5F5F5)
 val BrownDark = Color(0xFF3E2723)
 val DarkBackground = Color(0xFF212121) // Color oscuro para la imagen de fondo
 
-// Data class genérica para todos los ítems (Pizza, Snack, Bebida)
-data class MenuItem(
+// Modelo UI derivado del DTO (sin imágenes por ahora)
+data class MenuUiItem(
     val id: Int,
     val name: String,
     val description: String,
-    val price: Double,
-    val imageRes: Int // Aunque no se usará inmediatamente, mantiene la estructura
+    val price: Double
 )
 
 @Composable
 fun MenuPlatillos(
     onBackClick: () -> Unit,
-    onMenuClick: () -> Unit // Nuevo parámetro
+    onMenuClick: () -> Unit,
+    sucursalId: Int = 3
 ) {
-    // Datos originales de las Pizzas
-    val pizzaItems = remember {
-        listOf(
-            MenuItem(1, "Clásica Pepperoni", "Salsa de tomate, queso mozzarella y pepperoni.", 149.0, R.drawable.pp1),
-            MenuItem(2, "Cuatro Quesos", "Mezcla de mozzarella, parmesano, gorgonzola y cheddar.", 169.0, R.drawable.p4q),
-            MenuItem(3, "Hawaiana Galáctica", "Jamón, piña y mozzarella.", 159.0, R.drawable.ph),
-            MenuItem(4, "Peperoni con champiños", "Salsa de tomate, queso mozzarella, peperoni y champiñones.", 179.0, R.drawable.ppch),
-            MenuItem(5, "Especial Espacial", "Salsa BBQ, pollo y cebolla morada.", 169.0, R.drawable.pe) 
-        )
+    val context = LocalContext.current
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var items by remember { mutableStateOf<List<MenuUiItem>>(emptyList()) }
+    var selected by remember { mutableStateOf<MenuUiItem?>(null) }
+    var qty by remember { mutableStateOf(1) }
+
+    LaunchedEffect(sucursalId) {
+        isLoading = true
+        error = null
+        RetrofitProvider.pizzaApi(context).getMenuBySucursalId(sucursalId)
+            .enqueue(object : Callback<List<MenuItemDto>> {
+                override fun onResponse(
+                    call: Call<List<MenuItemDto>>, response: Response<List<MenuItemDto>>
+                ) {
+                    if (response.isSuccessful) {
+                        val body = response.body().orEmpty()
+                        items = body.map {
+                            MenuUiItem(
+                                id = it.productoId,
+                                name = it.nombre,
+                                description = it.descripcion,
+                                price = it.precio.toDouble()
+                            )
+                        }
+                        isLoading = false
+                    } else {
+                        error = "Error ${response.code()} al cargar menú"
+                        isLoading = false
+                    }
+                }
+
+                override fun onFailure(call: Call<List<MenuItemDto>>, t: Throwable) {
+                    error = t.message
+                    isLoading = false
+                }
+            })
     }
 
-    // NUEVOS DATOS DE SNACKS Y BEBIDAS
-    val snackItems = remember {
-        listOf(
-            MenuItem(6, "Alitas de Meteoro", "Alitas de pollo con salsa búfalo.", 89.0, R.drawable.ab),
-            MenuItem(7, "Asteroides de Queso", "Palitos de queso empanizados con salsa marinara.", 79.0, R.drawable.aq),
-            MenuItem(8, "Papas Nebulosas", "Papas a la francesa con toque de especias.", 65.0, R.drawable.pn),
-            MenuItem(9, "Pan Ajo Orbital", "Pan con mantequilla de ajo y queso.", 59.0, R.drawable.pao)
-        )
-    }
-
-    val drinkItems = remember {
-        listOf(
-            MenuItem(10, "Refrescos clásicos", "(Cola, Naranja, Limón).", 25.0, R.drawable.rcnl),
-            MenuItem(11, "Agua mineral planetaria.", "", 22.0, R.drawable.am),
-            MenuItem(12, "Malteadas cósmicas", "(Choco, Vainilla, Fresa)", 49.0, R.drawable.mvcf)
-        )
-    }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var isSubmitting by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = GrayBackground // Color de fondo general del Scaffold
+        containerColor = GrayBackground,
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -183,45 +210,30 @@ fun MenuPlatillos(
                 }
             }
 
-            // =======================================================
-            // 2. Sección Pizzas
-            // =======================================================
+            // Estado de carga o error
+            if (isLoading) {
+                item { 
+                    Spacer(Modifier.height(24.dp))
+                    CircularProgressIndicator(color = RedBrand)
+                    Spacer(Modifier.height(24.dp))
+                }
+            }
+            if (error != null) {
+                item {
+                    Spacer(Modifier.height(12.dp))
+                    Text(error!!, color = Color.Red)
+                }
+            }
+
+            // Lista de productos del menú
             item {
                 Spacer(Modifier.height(16.dp))
-                CategoryButton(text = "Pizzas")
+                CategoryButton(text = "Menú")
                 Spacer(Modifier.height(16.dp))
             }
 
-            items(pizzaItems) { item ->
-                MenuItemRow(item = item)
-                Spacer(Modifier.height(12.dp))
-            }
-            
-            // =======================================================
-            // 3. Sección Snacks
-            // =======================================================
-            item {
-                Spacer(Modifier.height(12.dp))
-                CategoryButton(text = "Snacks")
-                Spacer(Modifier.height(16.dp))
-            }
-
-            items(snackItems) { item ->
-                MenuItemRow(item = item)
-                Spacer(Modifier.height(12.dp))
-            }
-
-            // =======================================================
-            // 4. Sección Bebidas
-            // =======================================================
-            item {
-                Spacer(Modifier.height(12.dp))
-                CategoryButton(text = "Bebidas")
-                Spacer(Modifier.height(16.dp))
-            }
-
-            items(drinkItems) { item ->
-                MenuItemRow(item = item)
+            items(items) { item ->
+                MenuItemRow(item = item, onView = { selected = item; qty = 1 })
                 Spacer(Modifier.height(12.dp))
             }
 
@@ -296,6 +308,81 @@ fun MenuPlatillos(
             }
         }
     }
+
+    // Detalle del producto con contador y sugeridos
+    if (selected != null) {
+        val current = selected!!
+        ModalBottomSheet(
+            onDismissRequest = { selected = null },
+            containerColor = Color.White
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(current.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                if (current.description.isNotEmpty()) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(current.description, color = Color.Gray)
+                }
+                Spacer(Modifier.height(10.dp))
+                Text("$" + "%.0f".format(current.price), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = BrownDark)
+
+                Spacer(Modifier.height(16.dp))
+                Text("Cantidad", fontWeight = FontWeight.SemiBold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(onClick = { if (qty > 1) qty-- }) { Text("-") }
+                    Text(qty.toString(), modifier = Modifier.padding(horizontal = 16.dp))
+                    OutlinedButton(onClick = { qty++ }) { Text("+") }
+                }
+
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    enabled = !isSubmitting,
+                    onClick = {
+                        isSubmitting = true
+                        val body = CreateOrderRequest(
+                            sucursalId = sucursalId,
+                            items = listOf(OrderItemRequest(productoId = current.id, cantidad = qty))
+                        )
+                        RetrofitProvider.pizzaApi(context).createOrder(body)
+                            .enqueue(object : Callback<Void> {
+                                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                                    isSubmitting = false
+                                    if (response.isSuccessful) {
+                                        selected = null
+                                        qty = 1
+                                        scope.launch { snackbarHostState.showSnackbar("Producto agregado al pedido") }
+                                    } else {
+                                        scope.launch { snackbarHostState.showSnackbar("Error ${response.code()} al agregar") }
+                                    }
+                                }
+
+                                override fun onFailure(call: Call<Void>, t: Throwable) {
+                                    isSubmitting = false
+                                    scope.launch { snackbarHostState.showSnackbar("Error: ${t.message}") }
+                                }
+                            })
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = RedBrand)
+                ) {
+                    if (isSubmitting) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text("Agregar ($" + "%.0f".format(current.price * qty) + ")", color = Color.White)
+                }
+
+                Spacer(Modifier.height(20.dp))
+                Text("Sugeridos", fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                val suggestions = items.filter { it.id != current.id }.take(3)
+                suggestions.forEach { s ->
+                    SuggestionRow(item = s, onClick = { selected = s; qty = 1 })
+                    Spacer(Modifier.height(8.dp))
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
 }
 
 // Composable para el botón de categoría (Pizzas, Snacks, Bebidas)
@@ -313,7 +400,7 @@ fun CategoryButton(text: String) {
 
 // Composable para cada elemento del menú (Pizza, Snack, Bebida)
 @Composable
-fun MenuItemRow(item: MenuItem) {
+fun MenuItemRow(item: MenuUiItem, onView: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -328,15 +415,14 @@ fun MenuItemRow(item: MenuItem) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Reemplazar el Box placeholder con una Image real
-            Image(
-                painter = painterResource(id = item.imageRes),
-                contentDescription = item.name,
+            // Placeholder de imagen hasta que tengamos URLs
+            Box(
                 modifier = Modifier
                     .size(90.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFF1F1F1)),
+                contentAlignment = Alignment.Center
+            ) { Text("🍕", fontSize = 28.sp) }
 
             Spacer(Modifier.width(16.dp))
 
@@ -348,7 +434,7 @@ fun MenuItemRow(item: MenuItem) {
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
-                // Usamos un Box para que la descripción se muestre solo si no está vacía
+                // Mostrar descripción si existe
                 if (item.description.isNotEmpty()) {
                     Text(
                         item.description,
@@ -358,7 +444,7 @@ fun MenuItemRow(item: MenuItem) {
                     )
                 }
                 Text(
-                    "$" + "%.0f".format(item.price), // Formateo de precio sin decimales
+                    "$" + "%.0f".format(item.price),
                     fontWeight = FontWeight.ExtraBold,
                     color = BrownDark, 
                     fontSize = 16.sp
@@ -369,7 +455,7 @@ fun MenuItemRow(item: MenuItem) {
 
             // Botón "agregar"
             OutlinedButton(
-                onClick = { /* TODO */ },
+                onClick = onView,
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = BrownDark, 
                     containerColor = Color.White 
@@ -379,8 +465,35 @@ fun MenuItemRow(item: MenuItem) {
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 modifier = Modifier.height(35.dp) 
             ) {
-                Text("agregar", fontSize = 12.sp)
+                Text("ver", fontSize = 12.sp)
             }
+        }
+    }
+}
+
+@Composable
+private fun SuggestionRow(item: MenuUiItem, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFDFDFD)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFF1F1F1)),
+                contentAlignment = Alignment.Center
+            ) { Text("🍕") }
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(item.name, fontWeight = FontWeight.SemiBold)
+                if (item.description.isNotEmpty()) Text(item.description, color = Color.Gray, fontSize = 12.sp, maxLines = 1)
+            }
+            Text("$" + "%.0f".format(item.price), fontWeight = FontWeight.Bold)
+            Spacer(Modifier.width(8.dp))
+            OutlinedButton(onClick = onClick) { Text("ver") }
         }
     }
 }

@@ -78,7 +78,8 @@ public class OrderService : IOrderService
             {
                 Nombre = d.Producto?.Nombre ?? string.Empty,
                 Cantidad = d.Cantidad,
-                PrecioUnitario = d.PrecioUnitario
+                PrecioUnitario = d.PrecioUnitario,
+                Calorias = d.Producto?.Calorias
             }).ToList();
             result.Add(detalle);
         }

@@ -34,6 +34,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.animation.core.animateFloatAsState
@@ -83,6 +85,7 @@ fun PizzaHomeScreen() {
     var showMenu by remember { mutableStateOf(false) }
     var loginSuccess by remember { mutableStateOf(false) }
     var sucursales by remember { mutableStateOf<List<SucursalDto>>(emptyList()) }
+    var selectedSucursalId by remember { mutableStateOf<Int?>(null) }
 
     // Palette
     val Navy = Color(0xFF1D3557)
@@ -141,12 +144,8 @@ fun PizzaHomeScreen() {
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(Modifier.height(2.dp))  // Reducido de 4.dp a 2.dp
-                HotPizzaAnimation(
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    size = 600f,
-                    lineColor = Color.White.copy(alpha = 0.85f),
-                    strokeWidth = 8f
-                )
+                // Animación de pizza caliente removida temporalmente (no implementada)
+                Spacer(Modifier.height(8.dp))
             }
 
             // Se elimina la imagen decorativa inferior para que se vea como en el mock
@@ -522,7 +521,7 @@ fun PizzaHomeScreen() {
                 containerColor = Color.White,
                 bottomBar = {
                     BottomAppBar(
-                        containerColor = RedBrand,
+                        containerColor = Color(0xFFD32F2F),
                         contentColor = Color.White,
                         modifier = Modifier.height(70.dp)
                     ) {
@@ -558,75 +557,78 @@ fun PizzaHomeScreen() {
                     }
                 }
             ) { paddingValues ->
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
                         .padding(16.dp)
                 ) {
-                    // Header con flecha de regreso y título
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        IconButton(onClick = { showOrderSelector = false }) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = "Regresar",
-                                tint = Color(0xFF1D3557)
+                    item {
+                        // Header con flecha de regreso y título
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            IconButton(onClick = { showOrderSelector = false }) {
+                                Icon(
+                                    Icons.Default.ArrowBack,
+                                    contentDescription = "Regresar",
+                                    tint = Color(0xFF1D3557)
+                                )
+                            }
+                            Text(
+                                "Selecciona tu restaurante",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = Color(0xFF1D3557)
                             )
                         }
-                        Text(
-                            "Selecciona tu restaurante",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = Color(0xFF1D3557)
-                        )
+                        Spacer(Modifier.height(16.dp))
                     }
 
-                    Spacer(Modifier.height(16.dp))
-
-                    // Mapa con imagen real
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.map1),
-                            contentDescription = "Mapa",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-
-                    Spacer(Modifier.height(16.dp))
-
-                    // Buscador de CP o Ciudad
-                    OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Ciudad y estado o CP") },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.Search,
-                                contentDescription = "Buscar",
-                                tint = Color.Gray
+                    item {
+                        // Mapa con imagen real
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(150.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.map1),
+                                contentDescription = "Mapa",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
                             )
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF1D3557),
-                            unfocusedBorderColor = Color.LightGray
-                        ),
-                        singleLine = true
-                    )
+                        }
+                        Spacer(Modifier.height(16.dp))
+                    }
 
-                    Spacer(Modifier.height(16.dp))
+                    item {
+                        // Buscador de CP o Ciudad
+                        OutlinedTextField(
+                            value = "",
+                            onValueChange = {},
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Ciudad y estado o CP") },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = "Buscar",
+                                    tint = Color.Gray
+                                )
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF1D3557),
+                                unfocusedBorderColor = Color.LightGray
+                            ),
+                            singleLine = true
+                        )
+                        Spacer(Modifier.height(16.dp))
+                    }
 
-                    // Lista de sucursales dinámica
-                    sucursales.forEach { sucursal ->
+                    // Lista de sucursales dinámica y scrolleable
+                    items(sucursales) { sucursal ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -661,9 +663,10 @@ fun PizzaHomeScreen() {
                                     )
                                 }
                                 Button(
-                                    onClick = { 
+                                    onClick = {
+                                        selectedSucursalId = sucursal.id
                                         showOrderSelector = false
-                                        showMenu = true 
+                                        showMenu = true
                                     },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color(0xFF1D3557)
@@ -683,7 +686,8 @@ fun PizzaHomeScreen() {
         if (showMenu) {
             MenuPlatillos(
                 onBackClick = { showMenu = false },
-                onMenuClick = { showSideMenu = true; sideType = "order" }
+                onMenuClick = { showSideMenu = true; sideType = "order" },
+                sucursalId = selectedSucursalId ?: 3
             )
         }
 
