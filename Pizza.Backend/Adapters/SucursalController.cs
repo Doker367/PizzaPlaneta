@@ -5,7 +5,6 @@ using Pizza.Backend.Ports;
 
 namespace Pizza.Backend.Adapters;
 
-[Authorize]
 [ApiController]
 [Route("api/sucursales")]
 public class SucursalController : ControllerBase

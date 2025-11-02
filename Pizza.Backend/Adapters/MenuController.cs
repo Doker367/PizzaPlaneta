@@ -4,7 +4,6 @@ using Pizza.Backend.Ports;
 
 namespace Pizza.Backend.Adapters;
 
-[Authorize]
 [ApiController]
 [Route("api/menu")]
 public class MenuController : ControllerBase
