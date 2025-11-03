@@ -2,7 +2,6 @@
 
 package com.manybox.chofer.ui
 import coil.compose.AsyncImage
-import androidx.compose.ui.graphics.vector.ImageVector
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -80,7 +79,6 @@ import com.manybox.chofer.ui.components.SubtleSnackHost
 import androidx.compose.runtime.LaunchedEffect
 import com.manybox.chofer.auth.JwtUtils
 import com.manybox.chofer.ui.admin.AdminDashboard
-import androidx.compose.ui.graphics.vector.ImageVector
 
 
 @Composable
@@ -113,12 +111,9 @@ fun PizzaHomeScreen() {
     var selectedSucursalAddress by remember { mutableStateOf<String?>(null) }
     var selectedSucursalMapsUrl by remember { mutableStateOf<String?>(null) }
     var displayName by remember { mutableStateOf("Usuario") }
-<<<<<<< HEAD
     // Acción diferida a ejecutar después de login exitoso
     var postLogin by remember { mutableStateOf<(() -> Unit)?>(null) }
-=======
     var showCarrito by remember { mutableStateOf(false) }
->>>>>>> dbd43914a4532352f77298230f87981a02218a1e
 
     // Palette
     val Navy = Color(0xFF1D3557)
@@ -158,22 +153,21 @@ fun PizzaHomeScreen() {
                     }
                 }
                 Spacer(Modifier.height(16.dp))
-<<<<<<< HEAD
                 DrawerItemRow(text = "Método de pago", icon = Icons.Default.CreditCard) { scope.launch { drawerState.close() } }
-<<<<<<< HEAD
                 DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) { 
                     scope.launch { 
                         drawerState.close()
-                        showCarrito = true
+                        showCarrito = true 
                     }
                 }
-                DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) { scope.launch { drawerState.close() } }
-=======
-                DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) { scope.launch { drawerState.close() } }
-                DrawerItemRow(text = "Favoritos", icon = Icons.Default.Favorite) { showFavoritesDialog = true; scope.launch { drawerState.close() } }
-                DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) { showFavoriteBranchesDialog = true; scope.launch { drawerState.close() } }
-<<<<<<< HEAD
-=======
+                DrawerItemRow(text = "Favoritos", icon = Icons.Default.Favorite) { 
+                    showFavoritesDialog = true
+                    scope.launch { drawerState.close() }
+                }
+                DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) { 
+                    showFavoriteBranchesDialog = true
+                    scope.launch { drawerState.close() }
+                }
                 val isGuestUser = !isLoggedIn
                 DrawerItemRow(text = "Mi perfil", icon = Icons.Default.Person) {
                     if (isGuestUser) {
@@ -282,10 +276,6 @@ fun PizzaHomeScreen() {
                         scope.launch { drawerState.close() }
                     }
                 }
->>>>>>> a408a8d (feat: Implementar recuperación de contraseña y gestión de perfil de usuario)
-=======
->>>>>>> b86124f2eb06c9637d79009413585d8ed2c2a75e
->>>>>>> dbd43914a4532352f77298230f87981a02218a1e
                 Spacer(Modifier.weight(1f))
                 Text("v1.0.0", color = Color.Gray, modifier = Modifier.align(Alignment.CenterHorizontally).padding(12.dp))
             }
@@ -802,43 +792,6 @@ fun PizzaHomeScreen() {
                                         .clip(RoundedCornerShape(8.dp))
                                 )
                                 Spacer(Modifier.width(12.dp))
-<<<<<<< HEAD
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(
-                                                    sucursal.nombre,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                                Text(
-                                                    sucursal.direccion,
-                                                    color = Color.Gray,
-                                                    fontSize = 14.sp
-                                                )
-                                            }
-                                            // Toggle favorito de sucursal
-                                            IconButton(onClick = {
-                                                com.manybox.chofer.ui.FavoritesStore.toggleBranch(
-                                                    com.manybox.chofer.ui.FavoriteBranch(sucursal.id, sucursal.nombre)
-                                                )
-                                            }) {
-                                                if (com.manybox.chofer.ui.FavoritesStore.isBranchFavorite(sucursal.id)) {
-                                                    Icon(Icons.Default.Favorite, contentDescription = "Favorito sucursal", tint = Color(0xFFD32F2F))
-                                                } else {
-                                                    Icon(Icons.Default.FavoriteBorder, contentDescription = "Marcar sucursal favorita")
-                                                }
-                                            }
-                                            Button(
-                                                onClick = {
-                                                    selectedSucursalId = sucursal.id
-                                                    showOrderSelector = false
-                                                    showMenu = true
-                                                },
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = Color(0xFF1D3557)
-                                                )
-                                            ) {
-                                                Text("ELEGIR")
-                                            }
-=======
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         sucursal.nombre,
@@ -865,7 +818,6 @@ fun PizzaHomeScreen() {
                                 ) {
                                     Text("ELEGIR")
                                 }
->>>>>>> a408a8d (feat: Implementar recuperación de contraseña y gestión de perfil de usuario)
                             }
                         }
                         Spacer(Modifier.height(8.dp))
@@ -877,11 +829,16 @@ fun PizzaHomeScreen() {
         // Menu de platillos (nuevo componente)
         if (showMenu) {
             MenuPlatillos(
-<<<<<<< HEAD
-                onBackClick = { showMenu = false; showOrderSelector = true; selectedSucursalId = null; selectedSucursalName = null; selectedSucursalAddress = null },
-                onMenuClick = { /* no-op, el drawer se maneja desde el selector */ },
+                onBackClick = { 
+                    showMenu = false
+                    showOrderSelector = true
+                    selectedSucursalId = null
+                    selectedSucursalName = null
+                    selectedSucursalAddress = null 
+                },
+                onMenuClick = { scope.launch { drawerState.open() } },
+                onCarritoClick = { showCarrito = true },
                 onRequireAuth = {
-                    // Cierra menú y abre login, y al volver regresar al menú
                     postLogin = { showMenu = true }
                     showMenu = false
                     showLogin = true
@@ -890,12 +847,6 @@ fun PizzaHomeScreen() {
                 sucursalName = selectedSucursalName ?: "",
                 sucursalAddress = selectedSucursalAddress,
                 sucursalMapsUrl = selectedSucursalMapsUrl
-=======
-                onBackClick = { showMenu = false; showOrderSelector = true; selectedSucursalId = null },
-                onMenuClick = { scope.launch { drawerState.open() } },
-                onCarritoClick = { showCarrito = true },
-                sucursalId = selectedSucursalId ?: 3
->>>>>>> dbd43914a4532352f77298230f87981a02218a1e
             )
         }
 

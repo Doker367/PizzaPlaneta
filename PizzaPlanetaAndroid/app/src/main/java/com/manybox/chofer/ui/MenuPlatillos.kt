@@ -65,16 +65,12 @@ data class MenuUiItem(
 fun MenuPlatillos(
     onBackClick: () -> Unit,
     onMenuClick: () -> Unit,
-<<<<<<< HEAD
+    onCarritoClick: () -> Unit,
     onRequireAuth: () -> Unit = {},
     sucursalId: Int = 3,
     sucursalName: String = "",
     sucursalAddress: String? = null,
     sucursalMapsUrl: String? = null
-=======
-    onCarritoClick: () -> Unit, // Agregar este parámetro
-    sucursalId: Int = 3
->>>>>>> dbd43914a4532352f77298230f87981a02218a1e
 ) {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(true) }
