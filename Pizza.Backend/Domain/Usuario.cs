@@ -19,6 +19,10 @@ public partial class Usuario
 
     public DateTime? FechaRegistro { get; set; }
 
+    // Fields for Password Reset
+    public string? PasswordResetToken { get; set; }
+    public DateTime? ResetTokenExpires { get; set; }
+
     public virtual ICollection<Calificacione> Calificaciones { get; set; } = new List<Calificacione>();
 
     public virtual ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();

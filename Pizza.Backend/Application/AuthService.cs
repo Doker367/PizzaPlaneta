@@ -4,9 +4,11 @@ using Microsoft.IdentityModel.Tokens;
 using Pizza.Backend.Application.DTOs;
 using Pizza.Backend.Domain;
 using Pizza.Backend.Ports;
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Security.Cryptography; // Added for secure token generation
 
 namespace Pizza.Backend.Application;
 
@@ -55,6 +57,61 @@ public class AuthService : IAuthService
         };
 
         await _userRepository.AddUserAsync(newUser);
+    }
+
+    public async Task ForgotPassword(string email)
+    {
+        var user = await _userRepository.GetUserByEmailAsync(email);
+        if (user == null)
+        {
+            // Para evitar la enumeración de usuarios, no se debe indicar si el email existe o no.
+            // Simplemente se retorna sin hacer nada o se envía un mensaje genérico de éxito.
+            return; 
+        }
+
+        var tokenBytes = new byte[32]; // 256 bits
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(tokenBytes);
+        }
+        var resetToken = Convert.ToBase64String(tokenBytes); // This is the raw token to send via email
+
+        user.PasswordResetToken = BCrypt.Net.BCrypt.HashPassword(resetToken); // Store hashed token in DB
+        user.ResetTokenExpires = DateTime.UtcNow.AddMinutes(15); // Token valid for 15 minutes
+
+        await _userRepository.UpdateUserAsync(user);
+
+        // TODO: Implement email sending here.
+        // The email should contain a link like:
+        // https://your-frontend.com/reset-password?token={resetToken}&email={user.Email}
+        Console.WriteLine($"Password reset token for {user.Email}: {resetToken}"); // For testing/debugging
+    }
+
+    public async Task ResetPassword(ResetPasswordDto dto)
+    {
+        var user = await _userRepository.GetUserByEmailAsync(dto.Email);
+
+        if (user == null || user.PasswordResetToken == null || user.ResetTokenExpires == null || user.ResetTokenExpires < DateTime.UtcNow)
+        {
+            throw new Exception("Token de restablecimiento inválido o expirado.");
+        }
+
+        // Verify the provided token against the stored hashed token
+        if (!BCrypt.Net.BCrypt.Verify(dto.Token, user.PasswordResetToken))
+        {
+            throw new Exception("Token de restablecimiento inválido o expirado.");
+        }
+
+        if (dto.Password != dto.ConfirmPassword)
+        {
+            throw new Exception("Las contraseñas no coinciden.");
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+        user.PasswordResetToken = null; // Invalidate token
+        user.ResetTokenExpires = null; // Clear expiration
+
+        await _userRepository.UpdateUserAsync(user);
     }
 
     private string GenerateJwtToken(Usuario user)

@@ -1,8 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Pizza.Backend.Application.DTOs;
 using Pizza.Backend.Domain;
 using Pizza.Backend.Infrastructure.Data;
 using Pizza.Backend.Ports;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Pizza.Backend.Application;
 
@@ -12,18 +17,30 @@ public class SucursalService : ISucursalService
     private readonly MainDbContext _mainDbContext;
     private readonly IProductRepository _productRepository;
     private readonly IMenuRepository _menuRepository;
+    private readonly IMemoryCache _cache;
+    private const string SucursalesCacheKey = "AllSucursales";
 
-    public SucursalService(ISucursalRepository sucursalRepository, MainDbContext mainDbContext, IProductRepository productRepository, IMenuRepository menuRepository)
+    public SucursalService(ISucursalRepository sucursalRepository, MainDbContext mainDbContext, IProductRepository productRepository, IMenuRepository menuRepository, IMemoryCache cache)
     {
         _sucursalRepository = sucursalRepository;
         _mainDbContext = mainDbContext;
         _productRepository = productRepository;
         _menuRepository = menuRepository;
+        _cache = cache;
     }
 
     public async Task<IEnumerable<Sucursale>> GetAllAsync()
     {
-        return await _sucursalRepository.GetAllAsync();
+        if (!_cache.TryGetValue(SucursalesCacheKey, out IEnumerable<Sucursale> sucursales))
+        {
+            sucursales = await _sucursalRepository.GetAllAsync();
+            var cacheEntryOptions = new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromMinutes(10))
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(30));
+            
+            _cache.Set(SucursalesCacheKey, sucursales, cacheEntryOptions);
+        }
+        return sucursales;
     }
 
     public async Task<IEnumerable<MenuItemDto>> GetMenuBySucursalId(int sucursalId)
@@ -78,7 +95,9 @@ public class SucursalService : ISucursalService
             GoogleMapsUrl = sucursalDto.GoogleMapsUrl
         };
 
-        return await _sucursalRepository.AddAsync(newSucursal);
+        var createdSucursal = await _sucursalRepository.AddAsync(newSucursal);
+        _cache.Remove(SucursalesCacheKey); // Invalidate cache
+        return createdSucursal;
     }
 
     public async Task<Menu> AddMenuItemAsync(int sucursalId, AddMenuItemDto menuItemDto)

@@ -28,6 +28,8 @@ var mariadbConnectionString = Environment.GetEnvironmentVariable("MARIADB_CONNEC
 builder.Services.AddDbContext<ProductsDbContext>(options =>
     options.UseMySql(mariadbConnectionString, new MySqlServerVersion(new Version(10, 11))));
 
+builder.Services.AddMemoryCache();
+
 builder.Services.AddControllers();
 
 // Add custom services for Dependency Injection
@@ -67,10 +69,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+const string CORS_POLICY = "AllowSpecificOrigins";
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
-        builder.AllowAnyOrigin()
+    options.AddPolicy(CORS_POLICY, builder =>
+        // For production, replace with your frontend's actual domain
+        // e.g., builder.WithOrigins("https://your-pizzeria.com")
+        builder.WithOrigins("http://localhost:3000", "https://localhost:3001") 
                .AllowAnyMethod()
                .AllowAnyHeader());
 });
@@ -103,7 +108,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
+app.UseCors(CORS_POLICY);
 
 app.UseAuthentication();
 

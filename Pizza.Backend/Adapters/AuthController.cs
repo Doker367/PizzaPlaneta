@@ -42,4 +42,32 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = ex.Message });
         }
     }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        try
+        {
+            await _authService.ForgotPassword(dto.Email);
+            return Ok(new { message = "Si el correo existe, se ha enviado un enlace para restablecer la contraseña." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+    {
+        try
+        {
+            await _authService.ResetPassword(dto);
+            return Ok(new { message = "Contraseña restablecida exitosamente." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

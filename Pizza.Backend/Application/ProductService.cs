@@ -1,6 +1,8 @@
+using Microsoft.Extensions.Caching.Memory;
 using Pizza.Backend.Application.DTOs;
 using Pizza.Backend.Domain;
 using Pizza.Backend.Ports;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,15 +11,36 @@ namespace Pizza.Backend.Application;
 public class ProductService : IProductService
 {
     private readonly IProductRepository _productRepository;
+    private readonly IMemoryCache _cache;
+    private const string ProductsCacheKey = "AllProducts";
 
-    public ProductService(IProductRepository productRepository)
+    public ProductService(IProductRepository productRepository, IMemoryCache cache)
     {
         _productRepository = productRepository;
+        _cache = cache;
     }
 
     public async Task<IEnumerable<Producto>> GetAllAsync()
     {
-        return await _productRepository.GetAllAsync();
+        if (!_cache.TryGetValue(ProductsCacheKey, out IEnumerable<Producto> products))
+        {
+            var productList = (await _productRepository.GetAllAsync()).ToList();
+
+            // --- VISUAL CHANGE FOR FRONTEND ---
+            if (productList.Any())
+            {
+                productList.First().Nombre = "[OFERTA] " + productList.First().Nombre;
+            }
+            // ------------------------------------
+
+            products = productList;
+            var cacheEntryOptions = new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromMinutes(5))
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(15));
+            
+            _cache.Set(ProductsCacheKey, products, cacheEntryOptions);
+        }
+        return products;
     }
 
     public async Task<Producto?> GetByIdAsync(int id)
@@ -36,7 +59,9 @@ public class ProductService : IProductService
             Calorias = productDto.Calorias,
             Activo = productDto.Activo ?? true
         };
-        return await _productRepository.AddAsync(producto);
+        var newProduct = await _productRepository.AddAsync(producto);
+        _cache.Remove(ProductsCacheKey); // Invalidate cache
+        return newProduct;
     }
 
     public async Task<Producto> UpdateAsync(int id, UpdateProductDto productDto)
@@ -55,11 +80,13 @@ public class ProductService : IProductService
         existingProduct.Activo = productDto.Activo ?? existingProduct.Activo;
 
         await _productRepository.UpdateAsync(existingProduct);
+        _cache.Remove(ProductsCacheKey); // Invalidate cache
         return existingProduct;
     }
 
     public async Task DeleteAsync(int id)
     {
         await _productRepository.DeleteAsync(id);
+        _cache.Remove(ProductsCacheKey); // Invalidate cache
     }
 }
