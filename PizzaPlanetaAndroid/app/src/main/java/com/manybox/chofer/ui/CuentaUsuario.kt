@@ -54,6 +54,8 @@ fun CuentaUsuarioScreen(
 	errorMessage: String? = null,
 	onEditProfile: () -> Unit = {},
 	onLogout: () -> Unit = {},
+	isLoggedIn: Boolean = true,
+	onLogin: () -> Unit = {},
 	onReorder: (orderId: String) -> Unit = {}
 ) {
 	val Navy = Color(0xFF1D3557)
@@ -116,9 +118,13 @@ fun CuentaUsuarioScreen(
 									if (!email.isNullOrBlank()) Text(email, color = Color.DarkGray, fontSize = 14.sp)
 								}
 								Column(horizontalAlignment = Alignment.End) {
-									Button(onClick = onEditProfile, colors = ButtonDefaults.buttonColors(containerColor = ButtonBlue), shape = RoundedCornerShape(8.dp)) { Text("Editar", color = Color.White) }
-									Spacer(Modifier.height(6.dp))
-									OutlinedButton(onClick = onLogout, colors = ButtonDefaults.outlinedButtonColors(), shape = RoundedCornerShape(8.dp)) { Text("Cerrar sesión") }
+									if (isLoggedIn) {
+										Button(onClick = onEditProfile, colors = ButtonDefaults.buttonColors(containerColor = ButtonBlue), shape = RoundedCornerShape(8.dp)) { Text("Editar", color = Color.White) }
+										Spacer(Modifier.height(6.dp))
+										OutlinedButton(onClick = onLogout, colors = ButtonDefaults.outlinedButtonColors(), shape = RoundedCornerShape(8.dp)) { Text("Cerrar sesión") }
+									} else {
+										Button(onClick = onLogin, colors = ButtonDefaults.buttonColors(containerColor = ButtonBlue), shape = RoundedCornerShape(8.dp)) { Text("Iniciar sesión", color = Color.White) }
+									}
 								}
 							}
 						}

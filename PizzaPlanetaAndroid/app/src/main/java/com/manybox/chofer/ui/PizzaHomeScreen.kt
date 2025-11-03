@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.manybox.chofer.ui
 import coil.compose.AsyncImage
 
@@ -10,6 +12,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.infiniteRepeatable
@@ -78,12 +83,12 @@ fun PizzaHomeScreen() {
     val context = LocalContext.current
     val rootSnackbarHost = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
     var showLogin by remember { mutableStateOf(false) }
     var showRegister by remember { mutableStateOf(false) }
     var showForgot by remember { mutableStateOf(false) }
     var forgotStep by remember { mutableStateOf(0) }
-    var showSideMenu by remember { mutableStateOf(false) }
-    var sideType by remember { mutableStateOf("default") }
+    // Menú lateral
     var showAccount by remember { mutableStateOf(false) }
     var showOrderSelector by remember { mutableStateOf(false) }
     var isLoggingIn by remember { mutableStateOf(false) }
@@ -93,13 +98,49 @@ fun PizzaHomeScreen() {
     var isAdmin by remember { mutableStateOf(false) }
     var loginSuccess by remember { mutableStateOf(false) }
     var sucursales by remember { mutableStateOf<List<SucursalDto>>(emptyList()) }
+    var loadingSucursales by remember { mutableStateOf(false) }
+    var sucursalesError by remember { mutableStateOf<String?>(null) }
     var selectedSucursalId by remember { mutableStateOf<Int?>(null) }
+    var displayName by remember { mutableStateOf("Usuario") }
 
     // Palette
     val Navy = Color(0xFF1D3557)
     val Orange = Color(0xFFF77F00)
     val OnNavy = Color(0xFFEAEAEA)
 
+    // Cargar nombre guardado
+    LaunchedEffect(Unit) {
+        TokenStore.getDisplayNameBlocking(context)?.let { n -> if (n.isNotBlank()) displayName = n }
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = true,
+        drawerContent = {
+            ModalDrawerSheet(drawerContainerColor = Color.White, modifier = Modifier.width(280.dp)) {
+                // Header naranja rectangular (como antes)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp)
+                        .background(Color(0xFFF77F00)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Image(painter = painterResource(id = R.drawable.i4m), contentDescription = null, modifier = Modifier.size(56.dp))
+                        Spacer(Modifier.height(6.dp))
+                        Text(displayName.uppercase(), color = Color(0xFF1D3557), fontWeight = FontWeight.Bold)
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                DrawerItemRow(text = "Método de pago", icon = Icons.Default.CreditCard) { scope.launch { drawerState.close() } }
+                DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) { scope.launch { drawerState.close() } }
+                DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) { scope.launch { drawerState.close() } }
+                Spacer(Modifier.weight(1f))
+                Text("v1.0.0", color = Color.Gray, modifier = Modifier.align(Alignment.CenterHorizontally).padding(12.dp))
+            }
+        }
+    ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -107,28 +148,8 @@ fun PizzaHomeScreen() {
     ) {
 
         Column(modifier = Modifier.fillMaxSize()) {
-            // Header: small white circular hamburger button at top-left
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 16.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White)
-                        .align(Alignment.CenterStart)
-                        .clickable { showSideMenu = true; sideType = "default" },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Menu,
-                        contentDescription = "Menu",
-                        tint = Navy
-                    )
-                }
-            }
+            // Header sin botón de menú (se eliminó el menú lateral)
+            Spacer(Modifier.height(12.dp))
 
             // Bloque: Logo + "Bienvenido" más abajo (padding solo afecta a este bloque)
             Column(
@@ -177,6 +198,34 @@ fun PizzaHomeScreen() {
 
 
 
+        // Cargar sucursales cuando el usuario abre el selector, incluso si no inició sesión
+        LaunchedEffect(showOrderSelector) {
+            if (showOrderSelector && sucursales.isEmpty()) {
+                loadingSucursales = true
+                sucursalesError = null
+                RetrofitProvider.pizzaApi(context).getSucursales()
+                    .enqueue(object: Callback<List<SucursalDto>> {
+                        override fun onResponse(
+                            call: Call<List<SucursalDto>>, response: Response<List<SucursalDto>>
+                        ) {
+                            loadingSucursales = false
+                            if (response.isSuccessful) {
+                                sucursales = response.body().orEmpty()
+                                if (sucursales.isEmpty()) {
+                                    sucursalesError = "No hay sucursales disponibles"
+                                }
+                            } else {
+                                sucursalesError = "Error ${response.code()} al cargar sucursales"
+                            }
+                        }
+                        override fun onFailure(call: Call<List<SucursalDto>>, t: Throwable) {
+                            loadingSucursales = false
+                            sucursalesError = t.message
+                        }
+                    })
+            }
+        }
+
         // Bottom orange action bar overlay (Cuenta / Ordenar)
         Box(
             modifier = Modifier
@@ -202,7 +251,14 @@ fun PizzaHomeScreen() {
                             .weight(1f)
                             .offset(y = (-35).dp)
                             .zIndex(2f)
-                            .clickable(interactionSource = interaction, indication = null) { showLogin = true; showRegister = false; showForgot = false; forgotStep = 0 }
+                            .clickable(interactionSource = interaction, indication = null) {
+                                // Desde Home, el botón "Cuenta" debe ir al Login
+                                showLogin = true
+                                showRegister = false
+                                showForgot = false
+                                forgotStep = 0
+                                showAccount = false
+                            }
                     ) {
                         Box(
                             modifier = Modifier
@@ -304,6 +360,10 @@ fun PizzaHomeScreen() {
                                     isRegistering = false
                                     if (response.isSuccessful) {
                                         registroExito = true
+                                        // Guarda el nombre para mostrarlo en el menú lateral
+                                        CoroutineScope(Dispatchers.IO).launch {
+                                            TokenStore.saveDisplayName(context, nombre)
+                                        }
                                         // Espera 1.5s y regresa a login
                                         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
                                             kotlinx.coroutines.delay(1500)
@@ -367,7 +427,15 @@ fun PizzaHomeScreen() {
                                     val rawToken = response.body()?.token?.removePrefix("Bearer ")?.trim() ?: ""
                                     CoroutineScope(Dispatchers.IO).launch {
                                         TokenStore.saveToken(context, rawToken)
+                                        // Intenta extraer nombre del JWT y guardarlo
+                                        JwtUtils.getDisplayName(rawToken)?.let { name ->
+                                            TokenStore.saveDisplayName(context, name)
+                                        }
                                     }
+                                    // Refresca displayName en la UI inmediatamente si es posible
+                                    // Preferir nombre (name/given_name). Si no existe, dejar el nombre guardado o usar display actual
+                                    val nameOnly = JwtUtils.getNameOrGivenName(rawToken)
+                                    if (!nameOnly.isNullOrBlank()) displayName = nameOnly
                                     // Nueva instancia para asegurar que el interceptor use el token actualizado
                                     val apiWithToken = RetrofitProvider.pizzaApi(context)
                                     apiWithToken.getSucursales().enqueue(object: Callback<List<SucursalDto>> {
@@ -439,13 +507,8 @@ fun PizzaHomeScreen() {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Icono de menú
-                            IconButton(
-                                onClick = { 
-                                    showSideMenu = true
-                                    sideType = "order"
-                                }
-                            ) {
+                            // Icono de menú -> abre menú lateral
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
                                 Icon(
                                     Icons.Default.Menu,
                                     contentDescription = "Menú",
@@ -455,7 +518,7 @@ fun PizzaHomeScreen() {
 
                             // Texto centrado
                             Text(
-                                "BIENVENIDO, TADEO",
+                                "BIENVENIDO, ${displayName.uppercase()}",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
@@ -534,6 +597,25 @@ fun PizzaHomeScreen() {
                         Spacer(Modifier.height(16.dp))
                     }
 
+                    // Estado de carga y errores
+                    if (loadingSucursales) {
+                        item {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                                CircularProgressIndicator(color = Orange)
+                            }
+                            Spacer(Modifier.height(12.dp))
+                        }
+                    }
+                    if (sucursalesError != null && sucursales.isEmpty()) {
+                        item {
+                            Text(
+                                sucursalesError!!,
+                                color = Color.Red,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                    }
+
                     // Lista de sucursales dinámica y scrolleable
                     items(sucursales) { sucursal ->
                         Card(
@@ -593,10 +675,12 @@ fun PizzaHomeScreen() {
         if (showMenu) {
             MenuPlatillos(
                 onBackClick = { showMenu = false; showOrderSelector = true; selectedSucursalId = null },
-                onMenuClick = { showSideMenu = true; sideType = "order" },
+                onMenuClick = { /* no-op, menú lateral eliminado */ },
                 sucursalId = selectedSucursalId ?: 3
             )
         }
+
+        // (Drawer lateral reemplaza el sheet)
 
         // Admin dashboard
         if (showAdmin) {
@@ -606,97 +690,39 @@ fun PizzaHomeScreen() {
             )
         }
 
-        // Side menu overlay (siempre por encima)
-        AnimatedVisibility(visible = showSideMenu) {
-            Surface(
-                color = Color(0x66000000),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable { showSideMenu = false }
-                    .zIndex(10f) // encima de todo
-            ) {}
-        }
-        AnimatedVisibility(visible = showSideMenu) {
-            Card(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(300.dp)
-                    .align(Alignment.CenterStart)
-                    .zIndex(11f), // encima del scrim
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp)
-            )  {
-                if (sideType == "order") {
-                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(Modifier.height(8.dp))
-                        Image(
-                            painter = painterResource(id = R.drawable.im1),
-                            contentDescription = "Decorativo menú",
-                            modifier = Modifier.size(88.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Text("JOSE TADEO", color = Navy, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        Spacer(Modifier.height(12.dp))
-                        SideOption("Método de pago", color = Color.Black)
-                        SideOption("Carrito", color = Color.Black)
-                        SideOption("Direcciones", color = Color.Black)
-                        SideOption("Lugares favoritos", color = Color.Black)
-                        if (isAdmin) {
-                            Spacer(Modifier.height(8.dp))
-                            DrawerOptionWithIcon(
-                                text = "Panel admin",
-                                iconRes = R.drawable.cuenta,
-                                color = Color.Black,
-                                onClick = { showSideMenu = false; showAdmin = true }
-                            )
-                        }
-                    }
-                } else {
-                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(Modifier.height(8.dp))
-                        Image(
-                            painter = painterResource(id = R.drawable.im1),
-                            contentDescription = "Decorativo menú",
-                            modifier = Modifier.size(88.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Text("Hola, Usuario!", color = Navy, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        Spacer(Modifier.height(12.dp))
-                        DrawerOptionWithIcon(text = "Mi cuenta", iconRes = R.drawable.cuenta, color = Color.Black, onClick = { showAccount = true; showSideMenu = false })
-                        DrawerOptionWithIcon(text = "Más cercano", iconRes = R.drawable.cercano, color = Color.Black)
-                        if (isAdmin) {
-                            DrawerOptionWithIcon(
-                                text = "Panel admin",
-                                iconRes = R.drawable.cuenta,
-                                color = Color.Black,
-                                onClick = { showSideMenu = false; showAdmin = true }
-                            )
-                        }
-                    }
-                }
-            }
-        }
+    // Menú lateral activo
         // Mostrar pantalla de cuenta cuando se solicita
         if (showAccount) {
+            val tokenNow = AuthTokenHolder.token ?: TokenStore.getTokenBlocking(context)
+            val isLoggedInNow = !tokenNow.isNullOrBlank()
             CuentaUsuarioScreen(
-                fullname = "Usuario Ejemplo",
-                phone = "+51 900 000 000",
-                email = "usuario@example.com",
-                favorites = listOf("Margarita", "Pepperoni"),
-                favoriteBranch = "Sucursal Central",
-                paymentMethods = listOf("Tarjeta •••• 4242", "Efectivo"),
-                orders = listOf(),
+                fullname = if (isLoggedInNow) "Usuario Ejemplo" else "Invitado",
+                phone = if (isLoggedInNow) "+51 900 000 000" else null,
+                email = if (isLoggedInNow) "usuario@example.com" else null,
+                favorites = if (isLoggedInNow) listOf("Margarita", "Pepperoni") else emptyList(),
+                favoriteBranch = if (isLoggedInNow) "Sucursal Central" else null,
+                paymentMethods = if (isLoggedInNow) listOf("Tarjeta •••• 4242", "Efectivo") else emptyList(),
+                orders = if (isLoggedInNow) listOf() else emptyList(),
                 headerImageRes = R.drawable.pizzorra,
                 onBack = { showAccount = false },
                 onEditProfile = { /* abrir edición */ },
-                onLogout = { showAccount = false },
+                onLogout = {
+                    // limpiar estado local y cerrar cuenta
+                    showAccount = false
+                    // borrar token almacenado
+                    CoroutineScope(Dispatchers.IO).launch { TokenStore.clearToken(context) }
+                },
+                isLoggedIn = isLoggedInNow,
+                onLogin = {
+                    showAccount = false
+                    showLogin = true
+                },
                 onReorder = { orderId -> /* manejar reordenar */ }
             )
         }
         // Host global para snackbars sutiles
         SubtleSnackHost(hostState = rootSnackbarHost, bottomPadding = 130.dp)
+    }
     }
 }
 
@@ -725,6 +751,21 @@ private fun DrawerOptionWithIcon(text: String, iconRes: Int, color: Color = Colo
             contentScale = ContentScale.Fit
         )
         Text(text, color = color, fontSize = 16.sp)
+    }
+}
+
+@Composable
+private fun DrawerItemRow(text: String, icon: ImageVector, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = text, tint = Color(0xFF1D3557))
+        Spacer(Modifier.width(12.dp))
+        Text(text, color = Color.Black, fontSize = 16.sp)
     }
 }
 

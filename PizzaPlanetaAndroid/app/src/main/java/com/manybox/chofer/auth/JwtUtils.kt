@@ -36,4 +36,40 @@ object JwtUtils {
             false
         }
     }
+
+    fun getDisplayName(token: String?): String? {
+        if (token.isNullOrBlank()) return null
+        val parts = token.split('.')
+        if (parts.size < 2) return null
+        return try {
+            val payloadJson = String(Base64.decode(parts[1].replace('-', '+').replace('_', '/'), Base64.DEFAULT))
+            val obj = JSONObject(payloadJson)
+            // Common claim keys where a display name might live
+            val keys = listOf(
+                "name",
+                "given_name",
+                "preferred_username",
+                "unique_name",
+                "email",
+                "sub"
+            )
+            keys.firstNotNullOfOrNull { key -> obj.optString(key).takeIf { it.isNotBlank() } }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun getNameOrGivenName(token: String?): String? {
+        if (token.isNullOrBlank()) return null
+        val parts = token.split('.')
+        if (parts.size < 2) return null
+        return try {
+            val payloadJson = String(Base64.decode(parts[1].replace('-', '+').replace('_', '/'), Base64.DEFAULT))
+            val obj = JSONObject(payloadJson)
+            val keys = listOf("name", "given_name")
+            keys.firstNotNullOfOrNull { key -> obj.optString(key).takeIf { it.isNotBlank() } }
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

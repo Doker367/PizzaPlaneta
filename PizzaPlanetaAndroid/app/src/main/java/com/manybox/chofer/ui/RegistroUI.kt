@@ -1,6 +1,8 @@
 package com.manybox.chofer.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -109,7 +111,13 @@ fun RegistroScreen(
 					elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
 					shape = RoundedCornerShape(12.dp)
 				) {
-					Column(modifier = Modifier.padding(16.dp)) {
+					Column(
+						modifier = Modifier
+							.padding(16.dp)
+							.verticalScroll(rememberScrollState())
+							.imePadding()
+							.navigationBarsPadding()
+					) {
 						if (headerImageRes == null) {
 							Row(verticalAlignment = Alignment.CenterVertically) {
 								if (onBack != null) {

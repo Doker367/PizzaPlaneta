@@ -20,6 +20,7 @@ private val Context.dataStore by preferencesDataStore(name = "pizza_planeta_pref
 
 object TokenStore {
     private val KEY_TOKEN: Preferences.Key<String> = stringPreferencesKey("auth_token")
+    private val KEY_DISPLAY_NAME: Preferences.Key<String> = stringPreferencesKey("display_name")
 
     suspend fun saveToken(context: Context, token: String) {
         context.dataStore.edit { prefs ->
@@ -33,5 +34,25 @@ object TokenStore {
 
     fun getTokenBlocking(context: Context): String? = runBlocking {
         tokenFlow(context).first()
+    }
+
+    suspend fun clearToken(context: Context) {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_TOKEN)
+        }
+        AuthTokenHolder.token = null
+    }
+
+    suspend fun saveDisplayName(context: Context, name: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_DISPLAY_NAME] = name
+        }
+    }
+
+    fun displayNameFlow(context: Context): Flow<String?> =
+        context.dataStore.data.map { prefs -> prefs[KEY_DISPLAY_NAME] }
+
+    fun getDisplayNameBlocking(context: Context): String? = runBlocking {
+        displayNameFlow(context).first()
     }
 }
