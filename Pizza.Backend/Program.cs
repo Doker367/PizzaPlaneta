@@ -7,6 +7,7 @@ using Pizza.Backend.Application;
 using Pizza.Backend.Infrastructure.Data;
 using Pizza.Backend.Infrastructure.Repositories;
 using Pizza.Backend.Ports;
+using Pizza.Backend.Infrastructure;
 
 // Load .env file
 Env.Load();
@@ -47,6 +48,8 @@ builder.Services.AddScoped<ICarritoRepository, CarritoRepository>();
 builder.Services.AddScoped<ICarritoService, CarritoService>();
 builder.Services.AddScoped<ITarjetaRepository, TarjetaRepository>();
 builder.Services.AddScoped<ITarjetaService, TarjetaService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // Add Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

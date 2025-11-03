@@ -34,29 +34,32 @@ fun AdminDashboard(onBack: () -> Unit, onLogout: () -> Unit) {
     var tabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Sucursales", "Productos", "Menú por sucursal")
 
-    val AdminBg = Color(0xFF0F172A)
-    val AdminTop = Color(0xFF0B1220)
-    val OnAdmin = Color(0xFFE5E7EB)
+    // Align admin panel with app palette (Navy/Orange, light cards, dark text)
+    val Navy = Color(0xFF1D3557)
+    val Orange = Color(0xFFF77F00)
+    val PanelBg = Color(0xFFF2F2F2)
+    val TextPrimary = Color.Black
+    val TextSecondary = Color(0xFF3C4A6B)
     Scaffold(
-        containerColor = AdminBg,
+        containerColor = Navy,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Panel de Administración", fontWeight = FontWeight.Bold, color = OnAdmin) },
+                title = { Text("Panel de Administración", fontWeight = FontWeight.Bold, color = Navy) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = OnAdmin) }
+                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = Navy) }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = AdminTop)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Orange)
             )
         },
         snackbarHost = { SubtleSnackHost(hostState = snackbar, bottomPadding = 90.dp) }
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            TabRow(selectedTabIndex = tabIndex, containerColor = AdminTop, contentColor = OnAdmin) {
+            TabRow(selectedTabIndex = tabIndex, containerColor = Color.White, contentColor = Navy) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
                         selected = tabIndex == index,
                         onClick = { tabIndex = index },
-                        text = { Text(title, color = OnAdmin) }
+                        text = { Text(title, color = if (tabIndex == index) Navy else TextSecondary) }
                     )
                 }
             }
@@ -92,9 +95,12 @@ private fun AdminSucursalesTab(snackbar: SnackbarHostState) {
         })
     }
 
-    val CardBg = Color(0xFF111827)
-    val OnBg = Color(0xFFE5E7EB)
-    val Btn = Color(0xFF1D3557)
+    val Navy = Color(0xFF1D3557)
+    val Orange = Color(0xFFF77F00)
+    val CardBg = Color(0xFFF2F2F2)
+    val OnBg = Color.Black
+    val SubText = Color(0xFF3C4A6B)
+    val Btn = Orange
     var showCreate by remember { mutableStateOf(false) }
 
     LazyColumn(Modifier.fillMaxSize().padding(16.dp)) {
@@ -143,14 +149,14 @@ private fun AdminSucursalesTab(snackbar: SnackbarHostState) {
                 }
             }
             Spacer(Modifier.height(12.dp))
-            Text("Listado", fontWeight = FontWeight.SemiBold, color = OnBg)
+            Text("Listado", fontWeight = FontWeight.SemiBold, color = Navy)
         }
         items(sucursales) { s ->
             Card(Modifier.fillMaxWidth().padding(vertical = 4.dp), colors = CardDefaults.cardColors(containerColor = CardBg)) {
                 Column(Modifier.padding(12.dp)) {
-                    Text(s.nombre, fontWeight = FontWeight.Bold, color = OnBg)
-                    Text(s.direccion, maxLines = 1, overflow = TextOverflow.Ellipsis, color = OnBg.copy(alpha = 0.85f))
-                    Text(s.ciudad + if (s.estado != null) ", ${s.estado}" else "", color = OnBg.copy(alpha = 0.85f))
+                    Text(s.nombre, fontWeight = FontWeight.Bold, color = Navy)
+                    Text(s.direccion, maxLines = 1, overflow = TextOverflow.Ellipsis, color = SubText)
+                    Text(s.ciudad + if (s.estado != null) ", ${s.estado}" else "", color = SubText)
                 }
             }
         }
@@ -179,9 +185,12 @@ private fun AdminProductosTab(snackbar: SnackbarHostState) {
             override fun onFailure(call: Call<List<ProductDto>>, t: Throwable) {}
         })
     }
-    val CardBg = Color(0xFF111827)
-    val OnBg = Color(0xFFE5E7EB)
-    val Btn = Color(0xFF1D3557)
+    val Navy = Color(0xFF1D3557)
+    val Orange = Color(0xFFF77F00)
+    val CardBg = Color(0xFFF2F2F2)
+    val OnBg = Color.Black
+    val SubText = Color(0xFF3C4A6B)
+    val Btn = Orange
 
     var showCreate by remember { mutableStateOf(false) }
 
@@ -211,7 +220,7 @@ private fun AdminProductosTab(snackbar: SnackbarHostState) {
     LazyColumn(Modifier.fillMaxSize().padding(16.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                Text("Productos", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = OnBg)
+                Text("Productos", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Navy)
                 Spacer(Modifier.weight(1f))
                 FilledTonalIconButton(onClick = { showCreate = !showCreate }) { Icon(Icons.Default.Add, contentDescription = null) }
             }
@@ -260,7 +269,7 @@ private fun AdminProductosTab(snackbar: SnackbarHostState) {
                 }
             }
             Spacer(Modifier.height(12.dp))
-            Text("Listado", fontWeight = FontWeight.SemiBold, color = OnBg)
+            Text("Listado", fontWeight = FontWeight.SemiBold, color = Navy)
         }
         items(productos, key = { it.id }) { p ->
             Card(
@@ -268,10 +277,10 @@ private fun AdminProductosTab(snackbar: SnackbarHostState) {
                 colors = CardDefaults.cardColors(containerColor = CardBg)
             ) {
                 Column(Modifier.padding(12.dp)) {
-                    Text(p.nombre, fontWeight = FontWeight.Bold, color = OnBg)
+                    Text(p.nombre, fontWeight = FontWeight.Bold, color = Navy)
                     val line = "$" + String.format("%.2f", p.precio) + (if (p.calorias != null) "  •  ${p.calorias} kcal" else "")
-                    Text(line, color = OnBg.copy(alpha = 0.85f))
-                    if (!p.categoria.isNullOrBlank()) Text(p.categoria!!, color = OnBg.copy(alpha = 0.7f))
+                    Text(line, color = SubText)
+                    if (!p.categoria.isNullOrBlank()) Text(p.categoria!!, color = SubText.copy(alpha = 0.85f))
                 }
             }
         }
@@ -391,9 +400,12 @@ private fun AdminMenuSucursalTab(snackbar: SnackbarHostState) {
     }
 
     val scope = rememberCoroutineScope()
-    val CardBg = Color(0xFF111827)
-    val OnBg = Color(0xFFE5E7EB)
-    val Btn = Color(0xFF1D3557)
+    val Navy = Color(0xFF1D3557)
+    val Orange = Color(0xFFF77F00)
+    val CardBg = Color(0xFFF2F2F2)
+    val OnBg = Color.Black
+    val SubText = Color(0xFF3C4A6B)
+    val Btn = Orange
     var showForm by remember { mutableStateOf(true) }
     var showCreateProduct by remember { mutableStateOf(false) }
 
@@ -411,7 +423,7 @@ private fun AdminMenuSucursalTab(snackbar: SnackbarHostState) {
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Text("Menú por sucursal", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = OnBg)
+            Text("Menú por sucursal", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Navy)
             Spacer(Modifier.weight(1f))
             FilledTonalIconButton(onClick = { showForm = !showForm }) { Icon(Icons.Default.Add, contentDescription = null) }
         }
@@ -426,16 +438,6 @@ private fun AdminMenuSucursalTab(snackbar: SnackbarHostState) {
                             readOnly = true,
                             label = { Text("Selecciona sucursal") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = sucursalExpanded) },
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = CardBg,
-                                unfocusedContainerColor = CardBg,
-                                focusedTextColor = OnBg,
-                                unfocusedTextColor = OnBg,
-                                focusedLabelColor = OnBg.copy(alpha = 0.8f),
-                                unfocusedLabelColor = OnBg.copy(alpha = 0.6f),
-                                focusedIndicatorColor = OnBg.copy(alpha = 0.4f),
-                                unfocusedIndicatorColor = OnBg.copy(alpha = 0.2f)
-                            ),
                             modifier = Modifier.fillMaxWidth().menuAnchor()
                         )
                         ExposedDropdownMenu(expanded = sucursalExpanded, onDismissRequest = { sucursalExpanded = false }) {
@@ -458,16 +460,6 @@ private fun AdminMenuSucursalTab(snackbar: SnackbarHostState) {
                             readOnly = true,
                             label = { Text("Selecciona producto") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = productoExpanded) },
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = CardBg,
-                                unfocusedContainerColor = CardBg,
-                                focusedTextColor = OnBg,
-                                unfocusedTextColor = OnBg,
-                                focusedLabelColor = OnBg.copy(alpha = 0.8f),
-                                unfocusedLabelColor = OnBg.copy(alpha = 0.6f),
-                                focusedIndicatorColor = OnBg.copy(alpha = 0.4f),
-                                unfocusedIndicatorColor = OnBg.copy(alpha = 0.2f)
-                            ),
                             modifier = Modifier.fillMaxWidth().menuAnchor()
                         )
                         ExposedDropdownMenu(expanded = productoExpanded, onDismissRequest = { productoExpanded = false }) {
@@ -536,7 +528,7 @@ private fun AdminMenuSucursalTab(snackbar: SnackbarHostState) {
                     Spacer(Modifier.height(10.dp))
 
                     // Selección de acción
-                    Text("Acción", color = OnBg)
+                    Text("Acción", color = Navy)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(selected = action == "agregar", onClick = { action = "agregar" }, label = { Text("Agregar") })
                         FilterChip(selected = action == "oferta", onClick = { action = "oferta" }, label = { Text("Oferta/Precio sucursal") })

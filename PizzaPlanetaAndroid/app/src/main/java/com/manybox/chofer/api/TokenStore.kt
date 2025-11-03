@@ -39,6 +39,7 @@ object TokenStore {
     suspend fun clearToken(context: Context) {
         context.dataStore.edit { prefs ->
             prefs.remove(KEY_TOKEN)
+            prefs.remove(KEY_DISPLAY_NAME) // También limpiar el nombre
         }
         AuthTokenHolder.token = null
     }

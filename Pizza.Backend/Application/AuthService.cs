@@ -16,11 +16,13 @@ public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly IConfiguration _configuration;
+    private readonly IEmailService _emailService;
 
-    public AuthService(IUserRepository userRepository, IConfiguration configuration)
+    public AuthService(IUserRepository userRepository, IConfiguration configuration, IEmailService emailService)
     {
         _userRepository = userRepository;
         _configuration = configuration;
+        _emailService = emailService;
     }
 
     public async Task<LoginResponseDto> LoginAsync(LoginUserDto loginUserDto)
@@ -81,10 +83,8 @@ public class AuthService : IAuthService
 
         await _userRepository.UpdateUserAsync(user);
 
-        // TODO: Implement email sending here.
-        // The email should contain a link like:
-        // https://your-frontend.com/reset-password?token={resetToken}&email={user.Email}
-        Console.WriteLine($"Password reset token for {user.Email}: {resetToken}"); // For testing/debugging
+        // Send the password reset email
+        await _emailService.SendPasswordResetEmailAsync(user.Email, resetToken);
     }
 
     public async Task ResetPassword(ResetPasswordDto dto)

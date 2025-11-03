@@ -6,6 +6,6 @@ namespace Pizza.Backend.Application.DTOs
     {
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = null!;
     }
 }

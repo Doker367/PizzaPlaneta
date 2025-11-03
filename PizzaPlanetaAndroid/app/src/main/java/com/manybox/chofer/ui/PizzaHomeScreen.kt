@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -101,21 +102,35 @@ fun PizzaHomeScreen() {
     var showMenu by remember { mutableStateOf(false) }
     var showAdmin by remember { mutableStateOf(false) }
     var isAdmin by remember { mutableStateOf(false) }
+    var isLoggedIn by remember { mutableStateOf(false) }
     var loginSuccess by remember { mutableStateOf(false) }
     var sucursales by remember { mutableStateOf<List<SucursalDto>>(emptyList()) }
     var loadingSucursales by remember { mutableStateOf(false) }
     var sucursalesError by remember { mutableStateOf<String?>(null) }
     var selectedSucursalId by remember { mutableStateOf<Int?>(null) }
+    var selectedSucursalName by remember { mutableStateOf<String?>(null) }
+    var selectedSucursalAddress by remember { mutableStateOf<String?>(null) }
+    var selectedSucursalMapsUrl by remember { mutableStateOf<String?>(null) }
     var displayName by remember { mutableStateOf("Usuario") }
+    // Acción diferida a ejecutar después de login exitoso
+    var postLogin by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     // Palette
     val Navy = Color(0xFF1D3557)
     val Orange = Color(0xFFF77F00)
     val OnNavy = Color(0xFFEAEAEA)
 
-    // Cargar nombre guardado
+    // Cargar nombre guardado solo si hay un token
     LaunchedEffect(Unit) {
-        TokenStore.getDisplayNameBlocking(context)?.let { n -> if (n.isNotBlank()) displayName = n }
+        val token = TokenStore.getTokenBlocking(context)
+        isLoggedIn = !token.isNullOrBlank()
+        if (isLoggedIn) {
+            TokenStore.getDisplayNameBlocking(context)?.let { n ->
+                if (n.isNotBlank()) displayName = n
+            }
+        } else {
+            displayName = "Invitado"
+        }
     }
 
     ModalNavigationDrawer(
@@ -138,10 +153,121 @@ fun PizzaHomeScreen() {
                     }
                 }
                 Spacer(Modifier.height(16.dp))
+<<<<<<< HEAD
                 DrawerItemRow(text = "Método de pago", icon = Icons.Default.CreditCard) { scope.launch { drawerState.close() } }
                 DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) { scope.launch { drawerState.close() } }
                 DrawerItemRow(text = "Favoritos", icon = Icons.Default.Favorite) { showFavoritesDialog = true; scope.launch { drawerState.close() } }
                 DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) { showFavoriteBranchesDialog = true; scope.launch { drawerState.close() } }
+=======
+                val isGuestUser = !isLoggedIn
+                DrawerItemRow(text = "Mi perfil", icon = Icons.Default.Person) {
+                    if (isGuestUser) {
+                        // Abrir login encima de cualquier pantalla actual y volver a Perfil al terminar
+                        postLogin = { showAccount = true }
+                        showMenu = false
+                        showOrderSelector = false
+                        showAccount = false
+                        showRegister = false
+                        showForgot = false
+                        showLogin = true
+                        showRegister = false
+                        showForgot = false
+                    } else {
+                        // Navegar a la vista de perfil del usuario
+                        showMenu = false
+                        showOrderSelector = false
+                        showAdmin = false
+                        showAccount = true
+                    }
+                    scope.launch { drawerState.close() }
+                }
+                DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) {
+                    if (isGuestUser) {
+                        postLogin = { showOrderSelector = true }
+                        showMenu = false
+                        showOrderSelector = false
+                        showAccount = false
+                        showRegister = false
+                        showForgot = false
+                        showLogin = true
+                        showRegister = false
+                        showForgot = false
+                    } else {
+                        // TODO: Navegar al carrito
+                        scope.launch {
+                            rootSnackbarHost.showSnackbar("Carrito próximamente")
+                        }
+                    }
+                    scope.launch { drawerState.close() }
+                }
+                DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) {
+                    if (isGuestUser) {
+                        postLogin = { showOrderSelector = true }
+                        showMenu = false
+                        showOrderSelector = false
+                        showAccount = false
+                        showRegister = false
+                        showForgot = false
+                        showLogin = true
+                        showRegister = false
+                        showForgot = false
+                    } else {
+                        // TODO: Navegar a favoritos
+                        scope.launch {
+                            rootSnackbarHost.showSnackbar("Favoritos próximamente")
+                        }
+                    }
+                    scope.launch { drawerState.close() }
+                }
+                // Botón de cerrar sesión sólo si hay sesión activa
+                if (isLoggedIn) {
+                    Spacer(Modifier.height(8.dp))
+                    Divider()
+                    // Opción de Administrar sólo para admins
+                    if (isAdmin) {
+                        DrawerItemRow(text = "Administrar", icon = Icons.Default.Menu) {
+                            showMenu = false
+                            showOrderSelector = false
+                            showAdmin = true
+                            scope.launch { drawerState.close() }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Divider()
+                    }
+                    DrawerItemRow(text = "Cerrar sesión", icon = Icons.Default.Person) {
+                        scope.launch(Dispatchers.IO) {
+                            TokenStore.clearToken(context)
+                            launch(Dispatchers.Main) {
+                                displayName = "Invitado"
+                                isLoggedIn = false
+                                isAdmin = false
+                                scope.launch { drawerState.close() }
+                                scope.launch {
+                                    rootSnackbarHost.showSnackbar(
+                                        message = "Sesión cerrada",
+                                        withDismissAction = false,
+                                        duration = SnackbarDuration.Short
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Spacer(Modifier.height(8.dp))
+                    Divider()
+                    DrawerItemRow(text = "Iniciar sesión", icon = Icons.Default.Person) {
+                        // Abre el flujo de login y oculta el selector/menú para que no tape el login
+                        postLogin = { showOrderSelector = true }
+                        showMenu = false
+                        showOrderSelector = false
+                        showAccount = false
+                        showLogin = true
+                        showRegister = false
+                        showForgot = false
+                        scope.launch { drawerState.close() }
+                    }
+                }
+>>>>>>> a408a8d (feat: Implementar recuperación de contraseña y gestión de perfil de usuario)
                 Spacer(Modifier.weight(1f))
                 Text("v1.0.0", color = Color.Gray, modifier = Modifier.align(Alignment.CenterHorizontally).padding(12.dp))
             }
@@ -204,11 +330,13 @@ fun PizzaHomeScreen() {
 
 
 
-        // Cargar sucursales cuando el usuario abre el selector, incluso si no inició sesión
+        // Cargar/Refrescar sucursales cada vez que se abre el selector, sin requerir login
         LaunchedEffect(showOrderSelector) {
-            if (showOrderSelector && sucursales.isEmpty()) {
+            if (showOrderSelector) {
                 loadingSucursales = true
                 sucursalesError = null
+                // Opcional: limpiar para evitar ver datos obsoletos si cambia de usuario
+                sucursales = emptyList()
                 RetrofitProvider.pizzaApi(context).getSucursales()
                     .enqueue(object: Callback<List<SucursalDto>> {
                         override fun onResponse(
@@ -247,11 +375,12 @@ fun PizzaHomeScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
+                val isLoggedInNow = !((AuthTokenHolder.token ?: TokenStore.getTokenBlocking(context)).isNullOrBlank())
                 run {
                     val interaction = remember { MutableInteractionSource() }
                     val pressed by interaction.collectIsPressedAsState()
                     val scale by animateFloatAsState(targetValue = if (pressed) 1.06f else 1f, label = "cuentaScale")
-                    Column(
+                    if (!isLoggedInNow) Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .weight(1f)
@@ -259,6 +388,7 @@ fun PizzaHomeScreen() {
                             .zIndex(2f)
                             .clickable(interactionSource = interaction, indication = null) {
                                 // Desde Home, el botón "Cuenta" debe ir al Login
+                                postLogin = { showOrderSelector = true }
                                 showLogin = true
                                 showRegister = false
                                 showForgot = false
@@ -431,17 +561,17 @@ fun PizzaHomeScreen() {
                                 isLoggingIn = false
                                 if (response.isSuccessful) {
                                     val rawToken = response.body()?.token?.removePrefix("Bearer ")?.trim() ?: ""
+                                    // Calcula el displayName de inmediato con prioridades: name/given_name > display/email > fallback
+                                    val immediateName = JwtUtils.getNameOrGivenName(rawToken)
+                                        ?: JwtUtils.getDisplayName(rawToken)
+                                        ?: "Invitado"
+                                    // Actualiza UI inmediatamente
+                                    displayName = immediateName
+                                    // Persiste token y nombre en segundo plano
                                     CoroutineScope(Dispatchers.IO).launch {
                                         TokenStore.saveToken(context, rawToken)
-                                        // Intenta extraer nombre del JWT y guardarlo
-                                        JwtUtils.getDisplayName(rawToken)?.let { name ->
-                                            TokenStore.saveDisplayName(context, name)
-                                        }
+                                        TokenStore.saveDisplayName(context, immediateName)
                                     }
-                                    // Refresca displayName en la UI inmediatamente si es posible
-                                    // Preferir nombre (name/given_name). Si no existe, dejar el nombre guardado o usar display actual
-                                    val nameOnly = JwtUtils.getNameOrGivenName(rawToken)
-                                    if (!nameOnly.isNullOrBlank()) displayName = nameOnly
                                     // Nueva instancia para asegurar que el interceptor use el token actualizado
                                     val apiWithToken = RetrofitProvider.pizzaApi(context)
                                     apiWithToken.getSucursales().enqueue(object: Callback<List<SucursalDto>> {
@@ -460,8 +590,14 @@ fun PizzaHomeScreen() {
                                                 // Detectar admin por JWT y navegar
                                                 val isAdminNow = JwtUtils.hasAdminRole(rawToken)
                                                 isAdmin = isAdminNow
+                                                isLoggedIn = true
                                                 showLogin = false
-                                                if (isAdminNow) {
+                                                // Si hay una acción diferida, ejecútala; de lo contrario, flujo por defecto
+                                                val next = postLogin
+                                                postLogin = null
+                                                if (next != null) {
+                                                    next.invoke()
+                                                } else if (isAdminNow) {
                                                     showAdmin = true
                                                     showOrderSelector = false
                                                 } else {
@@ -522,9 +658,11 @@ fun PizzaHomeScreen() {
                                 )
                             }
 
-                            // Texto centrado
+                            // Texto centrado: mostrar "Invitado" si no hay sesión
+                            val tokenNow = AuthTokenHolder.token ?: TokenStore.getTokenBlocking(context)
+                            val welcomeName = if (tokenNow.isNullOrBlank()) "INVITADO" else displayName.uppercase()
                             Text(
-                                "BIENVENIDO, ${displayName.uppercase()}",
+                                "BIENVENIDO, $welcomeName",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
@@ -646,6 +784,7 @@ fun PizzaHomeScreen() {
                                         .clip(RoundedCornerShape(8.dp))
                                 )
                                 Spacer(Modifier.width(12.dp))
+<<<<<<< HEAD
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(
                                                     sucursal.nombre,
@@ -681,6 +820,34 @@ fun PizzaHomeScreen() {
                                             ) {
                                                 Text("ELEGIR")
                                             }
+=======
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        sucursal.nombre,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        sucursal.direccion,
+                                        color = Color.Gray,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                Button(
+                                    onClick = {
+                                        selectedSucursalId = sucursal.id
+                                        selectedSucursalName = sucursal.nombre
+                                        selectedSucursalAddress = sucursal.direccion
+                                        selectedSucursalMapsUrl = sucursal.googleMapsUrl
+                                        showOrderSelector = false
+                                        showMenu = true
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF1D3557)
+                                    )
+                                ) {
+                                    Text("ELEGIR")
+                                }
+>>>>>>> a408a8d (feat: Implementar recuperación de contraseña y gestión de perfil de usuario)
                             }
                         }
                         Spacer(Modifier.height(8.dp))
@@ -692,9 +859,18 @@ fun PizzaHomeScreen() {
         // Menu de platillos (nuevo componente)
         if (showMenu) {
             MenuPlatillos(
-                onBackClick = { showMenu = false; showOrderSelector = true; selectedSucursalId = null },
-                onMenuClick = { /* no-op, menú lateral eliminado */ },
-                sucursalId = selectedSucursalId ?: 3
+                onBackClick = { showMenu = false; showOrderSelector = true; selectedSucursalId = null; selectedSucursalName = null; selectedSucursalAddress = null },
+                onMenuClick = { /* no-op, el drawer se maneja desde el selector */ },
+                onRequireAuth = {
+                    // Cierra menú y abre login, y al volver regresar al menú
+                    postLogin = { showMenu = true }
+                    showMenu = false
+                    showLogin = true
+                },
+                sucursalId = selectedSucursalId ?: 3,
+                sucursalName = selectedSucursalName ?: "",
+                sucursalAddress = selectedSucursalAddress,
+                sucursalMapsUrl = selectedSucursalMapsUrl
             )
         }
 
@@ -727,8 +903,14 @@ fun PizzaHomeScreen() {
                 onLogout = {
                     // limpiar estado local y cerrar cuenta
                     showAccount = false
-                    // borrar token almacenado
-                    CoroutineScope(Dispatchers.IO).launch { TokenStore.clearToken(context) }
+                    // borrar token almacenado y nombre de usuario
+                    scope.launch(Dispatchers.IO) {
+                        TokenStore.clearToken(context)
+                        // Vuelve al hilo principal para actualizar la UI
+                        launch(Dispatchers.Main) {
+                            displayName = "Invitado"
+                        }
+                    }
                 },
                 isLoggedIn = isLoggedInNow,
                 onLogin = {
@@ -837,7 +1019,8 @@ private fun DrawerItemRow(text: String, icon: ImageVector, onClick: () -> Unit) 
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = text, tint = Color(0xFF1D3557))
+        // Use the ImageVector overload explicitly to avoid ambiguity with other Icon overloads
+        Icon(imageVector = icon, contentDescription = text, tint = Color(0xFF1D3557))
         Spacer(Modifier.width(12.dp))
         Text(text, color = Color.Black, fontSize = 16.sp)
     }

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
@@ -28,6 +30,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import com.manybox.chofer.R
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -61,7 +65,11 @@ data class MenuUiItem(
 fun MenuPlatillos(
     onBackClick: () -> Unit,
     onMenuClick: () -> Unit,
-    sucursalId: Int = 3
+    onRequireAuth: () -> Unit = {},
+    sucursalId: Int = 3,
+    sucursalName: String = "",
+    sucursalAddress: String? = null,
+    sucursalMapsUrl: String? = null
 ) {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(true) }
@@ -118,6 +126,18 @@ fun MenuPlatillos(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var isSubmitting by remember { mutableStateOf(false) }
+    
+    // Helper: ensure user is logged in before adding to cart
+    fun ensureAuthenticatedOrPrompt(): Boolean {
+        val tokenNow = com.manybox.chofer.api.AuthTokenHolder.token
+            ?: com.manybox.chofer.api.TokenStore.getTokenBlocking(context)
+        val loggedIn = !tokenNow.isNullOrBlank()
+        if (!loggedIn) {
+            scope.launch { snackbarHostState.showSnackbar("Inicia sesión para agregar al pedido") }
+            onRequireAuth()
+        }
+        return loggedIn
+    }
 
     Scaffold(
         containerColor = GrayBackground,
@@ -209,18 +229,53 @@ fun MenuPlatillos(
 
                             Spacer(Modifier.width(12.dp))
 
-                            Column {
+                            // Título y dirección con peso para no empujar el botón
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    "Pizza Planet Centro",
+                                    text = if (sucursalName.isNotBlank()) sucursalName else "Restaurante",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp,
-                                    color = DarkBackground 
+                                    color = DarkBackground,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
-                                Text(
-                                    "Av. 1ra poniente #2396",
-                                    fontSize = 14.sp,
-                                    color = Color.Gray
-                                )
+                                if (!sucursalAddress.isNullOrBlank()) {
+                                    Text(
+                                        text = sucursalAddress,
+                                        fontSize = 14.sp,
+                                        color = Color.Gray,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+
+                            // Botón compacto "Ir" a Google Maps (no se sobrepone)
+                            if (!sucursalMapsUrl.isNullOrBlank()) {
+                                TextButton(
+                                    onClick = {
+                                        val raw = sucursalMapsUrl.trim()
+                                        val url = if (raw.startsWith("http", ignoreCase = true)) raw else "https://$raw"
+                                        runCatching {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            }
+                                            context.startActivity(intent)
+                                        }.onFailure {
+                                            scope.launch { snackbarHostState.showSnackbar("No se pudo abrir Maps") }
+                                        }
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowForward,
+                                        contentDescription = "Abrir en Google Maps",
+                                        tint = RedBrand,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Ir", color = RedBrand, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                }
                             }
                         }
                     }
@@ -342,6 +397,8 @@ fun MenuPlatillos(
                         item = item,
                         onView = { selected = item; qty = 1 },
                         onQuickAdd = {
+                            // Requiere autenticación para agregar
+                            if (!ensureAuthenticatedOrPrompt()) return@MenuItemRow
                             // Agregar 1 unidad rápidamente
                             isSubmitting = true
                             val body = CreateOrderRequest(
@@ -473,6 +530,8 @@ fun MenuPlatillos(
                 Button(
                     enabled = !isSubmitting,
                     onClick = {
+                        // Requiere autenticación para agregar
+                        if (!ensureAuthenticatedOrPrompt()) return@Button
                         isSubmitting = true
                         val body = CreateOrderRequest(
                             sucursalId = sucursalId,

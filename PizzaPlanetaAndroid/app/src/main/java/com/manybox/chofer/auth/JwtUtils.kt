@@ -46,11 +46,16 @@ object JwtUtils {
             val obj = JSONObject(payloadJson)
             // Common claim keys where a display name might live
             val keys = listOf(
+                // Prefer Spanish custom claim first
+                "nombre",
+                // Then common name claims
                 "name",
                 "given_name",
+                // Then usernames/emails
                 "preferred_username",
                 "unique_name",
                 "email",
+                // Fallback subject id
                 "sub"
             )
             keys.firstNotNullOfOrNull { key -> obj.optString(key).takeIf { it.isNotBlank() } }
@@ -66,7 +71,8 @@ object JwtUtils {
         return try {
             val payloadJson = String(Base64.decode(parts[1].replace('-', '+').replace('_', '/'), Base64.DEFAULT))
             val obj = JSONObject(payloadJson)
-            val keys = listOf("name", "given_name")
+            // Prioritize custom 'nombre' claim, then 'name', then 'given_name'
+            val keys = listOf("nombre", "name", "given_name")
             keys.firstNotNullOfOrNull { key -> obj.optString(key).takeIf { it.isNotBlank() } }
         } catch (_: Exception) {
             null
