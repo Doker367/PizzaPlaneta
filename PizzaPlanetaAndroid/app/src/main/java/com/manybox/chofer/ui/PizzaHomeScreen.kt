@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.infiniteRepeatable
@@ -77,6 +78,8 @@ import com.manybox.chofer.ui.components.SubtleSnackHost
 import androidx.compose.runtime.LaunchedEffect
 import com.manybox.chofer.auth.JwtUtils
 import com.manybox.chofer.ui.admin.AdminDashboard
+import androidx.compose.ui.graphics.vector.ImageVector
+
 
 @Composable
 fun PizzaHomeScreen() {
@@ -91,6 +94,8 @@ fun PizzaHomeScreen() {
     // Menú lateral
     var showAccount by remember { mutableStateOf(false) }
     var showOrderSelector by remember { mutableStateOf(false) }
+    var showFavoritesDialog by remember { mutableStateOf(false) }
+    var showFavoriteBranchesDialog by remember { mutableStateOf(false) }
     var isLoggingIn by remember { mutableStateOf(false) }
     var loginError by remember { mutableStateOf<String?>(null) }
     var showMenu by remember { mutableStateOf(false) }
@@ -135,7 +140,8 @@ fun PizzaHomeScreen() {
                 Spacer(Modifier.height(16.dp))
                 DrawerItemRow(text = "Método de pago", icon = Icons.Default.CreditCard) { scope.launch { drawerState.close() } }
                 DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) { scope.launch { drawerState.close() } }
-                DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) { scope.launch { drawerState.close() } }
+                DrawerItemRow(text = "Favoritos", icon = Icons.Default.Favorite) { showFavoritesDialog = true; scope.launch { drawerState.close() } }
+                DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) { showFavoriteBranchesDialog = true; scope.launch { drawerState.close() } }
                 Spacer(Modifier.weight(1f))
                 Text("v1.0.0", color = Color.Gray, modifier = Modifier.align(Alignment.CenterHorizontally).padding(12.dp))
             }
@@ -640,29 +646,41 @@ fun PizzaHomeScreen() {
                                         .clip(RoundedCornerShape(8.dp))
                                 )
                                 Spacer(Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        sucursal.nombre,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        sucursal.direccion,
-                                        color = Color.Gray,
-                                        fontSize = 14.sp
-                                    )
-                                }
-                                Button(
-                                    onClick = {
-                                        selectedSucursalId = sucursal.id
-                                        showOrderSelector = false
-                                        showMenu = true
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF1D3557)
-                                    )
-                                ) {
-                                    Text("ELEGIR")
-                                }
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    sucursal.nombre,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(
+                                                    sucursal.direccion,
+                                                    color = Color.Gray,
+                                                    fontSize = 14.sp
+                                                )
+                                            }
+                                            // Toggle favorito de sucursal
+                                            IconButton(onClick = {
+                                                com.manybox.chofer.ui.FavoritesStore.toggleBranch(
+                                                    com.manybox.chofer.ui.FavoriteBranch(sucursal.id, sucursal.nombre)
+                                                )
+                                            }) {
+                                                if (com.manybox.chofer.ui.FavoritesStore.isBranchFavorite(sucursal.id)) {
+                                                    Icon(Icons.Default.Favorite, contentDescription = "Favorito sucursal", tint = Color(0xFFD32F2F))
+                                                } else {
+                                                    Icon(Icons.Default.FavoriteBorder, contentDescription = "Marcar sucursal favorita")
+                                                }
+                                            }
+                                            Button(
+                                                onClick = {
+                                                    selectedSucursalId = sucursal.id
+                                                    showOrderSelector = false
+                                                    showMenu = true
+                                                },
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color(0xFF1D3557)
+                                                )
+                                            ) {
+                                                Text("ELEGIR")
+                                            }
                             }
                         }
                         Spacer(Modifier.height(8.dp))
@@ -723,6 +741,62 @@ fun PizzaHomeScreen() {
         // Host global para snackbars sutiles
         SubtleSnackHost(hostState = rootSnackbarHost, bottomPadding = 130.dp)
     }
+    }
+
+    // Hoja modal de Favoritos (global)
+    if (showFavoritesDialog) {
+        ModalBottomSheet(onDismissRequest = { showFavoritesDialog = false }, containerColor = Color.White) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Favoritos", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Spacer(Modifier.height(8.dp))
+                val favs = com.manybox.chofer.ui.FavoritesStore.favorites
+                if (favs.isEmpty()) {
+                    Text("Aún no has marcado favoritos.", color = Color.Gray)
+                } else {
+                    favs.forEach { f ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) { Text(f.name, fontWeight = FontWeight.SemiBold) }
+                            IconButton(onClick = { com.manybox.chofer.ui.FavoritesStore.remove(f.id) }) {
+                                Icon(Icons.Default.Favorite, contentDescription = "Quitar favorito", tint = Color(0xFFD32F2F))
+                            }
+                        }
+                        Divider()
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(onClick = { showFavoritesDialog = false }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+                    Text("Cerrar")
+                }
+            }
+        }
+    }
+
+    // Hoja modal de Lugares Favoritos (sucursales)
+    if (showFavoriteBranchesDialog) {
+        ModalBottomSheet(onDismissRequest = { showFavoriteBranchesDialog = false }, containerColor = Color.White) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Lugares favoritos", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Spacer(Modifier.height(8.dp))
+                val branches = com.manybox.chofer.ui.FavoritesStore.favoriteBranches
+                if (branches.isEmpty()) {
+                    Text("Aún no has marcado lugares favoritos.", color = Color.Gray)
+                } else {
+                    branches.forEach { b ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) { Text(b.name, fontWeight = FontWeight.SemiBold) }
+                            IconButton(onClick = { com.manybox.chofer.ui.FavoritesStore.removeBranch(b.id) }) {
+                                Icon(Icons.Default.Favorite, contentDescription = "Quitar lugar favorito", tint = Color(0xFFD32F2F))
+                            }
+                        }
+                        Divider()
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(onClick = { showFavoriteBranchesDialog = false }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+                    Text("Cerrar")
+                }
+            }
+        }
     }
 }
 
