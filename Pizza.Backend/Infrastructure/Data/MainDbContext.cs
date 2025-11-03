@@ -15,6 +15,7 @@ public partial class MainDbContext : DbContext
     public virtual DbSet<Tarjeta> Tarjetas { get; set; }
     public virtual DbSet<Usuario> Usuarios { get; set; }
     public virtual DbSet<Menu> Menus { get; set; }
+    public virtual DbSet<Favorito> Favoritos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +35,22 @@ public partial class MainDbContext : DbContext
 
             entity.HasOne(d => d.Usuario).WithMany(p => p.Calificaciones)
                 .HasForeignKey(d => d.UsuarioId);
+        });
+
+        modelBuilder.Entity<Favorito>(entity =>
+        {
+            entity.ToTable("favoritos");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+            entity.Property(e => e.ProductoId).HasColumnName("producto_id");
+            entity.Property(e => e.FechaAgregado).HasColumnName("fecha_agregado").HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(d => d.Usuario)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioId);
+
+            entity.HasIndex(e => new { e.UsuarioId, e.ProductoId }).IsUnique();
         });
 
         modelBuilder.Entity<Sucursale>(entity =>

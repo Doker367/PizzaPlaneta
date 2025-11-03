@@ -50,6 +50,8 @@ builder.Services.AddScoped<ITarjetaRepository, TarjetaRepository>();
 builder.Services.AddScoped<ITarjetaService, TarjetaService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IFavoritoRepository, FavoritoRepository>();
+builder.Services.AddScoped<IFavoritoService, FavoritoService>();
 
 // Add Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

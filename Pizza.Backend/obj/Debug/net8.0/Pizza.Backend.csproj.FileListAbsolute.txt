@@ -230,3 +230,6 @@
 /home/doker/Descargas/Pizzeria/Pizza.Backend/obj/Debug/net8.0/ref/Pizza.Backend.dll
 /home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/Npgsql.dll
 /home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
+/home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/Newtonsoft.Json.dll
+/home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/SendGrid.dll
+/home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/StarkbankEcdsa.dll
