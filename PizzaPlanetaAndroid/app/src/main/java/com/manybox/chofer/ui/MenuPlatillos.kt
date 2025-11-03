@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
@@ -76,6 +77,7 @@ fun MenuPlatillos(
     data class CartItem(val id: Int, val name: String, val unitPrice: Double, var qty: Int)
     val cartItems = remember { mutableStateListOf<CartItem>() }
     var showCartSheet by remember { mutableStateOf(false) }
+    var showFavoritesSheet by remember { mutableStateOf(false) }
 
     // Categorías derivadas de los ítems (memoizadas por cambios en items)
     val categories = remember(items) { items.mapNotNull { it.category?.ifBlank { null } }.distinct() }
@@ -165,15 +167,15 @@ fun MenuPlatillos(
                             Icon(Icons.Default.ArrowBack, "Regresar", tint = Color.White)
                         }
                         // Botón de Favorito
-                        FloatingActionButton(
-                            onClick = { /* TODO */ },
-                            containerColor = Color.Black.copy(alpha = 0.5f), 
-                            shape = CircleShape,
-                            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 0.dp),
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(Icons.Default.FavoriteBorder, "Favorito", tint = Color.White)
-                        }
+                            FloatingActionButton(
+                                onClick = { showFavoritesSheet = true },
+                                containerColor = Color.Black.copy(alpha = 0.5f), 
+                                shape = CircleShape,
+                                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 0.dp),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(Icons.Default.FavoriteBorder, "Favorito", tint = Color.White)
+                            }
                     }
 
                     // Banner de Información del Restaurante
@@ -367,7 +369,9 @@ fun MenuPlatillos(
                                         scope.launch { snackbarHostState.showSnackbar("Error: ${t.message}") }
                                     }
                                 })
-                        }
+                        },
+                        isFavorite = FavoritesStore.isFavorite(item.id),
+                        onToggleFavorite = { FavoritesStore.toggle(Favorite(item.id, item.name)) }
                     )
                     Spacer(Modifier.height(12.dp))
                 }
@@ -584,6 +588,36 @@ fun MenuPlatillos(
             }
         }
     }
+
+    // Hoja con los favoritos (compartidos)
+    if (showFavoritesSheet) {
+        ModalBottomSheet(onDismissRequest = { showFavoritesSheet = false }, containerColor = Color.White) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Favoritos", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Spacer(Modifier.height(8.dp))
+                val favs = FavoritesStore.favorites
+                if (favs.isEmpty()) {
+                    Text("Aún no has marcado favoritos.", color = Color.Gray)
+                } else {
+                    favs.forEach { f ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(f.name, fontWeight = FontWeight.SemiBold)
+                            }
+                            IconButton(onClick = { FavoritesStore.remove(f.id) }) {
+                                Icon(Icons.Default.Favorite, contentDescription = "Quitar favorito", tint = RedBrand)
+                            }
+                        }
+                        Divider()
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(onClick = { showFavoritesSheet = false }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+                    Text("Cerrar")
+                }
+            }
+        }
+    }
 }
 
 // Composable para el botón de categoría (Pizzas, Snacks, Bebidas)
@@ -665,6 +699,7 @@ fun MenuItemRow(item: MenuUiItem, onView: () -> Unit, onQuickAdd: () -> Unit) {
             Spacer(Modifier.width(8.dp))
 
             Column(horizontalAlignment = Alignment.End) {
+                // placeholder for favorite toggle will be added by caller overload
                 // Ver detalles
                 OutlinedButton(
                     onClick = onView,
@@ -740,6 +775,107 @@ private fun SuggestionRow(item: MenuUiItem, onClick: () -> Unit) {
             Text("$" + "%.0f".format(item.price), fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(8.dp))
             OutlinedButton(onClick = onClick, shape = RoundedCornerShape(10.dp)) { Text("Ver") }
+        }
+    }
+}
+
+// Overload that supports favorite toggle
+@Composable
+fun MenuItemRow(item: MenuUiItem, onView: () -> Unit, onQuickAdd: () -> Unit, isFavorite: Boolean, onToggleFavorite: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Placeholder de imagen hasta que tengamos URLs
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFF1F1F1)),
+                contentAlignment = Alignment.Center
+            ) { Text("🍕", fontSize = 28.sp) }
+
+            Spacer(Modifier.width(16.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    item.name,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+                // Mostrar descripción si existe
+                if (item.description.isNotEmpty()) {
+                    Text(
+                        item.description,
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "$" + "%.0f".format(item.price),
+                        fontWeight = FontWeight.ExtraBold,
+                        color = BrownDark,
+                        fontSize = 16.sp
+                    )
+                    if (item.calories != null) {
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "• ${item.calories} kcal",
+                            color = Color.Gray,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            Column(horizontalAlignment = Alignment.End) {
+                // Heart toggle
+                IconButton(onClick = onToggleFavorite, modifier = Modifier.size(36.dp)) {
+                    if (isFavorite) {
+                        Icon(Icons.Default.Favorite, contentDescription = "Favorito", tint = RedBrand)
+                    } else {
+                        Icon(Icons.Default.FavoriteBorder, contentDescription = "Marcar favorito")
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                // Ver detalles
+                OutlinedButton(
+                    onClick = onView,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = BrownDark,
+                        containerColor = Color.White
+                    ),
+                    border = BorderStroke(1.dp, Color.LightGray),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.height(32.dp)
+                ) { Text("Detalles", fontSize = 12.sp) }
+                Spacer(Modifier.height(6.dp))
+                // Agregar rápido
+                Button(
+                    onClick = onQuickAdd,
+                    colors = ButtonDefaults.buttonColors(containerColor = RedBrand),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.height(32.dp)
+                ) { Text("Agregar", color = Color.White, fontSize = 12.sp) }
+            }
         }
     }
 }
