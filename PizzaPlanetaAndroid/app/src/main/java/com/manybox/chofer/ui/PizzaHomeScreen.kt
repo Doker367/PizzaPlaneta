@@ -2,6 +2,7 @@
 
 package com.manybox.chofer.ui
 import coil.compose.AsyncImage
+import androidx.compose.ui.graphics.vector.ImageVector
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -102,6 +103,7 @@ fun PizzaHomeScreen() {
     var sucursalesError by remember { mutableStateOf<String?>(null) }
     var selectedSucursalId by remember { mutableStateOf<Int?>(null) }
     var displayName by remember { mutableStateOf("Usuario") }
+    var showCarrito by remember { mutableStateOf(false) }
 
     // Palette
     val Navy = Color(0xFF1D3557)
@@ -134,7 +136,12 @@ fun PizzaHomeScreen() {
                 }
                 Spacer(Modifier.height(16.dp))
                 DrawerItemRow(text = "Método de pago", icon = Icons.Default.CreditCard) { scope.launch { drawerState.close() } }
-                DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) { scope.launch { drawerState.close() } }
+                DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) { 
+                    scope.launch { 
+                        drawerState.close()
+                        showCarrito = true
+                    }
+                }
                 DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) { scope.launch { drawerState.close() } }
                 Spacer(Modifier.weight(1f))
                 Text("v1.0.0", color = Color.Gray, modifier = Modifier.align(Alignment.CenterHorizontally).padding(12.dp))
@@ -675,12 +682,37 @@ fun PizzaHomeScreen() {
         if (showMenu) {
             MenuPlatillos(
                 onBackClick = { showMenu = false; showOrderSelector = true; selectedSucursalId = null },
-                onMenuClick = { /* no-op, menú lateral eliminado */ },
+                onMenuClick = { scope.launch { drawerState.open() } },
+                onCarritoClick = { showCarrito = true },
                 sucursalId = selectedSucursalId ?: 3
             )
         }
 
-        // (Drawer lateral reemplaza el sheet)
+        // Agregar el CarritoScreen:
+        if (showCarrito) {
+            val items = remember { mutableStateListOf(
+                CartItem(1, "Pizza Margarita", 120.00, 1),
+                CartItem(2, "Pizza Pepperoni", 140.00, 2, "Sin bordes de queso")
+            )}
+            
+            CarritoScreen(
+                onBackClick = { showCarrito = false },
+                onCheckoutClick = { /* Implementar checkout */ },
+                items = items,
+                onUpdateQuantity = { item, newQuantity ->
+                    val index = items.indexOfFirst { it.id == item.id }
+                    if (index != -1) {
+                        items[index] = item.copy(quantity = newQuantity)
+                    }
+                },
+                onDeleteItem = { item ->
+                    items.removeAll { it.id == item.id }
+                },
+                onClearCart = {
+                    items.clear()
+                }
+            )
+        }
 
         // Admin dashboard
         if (showAdmin) {

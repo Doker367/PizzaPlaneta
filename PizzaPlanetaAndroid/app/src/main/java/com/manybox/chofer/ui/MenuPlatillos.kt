@@ -60,6 +60,7 @@ data class MenuUiItem(
 fun MenuPlatillos(
     onBackClick: () -> Unit,
     onMenuClick: () -> Unit,
+    onCarritoClick: () -> Unit, // Agregar este parámetro
     sucursalId: Int = 3
 ) {
     val context = LocalContext.current
@@ -574,7 +575,7 @@ fun MenuPlatillos(
                         shape = RoundedCornerShape(10.dp)
                     ) { Text("Cerrar") }
                     Button(
-                        onClick = { showCartSheet = false; onMenuClick() },
+                        onClick = { showCartSheet = false; onCarritoClick() },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = RedBrand),
                         shape = RoundedCornerShape(10.dp)
