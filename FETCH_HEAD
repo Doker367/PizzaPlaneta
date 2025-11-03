@@ -1,0 +1,1 @@
+options kvm_intel nested=1 PACKETBOX.sln Pizza Pizza.Backend PizzaPlanetaAndroid README.md branch main -

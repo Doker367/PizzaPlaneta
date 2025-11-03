@@ -65,11 +65,16 @@ data class MenuUiItem(
 fun MenuPlatillos(
     onBackClick: () -> Unit,
     onMenuClick: () -> Unit,
+<<<<<<< HEAD
     onRequireAuth: () -> Unit = {},
     sucursalId: Int = 3,
     sucursalName: String = "",
     sucursalAddress: String? = null,
     sucursalMapsUrl: String? = null
+=======
+    onCarritoClick: () -> Unit, // Agregar este parámetro
+    sucursalId: Int = 3
+>>>>>>> dbd43914a4532352f77298230f87981a02218a1e
 ) {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(true) }
@@ -637,7 +642,7 @@ fun MenuPlatillos(
                         shape = RoundedCornerShape(10.dp)
                     ) { Text("Cerrar") }
                     Button(
-                        onClick = { showCartSheet = false; onMenuClick() },
+                        onClick = { showCartSheet = false; onCarritoClick() },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = RedBrand),
                         shape = RoundedCornerShape(10.dp)

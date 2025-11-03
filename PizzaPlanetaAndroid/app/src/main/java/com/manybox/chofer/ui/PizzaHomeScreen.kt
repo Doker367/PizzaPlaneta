@@ -2,6 +2,7 @@
 
 package com.manybox.chofer.ui
 import coil.compose.AsyncImage
+import androidx.compose.ui.graphics.vector.ImageVector
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -112,8 +113,12 @@ fun PizzaHomeScreen() {
     var selectedSucursalAddress by remember { mutableStateOf<String?>(null) }
     var selectedSucursalMapsUrl by remember { mutableStateOf<String?>(null) }
     var displayName by remember { mutableStateOf("Usuario") }
+<<<<<<< HEAD
     // Acción diferida a ejecutar después de login exitoso
     var postLogin by remember { mutableStateOf<(() -> Unit)?>(null) }
+=======
+    var showCarrito by remember { mutableStateOf(false) }
+>>>>>>> dbd43914a4532352f77298230f87981a02218a1e
 
     // Palette
     val Navy = Color(0xFF1D3557)
@@ -155,9 +160,19 @@ fun PizzaHomeScreen() {
                 Spacer(Modifier.height(16.dp))
 <<<<<<< HEAD
                 DrawerItemRow(text = "Método de pago", icon = Icons.Default.CreditCard) { scope.launch { drawerState.close() } }
+<<<<<<< HEAD
+                DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) { 
+                    scope.launch { 
+                        drawerState.close()
+                        showCarrito = true
+                    }
+                }
+                DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) { scope.launch { drawerState.close() } }
+=======
                 DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) { scope.launch { drawerState.close() } }
                 DrawerItemRow(text = "Favoritos", icon = Icons.Default.Favorite) { showFavoritesDialog = true; scope.launch { drawerState.close() } }
                 DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) { showFavoriteBranchesDialog = true; scope.launch { drawerState.close() } }
+<<<<<<< HEAD
 =======
                 val isGuestUser = !isLoggedIn
                 DrawerItemRow(text = "Mi perfil", icon = Icons.Default.Person) {
@@ -268,6 +283,9 @@ fun PizzaHomeScreen() {
                     }
                 }
 >>>>>>> a408a8d (feat: Implementar recuperación de contraseña y gestión de perfil de usuario)
+=======
+>>>>>>> b86124f2eb06c9637d79009413585d8ed2c2a75e
+>>>>>>> dbd43914a4532352f77298230f87981a02218a1e
                 Spacer(Modifier.weight(1f))
                 Text("v1.0.0", color = Color.Gray, modifier = Modifier.align(Alignment.CenterHorizontally).padding(12.dp))
             }
@@ -859,6 +877,7 @@ fun PizzaHomeScreen() {
         // Menu de platillos (nuevo componente)
         if (showMenu) {
             MenuPlatillos(
+<<<<<<< HEAD
                 onBackClick = { showMenu = false; showOrderSelector = true; selectedSucursalId = null; selectedSucursalName = null; selectedSucursalAddress = null },
                 onMenuClick = { /* no-op, el drawer se maneja desde el selector */ },
                 onRequireAuth = {
@@ -871,10 +890,40 @@ fun PizzaHomeScreen() {
                 sucursalName = selectedSucursalName ?: "",
                 sucursalAddress = selectedSucursalAddress,
                 sucursalMapsUrl = selectedSucursalMapsUrl
+=======
+                onBackClick = { showMenu = false; showOrderSelector = true; selectedSucursalId = null },
+                onMenuClick = { scope.launch { drawerState.open() } },
+                onCarritoClick = { showCarrito = true },
+                sucursalId = selectedSucursalId ?: 3
+>>>>>>> dbd43914a4532352f77298230f87981a02218a1e
             )
         }
 
-        // (Drawer lateral reemplaza el sheet)
+        // Agregar el CarritoScreen:
+        if (showCarrito) {
+            val items = remember { mutableStateListOf(
+                CartItem(1, "Pizza Margarita", 120.00, 1),
+                CartItem(2, "Pizza Pepperoni", 140.00, 2, "Sin bordes de queso")
+            )}
+            
+            CarritoScreen(
+                onBackClick = { showCarrito = false },
+                onCheckoutClick = { /* Implementar checkout */ },
+                items = items,
+                onUpdateQuantity = { item, newQuantity ->
+                    val index = items.indexOfFirst { it.id == item.id }
+                    if (index != -1) {
+                        items[index] = item.copy(quantity = newQuantity)
+                    }
+                },
+                onDeleteItem = { item ->
+                    items.removeAll { it.id == item.id }
+                },
+                onClearCart = {
+                    items.clear()
+                }
+            )
+        }
 
         // Admin dashboard
         if (showAdmin) {
