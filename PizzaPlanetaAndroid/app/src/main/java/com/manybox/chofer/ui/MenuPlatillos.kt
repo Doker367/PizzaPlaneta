@@ -355,7 +355,8 @@ fun MenuPlatillos(
                             isSubmitting = true
                             val body = CreateOrderRequest(
                                 sucursalId = sucursalId,
-                                items = listOf(OrderItemRequest(productoId = item.id, cantidad = 1))
+                                items = listOf(OrderItemRequest(productoId = item.id, cantidad = 1)),
+                                metodoPago = "Efectivo"
                             )
                             RetrofitProvider.pizzaApi(context).createOrder(body)
                                 .enqueue(object : Callback<Void> {
@@ -476,7 +477,8 @@ fun MenuPlatillos(
                         isSubmitting = true
                         val body = CreateOrderRequest(
                             sucursalId = sucursalId,
-                            items = listOf(OrderItemRequest(productoId = current.id, cantidad = qty))
+                            items = listOf(OrderItemRequest(productoId = current.id, cantidad = qty)),
+                            metodoPago = "Efectivo"
                         )
                         RetrofitProvider.pizzaApi(context).createOrder(body)
                             .enqueue(object : Callback<Void> {

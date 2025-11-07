@@ -26,10 +26,4 @@ public partial class Pedido
     public virtual ICollection<DetallePedido> DetallePedidos { get; set; } = new List<DetallePedido>();
 
     public virtual ICollection<HistorialEstadoPedido> HistorialEstadoPedidos { get; set; } = new List<HistorialEstadoPedido>();
-
-    public virtual Sucursale Sucursal { get; set; } = null!;
-
-    public virtual Tarjeta? Tarjeta { get; set; }
-
-    public virtual Usuario Usuario { get; set; } = null!;
 }
