@@ -8,5 +8,6 @@ public interface IOrderRepository
 {
     Task<bool> CreateOrder(Pedido order, List<DetallePedido> orderDetails);
     Task<List<Pedido>> GetOrdersByUser(int userId);
+    Task<Pedido> GetOrderById(int orderId);
     Task UpdateOrder(Pedido order);
 }

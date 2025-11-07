@@ -37,9 +37,6 @@ public class OrderService : IOrderService
         var user = await _userRepository.GetUserByIdAsync(int.Parse(userId));
         if (user == null) throw new Exception("Usuario no encontrado.");
 
-        var tarjeta = await _tarjetaRepository.GetByIdAsync(createOrderDto.TarjetaId);
-        if (tarjeta == null || tarjeta.UsuarioId != user.Id) throw new Exception("Tarjeta no válida.");
-
         var productIds = createOrderDto.Items.Select(x => x.ProductoId).ToList();
         var productos = await _productRepository.GetProductsByIds(productIds);
         if (productos.Count != productIds.Count)
@@ -63,51 +60,73 @@ public class OrderService : IOrderService
         {
             UsuarioId = int.Parse(userId),
             SucursalId = createOrderDto.SucursalId,
-            Estado = "Pendiente de Pago",
             Total = total,
             Fecha = DateTime.UtcNow,
+            MetodoPago = createOrderDto.MetodoPago,
             TarjetaId = createOrderDto.TarjetaId
         };
 
-        await _orderRepository.CreateOrder(pedido, detalles);
-
-        try
+        if (createOrderDto.MetodoPago == "Efectivo")
         {
-            StripeConfiguration.ApiKey = _stripeSecretKey;
-
-            var options = new PaymentIntentCreateOptions
+            pedido.Estado = "Pendiente";
+            await _orderRepository.CreateOrder(pedido, detalles);
+            return true;
+        }
+        else if (createOrderDto.MetodoPago == "Tarjeta")
+        {
+            if (!createOrderDto.TarjetaId.HasValue)
             {
-                Amount = (long)(total * 100), // Amount in cents
-                Currency = "mxn",
-                Customer = user.StripeCustomerId,
-                PaymentMethod = tarjeta.StripePaymentMethodId,
-                OffSession = true,
-                Confirm = true,
-            };
-
-            var service = new PaymentIntentService();
-            var paymentIntent = await service.CreateAsync(options);
-
-            if (paymentIntent.Status == "succeeded")
-            {
-                pedido.Estado = "Pagado";
-                await _orderRepository.UpdateOrder(pedido);
-                return true;
+                throw new Exception("Se requiere una tarjeta para el pago con tarjeta.");
             }
-            else
+
+            var tarjeta = await _tarjetaRepository.GetByIdAsync(createOrderDto.TarjetaId.Value);
+            if (tarjeta == null || tarjeta.UsuarioId != user.Id) throw new Exception("Tarjeta no válida.");
+
+            pedido.Estado = "Pendiente de Pago";
+            await _orderRepository.CreateOrder(pedido, detalles);
+
+            try
+            {
+                StripeConfiguration.ApiKey = _stripeSecretKey;
+
+                var options = new PaymentIntentCreateOptions
+                {
+                    Amount = (long)(total * 100), // Amount in cents
+                    Currency = "mxn",
+                    Customer = user.StripeCustomerId,
+                    PaymentMethod = tarjeta.StripePaymentMethodId,
+                    OffSession = true,
+                    Confirm = true,
+                };
+
+                var service = new PaymentIntentService();
+                var paymentIntent = await service.CreateAsync(options);
+
+                if (paymentIntent.Status == "succeeded")
+                {
+                    pedido.Estado = "Pagado";
+                    await _orderRepository.UpdateOrder(pedido);
+                    return true;
+                }
+                else
+                {
+                    pedido.Estado = "Pago Fallido";
+                    await _orderRepository.UpdateOrder(pedido);
+                    return false;
+                }
+            }
+            catch (StripeException e)
             {
                 pedido.Estado = "Pago Fallido";
                 await _orderRepository.UpdateOrder(pedido);
+                // Log the error
+                Console.WriteLine(e.StripeError.Message);
                 return false;
             }
         }
-        catch (StripeException e)
+        else
         {
-            pedido.Estado = "Pago Fallido";
-            await _orderRepository.UpdateOrder(pedido);
-            // Log the error
-            Console.WriteLine(e.StripeError.Message);
-            return false;
+            throw new Exception("Método de pago no válido.");
         }
     }
 
@@ -170,5 +189,16 @@ public class OrderService : IOrderService
         }).ToList();
 
         return result.OrderByDescending(x => x.Fecha).ToList();
+    }
+
+    public async Task<bool> UpdateOrderStatus(int orderId, string status)
+    {
+        var pedido = await _orderRepository.GetOrderById(orderId);
+        if (pedido == null) return false;
+
+        pedido.Estado = status;
+        await _orderRepository.UpdateOrder(pedido);
+
+        return true;
     }
 }

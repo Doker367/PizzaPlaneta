@@ -45,6 +45,11 @@ public async Task<List<Pedido>> GetOrdersByUser(int userId)
         .ToListAsync();
 }
 
+public async Task<Pedido> GetOrderById(int orderId)
+{
+    return await _context.Pedidos.FindAsync(orderId);
+}
+
     public async Task UpdateOrder(Pedido order)
     {
         _context.Pedidos.Update(order);

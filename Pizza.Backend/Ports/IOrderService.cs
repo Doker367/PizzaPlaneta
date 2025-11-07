@@ -8,4 +8,5 @@ public interface IOrderService
 {
     Task<bool> CreateOrder(CreateOrderDto createOrderDto, string userId);
     Task<List<OrderDetailDto>> GetOrdersByUser(string userId);
+    Task<bool> UpdateOrderStatus(int orderId, string status);
 }

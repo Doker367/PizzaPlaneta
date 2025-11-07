@@ -41,4 +41,16 @@ public async Task<IActionResult> GetOrders()
     var orders = await _orderService.GetOrdersByUser(userId);
     return Ok(orders);
 }
+
+[HttpPut("{orderId}/status")]
+[Authorize(Roles = "Admin")]
+public async Task<IActionResult> UpdateOrderStatus(int orderId, [FromBody] UpdateOrderStatusDto dto)
+{
+    var result = await _orderService.UpdateOrderStatus(orderId, dto.Status);
+    if (!result)
+    {
+        return NotFound();
+    }
+    return Ok(new { message = "Estado del pedido actualizado correctamente." });
+}
 }

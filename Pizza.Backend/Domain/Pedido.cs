@@ -19,6 +19,8 @@ public partial class Pedido
 
     public int? TarjetaId { get; set; }
 
+    public string MetodoPago { get; set; } = null!;
+
     public virtual ICollection<Calificacione> Calificaciones { get; set; } = new List<Calificacione>();
 
     public virtual ICollection<DetallePedido> DetallePedidos { get; set; } = new List<DetallePedido>();

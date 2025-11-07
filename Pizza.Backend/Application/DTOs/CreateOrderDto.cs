@@ -12,5 +12,7 @@ public class CreateOrderDto
     public List<OrderItemDto> Items { get; set; } = new();
 
     [Required]
-    public int TarjetaId { get; set; }
+    public string MetodoPago { get; set; } = string.Empty;
+
+    public int? TarjetaId { get; set; }
 }
