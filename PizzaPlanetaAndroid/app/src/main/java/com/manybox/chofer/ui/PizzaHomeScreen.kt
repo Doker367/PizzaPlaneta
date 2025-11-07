@@ -92,6 +92,7 @@ fun PizzaHomeScreen() {
     var forgotStep by remember { mutableStateOf(0) }
     // Menú lateral
     var showAccount by remember { mutableStateOf(false) }
+    var showMetodoPago by remember { mutableStateOf(false) }
     var showOrderSelector by remember { mutableStateOf(false) }
     var showFavoritesDialog by remember { mutableStateOf(false) }
     var showFavoriteBranchesDialog by remember { mutableStateOf(false) }
@@ -167,7 +168,13 @@ fun PizzaHomeScreen() {
                 DrawerItemRow(
                     text = "Método de pago",
                     icon = Icons.Default.CreditCard
-                ) { scope.launch { drawerState.close() } }
+                ) { 
+                    
+                    scope.launch { 
+                        drawerState.close()
+                        showMetodoPago = true
+                    } 
+                }
                 DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) {
                     scope.launch {
                         drawerState.close()
@@ -927,6 +934,13 @@ fun PizzaHomeScreen() {
                         showCarrito = false
                         // opcional: mostrar selector o menú
                     }
+                )
+            }
+
+            if (showMetodoPago) {
+                MetodoPagoScreen(
+                    onBack = { showMetodoPago = false },
+                    headerImageRes = R.drawable.pizzorra
                 )
             }
 
