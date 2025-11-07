@@ -21,6 +21,13 @@ public class OrderController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateOrder(CreateOrderDto createOrderDto)
     {
+        // Log the incoming DTO for debugging
+        Console.WriteLine($"Received CreateOrderDto: SucursalId={createOrderDto.SucursalId}, MetodoPago={createOrderDto.MetodoPago}, TarjetaId={createOrderDto.TarjetaId}");
+        foreach (var item in createOrderDto.Items)
+        {
+            Console.WriteLine($"  Item: ProductoId={item.ProductoId}, Cantidad={item.Cantidad}");
+        }
+
         // Obtener el userId del JWT
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
         if (userId == null)
