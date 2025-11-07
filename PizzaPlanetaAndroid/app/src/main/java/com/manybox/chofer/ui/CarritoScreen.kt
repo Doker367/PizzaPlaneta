@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.manybox.chofer.R
 
-data class CartItem(
+data class LegacyCartItem(
     val id: Int,
     val name: String,
     val price: Double,
@@ -37,12 +37,12 @@ data class CartItem(
 fun CarritoScreen(
     onBackClick: () -> Unit,
     onCheckoutClick: () -> Unit,
-    items: List<CartItem>,
-    onUpdateQuantity: (CartItem, Int) -> Unit,
-    onDeleteItem: (CartItem) -> Unit,
+    items: List<LegacyCartItem>,
+    onUpdateQuantity: (LegacyCartItem, Int) -> Unit,
+    onDeleteItem: (LegacyCartItem) -> Unit,
     onClearCart: () -> Unit
 ) {
-    var showDeleteDialog by remember { mutableStateOf<CartItem?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<LegacyCartItem?>(null) }
     var showClearCartDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -219,7 +219,7 @@ fun CarritoScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CartItemCard(
-    item: CartItem,
+    item: LegacyCartItem,
     onQuantityChange: (Int) -> Unit,
     onDelete: () -> Unit
 ) {

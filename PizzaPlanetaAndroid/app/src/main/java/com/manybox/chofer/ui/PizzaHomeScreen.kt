@@ -113,6 +113,7 @@ fun PizzaHomeScreen() {
     // Acción diferida a ejecutar después de login exitoso
     var postLogin by remember { mutableStateOf<(() -> Unit)?>(null) }
     var showCarrito by remember { mutableStateOf(false) }
+    val cartViewModel = remember { CartViewModel() }
 
     // Palette
     val Navy = Color(0xFF1D3557)
@@ -205,7 +206,7 @@ fun PizzaHomeScreen() {
                 }
                 DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) {
                     if (isGuestUser) {
-                        postLogin = { showOrderSelector = true }
+                        postLogin = { showCarrito = true }
                         showMenu = false
                         showOrderSelector = false
                         showAccount = false
@@ -215,10 +216,7 @@ fun PizzaHomeScreen() {
                         showRegister = false
                         showForgot = false
                     } else {
-                        // TODO: Navegar al carrito
-                        scope.launch {
-                            rootSnackbarHost.showSnackbar("Carrito próximamente")
-                        }
+                        showCarrito = true
                     }
                     scope.launch { drawerState.close() }
                 }
@@ -912,10 +910,23 @@ fun PizzaHomeScreen() {
                         showMenu = false
                         showLogin = true
                     },
+                    cartViewModel = cartViewModel,
                     sucursalId = selectedSucursalId ?: 3,
                     sucursalName = selectedSucursalName ?: "",
                     sucursalAddress = selectedSucursalAddress,
                     sucursalMapsUrl = selectedSucursalMapsUrl
+                )
+            }
+
+            // Pantalla de carrito
+            if (showCarrito) {
+                CartScreen(
+                    viewModel = cartViewModel,
+                    onBack = { showCarrito = false },
+                    onOrderSuccess = {
+                        showCarrito = false
+                        // opcional: mostrar selector o menú
+                    }
                 )
             }
 

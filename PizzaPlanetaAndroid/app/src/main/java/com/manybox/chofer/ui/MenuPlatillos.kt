@@ -63,6 +63,7 @@ fun MenuPlatillos(
     onMenuClick: () -> Unit,
     onCarritoClick: () -> Unit = {},
     onRequireAuth: () -> Unit = {},
+    cartViewModel: CartViewModel,
     sucursalId: Int = 3,
     sucursalName: String = "",
     sucursalAddress: String? = null,
@@ -77,15 +78,16 @@ fun MenuPlatillos(
     var selected by remember { mutableStateOf<MenuUiItem?>(null) }
     var qty by remember { mutableStateOf(1) }
     var cartCount by remember { mutableStateOf(0) }
-    // Carrito local para mostrar "Ver pedido"
-    data class CartItem(val id: Int, val name: String, val unitPrice: Double, var qty: Int)
-    val cartItems = remember { mutableStateListOf<CartItem>() }
+    // Carrito compartido
+    val cartVm = cartViewModel
     var showCartSheet by remember { mutableStateOf(false) }
 
     // Categorías derivadas de los ítems (memoizadas por cambios en items)
     val categories = remember(items) { items.mapNotNull { it.category?.ifBlank { null } }.distinct() }
 
     LaunchedEffect(sucursalId) {
+        // Configurar sucursal en el carrito compartido
+        cartVm.setSucursal(sucursalId)
         isLoading = true
         error = null
         RetrofitProvider.pizzaApi(context).getMenuBySucursalId(sucursalId)
@@ -363,10 +365,9 @@ fun MenuPlatillos(
                                     override fun onResponse(call: Call<Void>, response: Response<Void>) {
                                         isSubmitting = false
                                         if (response.isSuccessful) {
-                                            val existing = cartItems.indexOfFirst { it.id == item.id }
-                                            if (existing >= 0) cartItems[existing] = cartItems[existing].copy(qty = cartItems[existing].qty + 1)
-                                            else cartItems.add(CartItem(item.id, item.name, item.price, 1))
-                                            cartCount = cartItems.sumOf { it.qty }
+                                            cartVm.setSucursal(sucursalId)
+                                            cartVm.addItem(item.id, item.name, item.price, 1)
+                                            cartCount = cartVm.items.sumOf { it.cantidad }
                                             scope.launch { snackbarHostState.showSnackbar("Agregado al pedido") }
                                         } else {
                                             scope.launch { snackbarHostState.showSnackbar("Error ${response.code()} al agregar") }
@@ -427,8 +428,9 @@ fun MenuPlatillos(
                     Spacer(Modifier.weight(1f))
                     Button(
                         onClick = {
+                            // Solo abre la hoja de "Tu pedido"; la navegación al carrito
+                            // se hace desde el botón Continuar dentro de la hoja.
                             showCartSheet = true
-                            onCarritoClick()
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                         shape = RoundedCornerShape(10.dp)
@@ -486,10 +488,9 @@ fun MenuPlatillos(
                                     isSubmitting = false
                                     if (response.isSuccessful) {
                                         selected = null
-                                        val existing = cartItems.indexOfFirst { it.id == current.id }
-                                        if (existing >= 0) cartItems[existing] = cartItems[existing].copy(qty = cartItems[existing].qty + qty)
-                                        else cartItems.add(CartItem(current.id, current.name, current.price, qty))
-                                        cartCount = cartItems.sumOf { it.qty }
+                                        cartVm.setSucursal(sucursalId)
+                                        cartVm.addItem(current.id, current.name, current.price, qty)
+                                        cartCount = cartVm.items.sumOf { it.cantidad }
                                         qty = 1
                                         scope.launch { snackbarHostState.showSnackbar("Producto agregado al pedido") }
                                     } else {
@@ -531,17 +532,17 @@ fun MenuPlatillos(
             Column(Modifier.padding(16.dp)) {
                 Text("Tu pedido", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 Spacer(Modifier.height(8.dp))
-                if (cartItems.isEmpty()) {
+                if (cartVm.items.isEmpty()) {
                     Text("Aún no has agregado artículos.", color = Color.Gray)
                 } else {
                     var total = 0.0
-                    cartItems.forEach { c ->
-                        val subtotal = c.unitPrice * c.qty
+                    cartVm.items.forEach { c ->
+                        val subtotal = c.subtotal
                         total += subtotal
                         Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text(c.name, fontWeight = FontWeight.SemiBold)
-                                Text("${c.qty} x $" + "%.0f".format(c.unitPrice), color = Color.Gray, fontSize = 12.sp)
+                                Text(c.nombre, fontWeight = FontWeight.SemiBold)
+                                Text("${c.cantidad} x $" + "%.0f".format(c.precioUnitario), color = Color.Gray, fontSize = 12.sp)
                             }
                             Text("$" + "%.0f".format(subtotal), fontWeight = FontWeight.Bold)
                         }
@@ -560,7 +561,11 @@ fun MenuPlatillos(
                         shape = RoundedCornerShape(10.dp)
                     ) { Text("Cerrar") }
                     Button(
-                        onClick = { showCartSheet = false; onMenuClick() },
+                        onClick = { 
+                            // Cerrar hoja y navegar al flujo de carrito/pago en lugar del menú general
+                            showCartSheet = false
+                            onCarritoClick()
+                        },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = RedBrand),
                         shape = RoundedCornerShape(10.dp)
