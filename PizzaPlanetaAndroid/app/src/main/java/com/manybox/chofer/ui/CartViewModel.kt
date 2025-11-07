@@ -10,7 +10,10 @@ data class CartLine(
     val productoId: Int,
     val nombre: String,
     val precioUnitario: Double,
-    var cantidad: Int
+    var cantidad: Int,
+    val imageUrl: String? = null,
+    val imageResId: Int? = null,
+    val notes: String? = null
 ) {
     val subtotal: Double get() = precioUnitario * cantidad
 }
@@ -23,12 +26,20 @@ class CartViewModel : ViewModel() {
 
     fun setSucursal(id: Int) { sucursalId = id }
 
-    fun addItem(productoId: Int, nombre: String, precio: Double, cantidad: Int = 1) {
+    fun addItem(
+        productoId: Int,
+        nombre: String,
+        precio: Double,
+        cantidad: Int = 1,
+        imageUrl: String? = null,
+        imageResId: Int? = null,
+        notes: String? = null
+    ) {
         val idx = _items.indexOfFirst { it.productoId == productoId }
         if (idx >= 0) {
             _items[idx] = _items[idx].copy(cantidad = _items[idx].cantidad + cantidad)
         } else {
-            _items.add(CartLine(productoId, nombre, precio, cantidad))
+            _items.add(CartLine(productoId, nombre, precio, cantidad, imageUrl, imageResId, notes))
         }
     }
 

@@ -5,12 +5,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,6 +27,14 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import coil.compose.AsyncImage
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.OutlinedIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,23 +70,67 @@ fun CartScreen(
             } else {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(viewModel.items) { item ->
-                        ElevatedCard(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                        ElevatedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(item.nombre, fontWeight = FontWeight.SemiBold)
-                                    Text("${item.cantidad} x $" + "%.0f".format(item.precioUnitario), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                // Imagen del producto
+                                val corner = RoundedCornerShape(10.dp)
+                                Box(modifier = Modifier.size(72.dp).clip(corner)) {
+                                    when {
+                                        item.imageUrl != null -> AsyncImage(
+                                            model = item.imageUrl,
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                        item.imageResId != null -> Image(
+                                            painter = painterResource(id = item.imageResId),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                        else -> Image(
+                                            painter = painterResource(id = com.manybox.chofer.R.drawable.i4m),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    }
                                 }
-                                Text("$" + "%.0f".format(item.subtotal), fontWeight = FontWeight.Bold)
+
                                 Spacer(Modifier.width(12.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    OutlinedButton(onClick = { viewModel.decrement(item.productoId) }, modifier = Modifier.height(32.dp)) { Text("-") }
-                                    Spacer(Modifier.width(6.dp))
-                                    OutlinedButton(onClick = { viewModel.increment(item.productoId) }, modifier = Modifier.height(32.dp)) { Text("+") }
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(item.nombre, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                                    val unitText = "$" + "%.0f".format(item.precioUnitario)
+                                    Text("${item.cantidad} x $unitText", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("Subtotal: $" + "%.0f".format(item.subtotal), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                                }
+
+                                // Controles cantidad + eliminar
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        OutlinedIconButton(onClick = { viewModel.decrement(item.productoId) }, modifier = Modifier.size(32.dp)) {
+                                            Icon(Icons.Default.Remove, contentDescription = "Menos")
+                                        }
+                                        Text(item.cantidad.toString(), modifier = Modifier.padding(horizontal = 6.dp))
+                                        OutlinedIconButton(onClick = { viewModel.increment(item.productoId) }, modifier = Modifier.size(32.dp)) {
+                                            Icon(Icons.Default.Add, contentDescription = "Más")
+                                        }
+                                    }
+                                    IconButton(onClick = { viewModel.remove(item.productoId) }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                                    }
                                 }
                             }
                         }
