@@ -98,8 +98,7 @@ object RetrofitProvider {
     }
 
     private fun getPizzaBaseUrl(): String {
-        // Usa el puerto correcto del backend local
-        // Redirigido a entorno público (ngrok)
-        return "https://d5f908e09aef.ngrok-free.app/"
+        // Apunta al túnel ngrok solicitado (asegúrate de que termine con '/')
+        return "https://a0c5349823d9.ngrok-free.app/"
     }
 }

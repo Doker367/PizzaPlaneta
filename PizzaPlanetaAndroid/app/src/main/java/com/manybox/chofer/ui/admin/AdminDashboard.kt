@@ -273,99 +273,18 @@ private fun AdminProductosTab(snackbar: SnackbarHostState) {
         }
         items(productos, key = { it.id }) { p ->
             Card(
-                Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { openDialog(p) },
+                Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 colors = CardDefaults.cardColors(containerColor = CardBg)
             ) {
                 Column(Modifier.padding(12.dp)) {
                     Text(p.nombre, fontWeight = FontWeight.Bold, color = Navy)
-                    val line = "$" + String.format("%.2f", p.precio) + (if (p.calorias != null) "  •  ${p.calorias} kcal" else "")
-                    Text(line, color = SubText)
-                    if (!p.categoria.isNullOrBlank()) Text(p.categoria!!, color = SubText.copy(alpha = 0.85f))
+                    if (!p.descripcion.isNullOrBlank()) Text(p.descripcion!!, color = SubText)
+                    Text("Precio: $${String.format("%.2f", p.precio)}")
+                    if (!p.categoria.isNullOrBlank()) Text("Categoría: ${p.categoria}")
+                    if (p.calorias != null) Text("Calorías: ${p.calorias}")
                 }
             }
         }
-    }
-
-    if (showDialog && selected != null) {
-        val p = selected!!
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text("Producto: ${p.nombre}") },
-            text = {
-                Column {
-                    if (!editMode) {
-                        Text("Nombre: ${p.nombre}")
-                        if (!p.descripcion.isNullOrBlank()) Text("Descripción: ${p.descripcion}")
-                        Text("Precio: $${String.format("%.2f", p.precio)}")
-                        if (!p.categoria.isNullOrBlank()) Text("Categoría: ${p.categoria}")
-                        if (p.calorias != null) Text("Calorías: ${p.calorias}")
-                    } else {
-                        OutlinedTextField(value = edNombre, onValueChange = { edNombre = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
-                        OutlinedTextField(value = edDesc, onValueChange = { edDesc = it }, label = { Text("Descripción") }, modifier = Modifier.fillMaxWidth())
-                        OutlinedTextField(value = edPrecio, onValueChange = { edPrecio = it }, label = { Text("Precio") }, modifier = Modifier.fillMaxWidth())
-                        OutlinedTextField(value = edCategoria, onValueChange = { edCategoria = it }, label = { Text("Categoría") }, modifier = Modifier.fillMaxWidth())
-                        OutlinedTextField(value = edCalorias, onValueChange = { edCalorias = it }, label = { Text("Calorías") }, modifier = Modifier.fillMaxWidth())
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    if (!confirmDelete) {
-                        OutlinedButton(onClick = { confirmDelete = true }) { Text("Eliminar", color = Color.Red) }
-                    } else {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(colors = ButtonDefaults.buttonColors(containerColor = Color.Red), onClick = {
-                                api.deleteProducto(p.id).enqueue(object: Callback<Void> {
-                                    override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                                        if (response.isSuccessful) {
-                                            productos = productos.filterNot { it.id == p.id }
-                                            scope.launch { snackbar.showSnackbar("Producto eliminado") }
-                                            showDialog = false
-                                        } else {
-                                            scope.launch { snackbar.showSnackbar("Error ${response.code()} al eliminar") }
-                                        }
-                                    }
-                                    override fun onFailure(call: Call<Void>, t: Throwable) {
-                                        scope.launch { snackbar.showSnackbar("Error: ${t.message}") }
-                                    }
-                                })
-                            }) { Text("Confirmar eliminación") }
-                            OutlinedButton(onClick = { confirmDelete = false }) { Text("Cancelar") }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                if (!editMode) {
-                    Button(onClick = { editMode = true }, colors = ButtonDefaults.buttonColors(containerColor = Btn)) { Text("Modificar") }
-                } else {
-                    Button(onClick = {
-                        val body = UpdateProductRequest(
-                            nombre = edNombre.ifBlank { null },
-                            descripcion = edDesc.ifBlank { null },
-                            precio = edPrecio.toDoubleOrNull() ?: p.precio,
-                            categoria = edCategoria.ifBlank { null },
-                            calorias = edCalorias.toIntOrNull()
-                        )
-                        api.updateProducto(p.id, body).enqueue(object: Callback<ProductDto> {
-                            override fun onResponse(call: Call<ProductDto>, response: Response<ProductDto>) {
-                                if (response.isSuccessful) {
-                                    val updated = response.body()!!
-                                    productos = productos.map { if (it.id == p.id) updated else it }
-                                    scope.launch { snackbar.showSnackbar("Producto actualizado") }
-                                    showDialog = false
-                                } else {
-                                    scope.launch { snackbar.showSnackbar("Error ${response.code()} al actualizar") }
-                                }
-                            }
-                            override fun onFailure(call: Call<ProductDto>, t: Throwable) {
-                                scope.launch { snackbar.showSnackbar("Error: ${t.message}") }
-                            }
-                        })
-                    }, colors = ButtonDefaults.buttonColors(containerColor = Btn)) { Text("Guardar") }
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialog = false }) { Text("Cerrar") }
-            }
-        )
     }
 }
 
@@ -400,12 +319,9 @@ private fun AdminMenuSucursalTab(snackbar: SnackbarHostState) {
     }
 
     val scope = rememberCoroutineScope()
-    val Navy = Color(0xFF1D3557)
-    val Orange = Color(0xFFF77F00)
-    val CardBg = Color(0xFFF2F2F2)
-    val OnBg = Color.Black
-    val SubText = Color(0xFF3C4A6B)
-    val Btn = Orange
+    val CardBg = Color(0xFF111827)
+    val OnBg = Color(0xFFE5E7EB)
+    val Btn = Color(0xFF1D3557)
     var showForm by remember { mutableStateOf(true) }
     var showCreateProduct by remember { mutableStateOf(false) }
 
@@ -423,7 +339,7 @@ private fun AdminMenuSucursalTab(snackbar: SnackbarHostState) {
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Text("Menú por sucursal", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Navy)
+            Text("Menú por sucursal", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = OnBg)
             Spacer(Modifier.weight(1f))
             FilledTonalIconButton(onClick = { showForm = !showForm }) { Icon(Icons.Default.Add, contentDescription = null) }
         }
@@ -438,6 +354,16 @@ private fun AdminMenuSucursalTab(snackbar: SnackbarHostState) {
                             readOnly = true,
                             label = { Text("Selecciona sucursal") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = sucursalExpanded) },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = CardBg,
+                                unfocusedContainerColor = CardBg,
+                                focusedTextColor = OnBg,
+                                unfocusedTextColor = OnBg,
+                                focusedLabelColor = OnBg.copy(alpha = 0.8f),
+                                unfocusedLabelColor = OnBg.copy(alpha = 0.6f),
+                                focusedIndicatorColor = OnBg.copy(alpha = 0.4f),
+                                unfocusedIndicatorColor = OnBg.copy(alpha = 0.2f)
+                            ),
                             modifier = Modifier.fillMaxWidth().menuAnchor()
                         )
                         ExposedDropdownMenu(expanded = sucursalExpanded, onDismissRequest = { sucursalExpanded = false }) {
@@ -460,6 +386,16 @@ private fun AdminMenuSucursalTab(snackbar: SnackbarHostState) {
                             readOnly = true,
                             label = { Text("Selecciona producto") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = productoExpanded) },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = CardBg,
+                                unfocusedContainerColor = CardBg,
+                                focusedTextColor = OnBg,
+                                unfocusedTextColor = OnBg,
+                                focusedLabelColor = OnBg.copy(alpha = 0.8f),
+                                unfocusedLabelColor = OnBg.copy(alpha = 0.6f),
+                                focusedIndicatorColor = OnBg.copy(alpha = 0.4f),
+                                unfocusedIndicatorColor = OnBg.copy(alpha = 0.2f)
+                            ),
                             modifier = Modifier.fillMaxWidth().menuAnchor()
                         )
                         ExposedDropdownMenu(expanded = productoExpanded, onDismissRequest = { productoExpanded = false }) {
@@ -528,7 +464,7 @@ private fun AdminMenuSucursalTab(snackbar: SnackbarHostState) {
                     Spacer(Modifier.height(10.dp))
 
                     // Selección de acción
-                    Text("Acción", color = Navy)
+                    Text("Acción", color = OnBg)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(selected = action == "agregar", onClick = { action = "agregar" }, label = { Text("Agregar") })
                         FilterChip(selected = action == "oferta", onClick = { action = "oferta" }, label = { Text("Oferta/Precio sucursal") })

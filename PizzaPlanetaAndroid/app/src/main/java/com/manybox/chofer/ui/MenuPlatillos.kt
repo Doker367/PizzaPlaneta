@@ -10,9 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,7 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
@@ -30,8 +27,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import com.manybox.chofer.R
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +34,7 @@ import com.manybox.chofer.api.MenuItemDto
 import com.manybox.chofer.api.RetrofitProvider
 import com.manybox.chofer.api.CreateOrderRequest
 import com.manybox.chofer.api.OrderItemRequest
+import com.manybox.chofer.api.TokenStore
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -65,7 +61,7 @@ data class MenuUiItem(
 fun MenuPlatillos(
     onBackClick: () -> Unit,
     onMenuClick: () -> Unit,
-    onCarritoClick: () -> Unit,
+    onCarritoClick: () -> Unit = {},
     onRequireAuth: () -> Unit = {},
     sucursalId: Int = 3,
     sucursalName: String = "",
@@ -76,16 +72,15 @@ fun MenuPlatillos(
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var items by remember { mutableStateOf<List<MenuUiItem>>(emptyList()) }
-    var selected by remember { mutableStateOf<MenuUiItem?>(null) }
-    var qty by remember { mutableStateOf(1) }
     var search by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Todos") }
+    var selected by remember { mutableStateOf<MenuUiItem?>(null) }
+    var qty by remember { mutableStateOf(1) }
     var cartCount by remember { mutableStateOf(0) }
     // Carrito local para mostrar "Ver pedido"
     data class CartItem(val id: Int, val name: String, val unitPrice: Double, var qty: Int)
     val cartItems = remember { mutableStateListOf<CartItem>() }
     var showCartSheet by remember { mutableStateOf(false) }
-    var showFavoritesSheet by remember { mutableStateOf(false) }
 
     // Categorías derivadas de los ítems (memoizadas por cambios en items)
     val categories = remember(items) { items.mapNotNull { it.category?.ifBlank { null } }.distinct() }
@@ -127,18 +122,6 @@ fun MenuPlatillos(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var isSubmitting by remember { mutableStateOf(false) }
-    
-    // Helper: ensure user is logged in before adding to cart
-    fun ensureAuthenticatedOrPrompt(): Boolean {
-        val tokenNow = com.manybox.chofer.api.AuthTokenHolder.token
-            ?: com.manybox.chofer.api.TokenStore.getTokenBlocking(context)
-        val loggedIn = !tokenNow.isNullOrBlank()
-        if (!loggedIn) {
-            scope.launch { snackbarHostState.showSnackbar("Inicia sesión para agregar al pedido") }
-            onRequireAuth()
-        }
-        return loggedIn
-    }
 
     Scaffold(
         containerColor = GrayBackground,
@@ -187,15 +170,15 @@ fun MenuPlatillos(
                             Icon(Icons.Default.ArrowBack, "Regresar", tint = Color.White)
                         }
                         // Botón de Favorito
-                            FloatingActionButton(
-                                onClick = { showFavoritesSheet = true },
-                                containerColor = Color.Black.copy(alpha = 0.5f), 
-                                shape = CircleShape,
-                                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 0.dp),
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(Icons.Default.FavoriteBorder, "Favorito", tint = Color.White)
-                            }
+                        FloatingActionButton(
+                            onClick = { /* TODO */ },
+                            containerColor = Color.Black.copy(alpha = 0.5f), 
+                            shape = CircleShape,
+                            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 0.dp),
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(Icons.Default.FavoriteBorder, "Favorito", tint = Color.White)
+                        }
                     }
 
                     // Banner de Información del Restaurante
@@ -230,53 +213,18 @@ fun MenuPlatillos(
 
                             Spacer(Modifier.width(12.dp))
 
-                            // Título y dirección con peso para no empujar el botón
-                            Column(modifier = Modifier.weight(1f)) {
+                            Column {
                                 Text(
-                                    text = if (sucursalName.isNotBlank()) sucursalName else "Restaurante",
+                                    "Pizza Planet Centro",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp,
-                                    color = DarkBackground,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    color = DarkBackground 
                                 )
-                                if (!sucursalAddress.isNullOrBlank()) {
-                                    Text(
-                                        text = sucursalAddress,
-                                        fontSize = 14.sp,
-                                        color = Color.Gray,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-
-                            // Botón compacto "Ir" a Google Maps (no se sobrepone)
-                            if (!sucursalMapsUrl.isNullOrBlank()) {
-                                TextButton(
-                                    onClick = {
-                                        val raw = sucursalMapsUrl.trim()
-                                        val url = if (raw.startsWith("http", ignoreCase = true)) raw else "https://$raw"
-                                        runCatching {
-                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                            }
-                                            context.startActivity(intent)
-                                        }.onFailure {
-                                            scope.launch { snackbarHostState.showSnackbar("No se pudo abrir Maps") }
-                                        }
-                                    },
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowForward,
-                                        contentDescription = "Abrir en Google Maps",
-                                        tint = RedBrand,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Ir", color = RedBrand, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                }
+                                Text(
+                                    "Av. 1ra poniente #2396",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
                             }
                         }
                     }
@@ -398,9 +346,12 @@ fun MenuPlatillos(
                         item = item,
                         onView = { selected = item; qty = 1 },
                         onQuickAdd = {
-                            // Requiere autenticación para agregar
-                            if (!ensureAuthenticatedOrPrompt()) return@MenuItemRow
-                            // Agregar 1 unidad rápidamente
+                            // Requiere autenticación: si no hay token invoca callback y aborta
+                            val token = TokenStore.getTokenBlocking(context)
+                            if (token.isNullOrBlank()) {
+                                onRequireAuth()
+                                return@MenuItemRow
+                            }
                             isSubmitting = true
                             val body = CreateOrderRequest(
                                 sucursalId = sucursalId,
@@ -411,7 +362,6 @@ fun MenuPlatillos(
                                     override fun onResponse(call: Call<Void>, response: Response<Void>) {
                                         isSubmitting = false
                                         if (response.isSuccessful) {
-                                            // Actualiza carrito local
                                             val existing = cartItems.indexOfFirst { it.id == item.id }
                                             if (existing >= 0) cartItems[existing] = cartItems[existing].copy(qty = cartItems[existing].qty + 1)
                                             else cartItems.add(CartItem(item.id, item.name, item.price, 1))
@@ -426,36 +376,27 @@ fun MenuPlatillos(
                                         scope.launch { snackbarHostState.showSnackbar("Error: ${t.message}") }
                                     }
                                 })
-                        },
-                        isFavorite = FavoritesStore.isFavorite(item.id),
-                        onToggleFavorite = { FavoritesStore.toggle(Favorite(item.id, item.name)) }
+                        }
                     )
                     Spacer(Modifier.height(12.dp))
                 }
             }
-
-            // Espaciador para el área del BottomBar flotante
-            item {
-                Spacer(Modifier.height(80.dp))
-            }
         }
-        
-        // =======================================================
-        // 5. Bottom Bar Flotante
-        // =======================================================
+
+        // Bottom bar flotante fuera del LazyColumn, pegada al fondo
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentAlignment = Alignment.BottomCenter 
+            contentAlignment = Alignment.BottomCenter
         ) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(70.dp),
-                shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp), 
+                shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
                 colors = CardDefaults.cardColors(containerColor = RedBrand),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp) 
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -463,16 +404,10 @@ fun MenuPlatillos(
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Hamburguesa para abrir menú lateral (izquierda fija)
                     IconButton(onClick = onMenuClick) {
-                        Icon(
-                            Icons.Default.Menu,
-                            contentDescription = "Menú",
-                            tint = Color.White
-                        )
+                        Icon(Icons.Default.Menu, contentDescription = "Menú", tint = Color.White)
                     }
                     Spacer(Modifier.width(6.dp))
-                    // Texto + contador apilados
                     Column {
                         Text("Tu pedido", color = Color.White.copy(alpha = 0.95f), fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(2.dp))
@@ -490,7 +425,10 @@ fun MenuPlatillos(
                     }
                     Spacer(Modifier.weight(1f))
                     Button(
-                        onClick = { showCartSheet = true },
+                        onClick = {
+                            showCartSheet = true
+                            onCarritoClick()
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                         shape = RoundedCornerShape(10.dp)
                     ) { Text("Ver pedido", color = RedBrand, fontWeight = FontWeight.Bold) }
@@ -531,8 +469,10 @@ fun MenuPlatillos(
                 Button(
                     enabled = !isSubmitting,
                     onClick = {
-                        // Requiere autenticación para agregar
-                        if (!ensureAuthenticatedOrPrompt()) return@Button
+                        val token = TokenStore.getTokenBlocking(context)
+                        if (token.isNullOrBlank()) {
+                            onRequireAuth(); return@Button
+                        }
                         isSubmitting = true
                         val body = CreateOrderRequest(
                             sucursalId = sucursalId,
@@ -544,39 +484,19 @@ fun MenuPlatillos(
                                     isSubmitting = false
                                     if (response.isSuccessful) {
                                         selected = null
-                                        // Actualiza carrito local
                                         val existing = cartItems.indexOfFirst { it.id == current.id }
                                         if (existing >= 0) cartItems[existing] = cartItems[existing].copy(qty = cartItems[existing].qty + qty)
                                         else cartItems.add(CartItem(current.id, current.name, current.price, qty))
                                         cartCount = cartItems.sumOf { it.qty }
                                         qty = 1
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                message = "Producto agregado al pedido",
-                                                withDismissAction = false,
-                                                duration = SnackbarDuration.Short
-                                            )
-                                        }
+                                        scope.launch { snackbarHostState.showSnackbar("Producto agregado al pedido") }
                                     } else {
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                message = "Error ${response.code()} al agregar",
-                                                withDismissAction = false,
-                                                duration = SnackbarDuration.Short
-                                            )
-                                        }
+                                        scope.launch { snackbarHostState.showSnackbar("Error ${response.code()} al agregar") }
                                     }
                                 }
-
                                 override fun onFailure(call: Call<Void>, t: Throwable) {
                                     isSubmitting = false
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            message = "Error: ${t.message}",
-                                            withDismissAction = false,
-                                            duration = SnackbarDuration.Short
-                                        )
-                                    }
+                                    scope.launch { snackbarHostState.showSnackbar("Error: ${t.message}") }
                                 }
                             })
                     },
@@ -638,41 +558,11 @@ fun MenuPlatillos(
                         shape = RoundedCornerShape(10.dp)
                     ) { Text("Cerrar") }
                     Button(
-                        onClick = { showCartSheet = false; onCarritoClick() },
+                        onClick = { showCartSheet = false; onMenuClick() },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = RedBrand),
                         shape = RoundedCornerShape(10.dp)
                     ) { Text("Continuar", color = Color.White) }
-                }
-            }
-        }
-    }
-
-    // Hoja con los favoritos (compartidos)
-    if (showFavoritesSheet) {
-        ModalBottomSheet(onDismissRequest = { showFavoritesSheet = false }, containerColor = Color.White) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Favoritos", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Spacer(Modifier.height(8.dp))
-                val favs = FavoritesStore.favorites
-                if (favs.isEmpty()) {
-                    Text("Aún no has marcado favoritos.", color = Color.Gray)
-                } else {
-                    favs.forEach { f ->
-                        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) {
-                                Text(f.name, fontWeight = FontWeight.SemiBold)
-                            }
-                            IconButton(onClick = { FavoritesStore.remove(f.id) }) {
-                                Icon(Icons.Default.Favorite, contentDescription = "Quitar favorito", tint = RedBrand)
-                            }
-                        }
-                        Divider()
-                    }
-                }
-                Spacer(Modifier.height(12.dp))
-                OutlinedButton(onClick = { showFavoritesSheet = false }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
-                    Text("Cerrar")
                 }
             }
         }
@@ -758,7 +648,6 @@ fun MenuItemRow(item: MenuUiItem, onView: () -> Unit, onQuickAdd: () -> Unit) {
             Spacer(Modifier.width(8.dp))
 
             Column(horizontalAlignment = Alignment.End) {
-                // placeholder for favorite toggle will be added by caller overload
                 // Ver detalles
                 OutlinedButton(
                     onClick = onView,
@@ -834,107 +723,6 @@ private fun SuggestionRow(item: MenuUiItem, onClick: () -> Unit) {
             Text("$" + "%.0f".format(item.price), fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(8.dp))
             OutlinedButton(onClick = onClick, shape = RoundedCornerShape(10.dp)) { Text("Ver") }
-        }
-    }
-}
-
-// Overload that supports favorite toggle
-@Composable
-fun MenuItemRow(item: MenuUiItem, onView: () -> Unit, onQuickAdd: () -> Unit, isFavorite: Boolean, onToggleFavorite: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Placeholder de imagen hasta que tengamos URLs
-            Box(
-                modifier = Modifier
-                    .size(90.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFF1F1F1)),
-                contentAlignment = Alignment.Center
-            ) { Text("🍕", fontSize = 28.sp) }
-
-            Spacer(Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    item.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-                // Mostrar descripción si existe
-                if (item.description.isNotEmpty()) {
-                    Text(
-                        item.description,
-                        color = Color.Gray,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "$" + "%.0f".format(item.price),
-                        fontWeight = FontWeight.ExtraBold,
-                        color = BrownDark,
-                        fontSize = 16.sp
-                    )
-                    if (item.calories != null) {
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "• ${item.calories} kcal",
-                            color = Color.Gray,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.width(8.dp))
-
-            Column(horizontalAlignment = Alignment.End) {
-                // Heart toggle
-                IconButton(onClick = onToggleFavorite, modifier = Modifier.size(36.dp)) {
-                    if (isFavorite) {
-                        Icon(Icons.Default.Favorite, contentDescription = "Favorito", tint = RedBrand)
-                    } else {
-                        Icon(Icons.Default.FavoriteBorder, contentDescription = "Marcar favorito")
-                    }
-                }
-                Spacer(Modifier.height(6.dp))
-                // Ver detalles
-                OutlinedButton(
-                    onClick = onView,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = BrownDark,
-                        containerColor = Color.White
-                    ),
-                    border = BorderStroke(1.dp, Color.LightGray),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    modifier = Modifier.height(32.dp)
-                ) { Text("Detalles", fontSize = 12.sp) }
-                Spacer(Modifier.height(6.dp))
-                // Agregar rápido
-                Button(
-                    onClick = onQuickAdd,
-                    colors = ButtonDefaults.buttonColors(containerColor = RedBrand),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    modifier = Modifier.height(32.dp)
-                ) { Text("Agregar", color = Color.White, fontSize = 12.sp) }
-            }
         }
     }
 }
