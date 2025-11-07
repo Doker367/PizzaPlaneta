@@ -70,11 +70,10 @@ public partial class MainDbContext : DbContext
             entity.ToTable("tarjetas");
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.FechaGuardado).HasColumnName("fecha_guardado");
-            entity.Property(e => e.FechaVencimiento).HasColumnName("fecha_vencimiento");
-            entity.Property(e => e.Marca).HasColumnName("marca");
-            entity.Property(e => e.NombreTarjeta).HasColumnName("nombre_tarjeta");
-            entity.Property(e => e.NumeroEnmascarado).HasColumnName("numero_enmascarado");
-            entity.Property(e => e.TokenPago).HasColumnName("token_pago");
+            entity.Property(e => e.StripePaymentMethodId).HasColumnName("stripe_payment_method_id");
+            entity.Property(e => e.Last4).HasColumnName("last4");
+            entity.Property(e => e.ExpMonth).HasColumnName("exp_month");
+            entity.Property(e => e.ExpYear).HasColumnName("exp_year");
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
 
             entity.HasOne(d => d.Usuario).WithMany(p => p.Tarjetas)

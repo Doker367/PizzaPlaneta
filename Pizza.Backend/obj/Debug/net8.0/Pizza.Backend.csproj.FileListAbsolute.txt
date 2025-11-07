@@ -233,3 +233,6 @@
 /home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/Newtonsoft.Json.dll
 /home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/SendGrid.dll
 /home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/StarkbankEcdsa.dll
+/home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/Stripe.net.dll
+/home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/System.Configuration.ConfigurationManager.dll
+/home/doker/Descargas/Pizzeria/Pizza.Backend/bin/Debug/net8.0/System.Security.Cryptography.ProtectedData.dll

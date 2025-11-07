@@ -11,13 +11,15 @@ public partial class Tarjeta
 
     public string NombreTarjeta { get; set; } = null!;
 
-    public string NumeroEnmascarado { get; set; } = null!;
+    public string StripePaymentMethodId { get; set; } = null!;
 
-    public string? Marca { get; set; }
+    public string Last4 { get; set; } = null!;
 
-    public string? FechaVencimiento { get; set; }
+    public int ExpMonth { get; set; }
 
-    public string? TokenPago { get; set; }
+    public int ExpYear { get; set; }
+
+    public string Marca { get; set; } = null!;
 
     public DateTime? FechaGuardado { get; set; }
 

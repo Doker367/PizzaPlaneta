@@ -66,6 +66,26 @@ namespace Pizza.Backend.Adapters
             }
         }
 
+        [HttpPut("items/{productoId}")]
+        public async Task<IActionResult> UpdateItemQuantity(int productoId, [FromBody] UpdateCartItemQuantityDto quantityDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var userId = GetUserId();
+                var cart = await _carritoService.UpdateItemQuantityAsync(userId, productoId, quantityDto.Cantidad);
+                return Ok(cart);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpDelete("items/{productoId}")]
         public async Task<IActionResult> RemoveItemFromCart(int productoId)
         {

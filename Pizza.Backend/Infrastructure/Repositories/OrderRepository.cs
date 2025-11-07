@@ -45,4 +45,10 @@ public async Task<List<Pedido>> GetOrdersByUser(int userId)
         .ToListAsync();
 }
 
+    public async Task UpdateOrder(Pedido order)
+    {
+        _context.Pedidos.Update(order);
+        await _context.SaveChangesAsync();
+    }
+
 }

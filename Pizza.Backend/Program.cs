@@ -8,11 +8,15 @@ using Pizza.Backend.Infrastructure.Data;
 using Pizza.Backend.Infrastructure.Repositories;
 using Pizza.Backend.Ports;
 using Pizza.Backend.Infrastructure;
+using Stripe;
 
 // Load .env file
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Stripe API Key
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 // 1. Add services to the container.
 
@@ -40,7 +44,7 @@ builder.Services.AddScoped<ISucursalRepository, SucursalRepository>();
 builder.Services.AddScoped<ISucursalService, SucursalService>();
 builder.Services.AddScoped<IMenuRepository, MenuRepository>();
 builder.Services.AddScoped<IMenuService, MenuService>();
-builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductService, Pizza.Backend.Application.ProductService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();

@@ -1,4 +1,3 @@
-
 using System.Linq;
 using System.Threading.Tasks;
 using Pizza.Backend.Application.DTOs;
@@ -23,9 +22,12 @@ namespace Pizza.Backend.Application
             var carrito = await _carritoRepository.GetByUserIdAsync(userId);
             if (carrito == null)
             {
-                return new CarritoDto(); // Devuelve un carrito vacío si no existe
+                // Si no hay carrito, creamos uno vacío para asegurar que la app no falle.
+                var newCart = await _carritoRepository.CreateAsync(new Carrito { UsuarioId = userId });
+                await _carritoRepository.SaveChangesAsync();
+                return await MapCarritoToDtoAsync(newCart);
             }
-            return MapCarritoToDto(carrito);
+            return await MapCarritoToDtoAsync(carrito);
         }
 
         public async Task<CarritoDto> AddItemToCartAsync(int userId, AddItemToCartDto itemDto)
@@ -33,15 +35,15 @@ namespace Pizza.Backend.Application
             var producto = await _productRepository.GetByIdAsync(itemDto.ProductoId);
             if (producto == null)
             {
-                throw new System.Exception("Producto no encontrado"); // Considerar una excepción más específica
+                throw new System.Exception("Producto no encontrado");
             }
 
             var carrito = await _carritoRepository.GetByUserIdAsync(userId);
             if (carrito == null)
             {
                 carrito = await _carritoRepository.CreateAsync(new Carrito { UsuarioId = userId });
-                await _carritoRepository.SaveChangesAsync(); // Guardar para obtener el ID del carrito
-                carrito = await _carritoRepository.GetByUserIdAsync(userId); // Re-obtener con includes
+                await _carritoRepository.SaveChangesAsync();
+                carrito = await _carritoRepository.GetByUserIdAsync(userId);
             }
 
             if (carrito == null)
@@ -70,7 +72,7 @@ namespace Pizza.Backend.Application
             await _carritoRepository.SaveChangesAsync();
 
             var carritoActualizado = await _carritoRepository.GetByUserIdAsync(userId);
-            return MapCarritoToDto(carritoActualizado);
+            return await MapCarritoToDtoAsync(carritoActualizado);
         }
 
         public async Task<CarritoDto> RemoveItemFromCartAsync(int userId, int productoId)
@@ -89,24 +91,65 @@ namespace Pizza.Backend.Application
             }
 
             var carritoActualizado = await _carritoRepository.GetByUserIdAsync(userId);
-            return MapCarritoToDto(carritoActualizado);
+            return await MapCarritoToDtoAsync(carritoActualizado);
         }
 
-        private CarritoDto MapCarritoToDto(Carrito? carrito)
+        public async Task<CarritoDto> UpdateItemQuantityAsync(int userId, int productoId, int cantidad)
+        {
+            var carrito = await _carritoRepository.GetByUserIdAsync(userId);
+            if (carrito == null)
+            {
+                throw new System.Exception("Carrito no encontrado");
+            }
+
+            var itemParaActualizar = await _carritoRepository.GetItemAsync(carrito.Id, productoId);
+            if (itemParaActualizar != null)
+            {
+                if (cantidad > 0)
+                {
+                    itemParaActualizar.Cantidad = cantidad;
+                    _carritoRepository.UpdateItem(itemParaActualizar);
+                }
+                else
+                {
+                    _carritoRepository.RemoveItem(itemParaActualizar);
+                }
+                await _carritoRepository.SaveChangesAsync();
+            }
+            // Si el item no existe, no hacemos nada. Podríamos añadir un item nuevo si quisiéramos.
+
+            var carritoActualizado = await _carritoRepository.GetByUserIdAsync(userId);
+            return await MapCarritoToDtoAsync(carritoActualizado);
+        }
+
+        private async Task<CarritoDto> MapCarritoToDtoAsync(Carrito? carrito)
         {
             if (carrito == null)
             {
-                return new CarritoDto();
+                return new CarritoDto { Items = new System.Collections.Generic.List<CarritoItemDto>() };
             }
+
+            if (carrito.Items == null || !carrito.Items.Any())
+            {
+                return new CarritoDto { Items = new System.Collections.Generic.List<CarritoItemDto>() };
+            }
+
+            var productIds = carrito.Items.Select(i => i.ProductoId).Distinct().ToList();
+            var productos = await _productRepository.GetProductsByIds(productIds);
+            var prodDict = productos.ToDictionary(p => p.Id);
 
             return new CarritoDto
             {
-                Items = carrito.Items.Select(item => new CarritoItemDto
+                Items = carrito.Items.Select(item =>
                 {
-                    ProductoId = item.ProductoId,
-                    NombreProducto = item.Producto?.Nombre ?? string.Empty,
-                    Cantidad = item.Cantidad,
-                    PrecioUnitario = item.Producto?.Precio ?? 0
+                    prodDict.TryGetValue(item.ProductoId, out var prod);
+                    return new CarritoItemDto
+                    {
+                        ProductoId = item.ProductoId,
+                        NombreProducto = prod?.Nombre ?? "Producto no encontrado",
+                        Cantidad = item.Cantidad,
+                        PrecioUnitario = prod?.Precio ?? 0
+                    };
                 }).ToList()
             };
         }

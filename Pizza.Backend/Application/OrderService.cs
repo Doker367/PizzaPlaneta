@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Pizza.Backend.Application.DTOs;
 using Pizza.Backend.Domain;
 using Pizza.Backend.Infrastructure.Data;
 using Pizza.Backend.Ports;
+using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,17 +16,30 @@ public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly ITarjetaRepository _tarjetaRepository;
     private readonly MainDbContext _mainDbContext; // Injected for Sucursal and Calificaciones
+    private readonly string _stripeSecretKey;
 
-    public OrderService(IOrderRepository orderRepository, IProductRepository productRepository, MainDbContext mainDbContext)
+
+    public OrderService(IOrderRepository orderRepository, IProductRepository productRepository, MainDbContext mainDbContext, IUserRepository userRepository, ITarjetaRepository tarjetaRepository, IConfiguration configuration)
     {
         _orderRepository = orderRepository;
         _productRepository = productRepository;
         _mainDbContext = mainDbContext;
+        _userRepository = userRepository;
+        _tarjetaRepository = tarjetaRepository;
+        _stripeSecretKey = configuration["Stripe:SecretKey"];
     }
 
     public async Task<bool> CreateOrder(CreateOrderDto createOrderDto, string userId)
     {
+        var user = await _userRepository.GetUserByIdAsync(int.Parse(userId));
+        if (user == null) throw new Exception("Usuario no encontrado.");
+
+        var tarjeta = await _tarjetaRepository.GetByIdAsync(createOrderDto.TarjetaId);
+        if (tarjeta == null || tarjeta.UsuarioId != user.Id) throw new Exception("Tarjeta no válida.");
+
         var productIds = createOrderDto.Items.Select(x => x.ProductoId).ToList();
         var productos = await _productRepository.GetProductsByIds(productIds);
         if (productos.Count != productIds.Count)
@@ -48,14 +63,52 @@ public class OrderService : IOrderService
         {
             UsuarioId = int.Parse(userId),
             SucursalId = createOrderDto.SucursalId,
-            Estado = "Pendiente",
+            Estado = "Pendiente de Pago",
             Total = total,
-            Fecha = DateTime.UtcNow
+            Fecha = DateTime.UtcNow,
+            TarjetaId = createOrderDto.TarjetaId
         };
 
         await _orderRepository.CreateOrder(pedido, detalles);
 
-        return true;
+        try
+        {
+            StripeConfiguration.ApiKey = _stripeSecretKey;
+
+            var options = new PaymentIntentCreateOptions
+            {
+                Amount = (long)(total * 100), // Amount in cents
+                Currency = "mxn",
+                Customer = user.StripeCustomerId,
+                PaymentMethod = tarjeta.StripePaymentMethodId,
+                OffSession = true,
+                Confirm = true,
+            };
+
+            var service = new PaymentIntentService();
+            var paymentIntent = await service.CreateAsync(options);
+
+            if (paymentIntent.Status == "succeeded")
+            {
+                pedido.Estado = "Pagado";
+                await _orderRepository.UpdateOrder(pedido);
+                return true;
+            }
+            else
+            {
+                pedido.Estado = "Pago Fallido";
+                await _orderRepository.UpdateOrder(pedido);
+                return false;
+            }
+        }
+        catch (StripeException e)
+        {
+            pedido.Estado = "Pago Fallido";
+            await _orderRepository.UpdateOrder(pedido);
+            // Log the error
+            Console.WriteLine(e.StripeError.Message);
+            return false;
+        }
     }
 
     public async Task<List<OrderDetailDto>> GetOrdersByUser(string userId)

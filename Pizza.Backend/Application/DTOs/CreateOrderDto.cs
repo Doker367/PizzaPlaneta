@@ -10,4 +10,7 @@ public class CreateOrderDto
     [Required]
     [MinLength(1)]
     public List<OrderItemDto> Items { get; set; } = new();
+
+    [Required]
+    public int TarjetaId { get; set; }
 }

@@ -5,8 +5,9 @@ namespace Pizza.Backend.Application.DTOs
     {
         public int Id { get; set; }
         public string NombreTarjeta { get; set; } = string.Empty;
-        public string NumeroEnmascarado { get; set; } = string.Empty;
+        public string Last4 { get; set; } = string.Empty;
         public string Marca { get; set; } = string.Empty;
-        public string? FechaVencimiento { get; set; }
+        public int ExpMonth { get; set; }
+        public int ExpYear { get; set; }
     }
 }

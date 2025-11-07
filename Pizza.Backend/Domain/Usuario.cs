@@ -23,6 +23,9 @@ public partial class Usuario
     public string? PasswordResetToken { get; set; }
     public DateTime? ResetTokenExpires { get; set; }
 
+    // Stripe Customer ID
+    public string? StripeCustomerId { get; set; }
+
     public virtual ICollection<Calificacione> Calificaciones { get; set; } = new List<Calificacione>();
 
     public virtual ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
