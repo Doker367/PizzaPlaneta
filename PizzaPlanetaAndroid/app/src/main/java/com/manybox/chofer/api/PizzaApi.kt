@@ -90,9 +90,7 @@ data class OrderItemRequest(
 
 data class CreateOrderRequest(
     val sucursalId: Int,
-    val items: List<OrderItemRequest>,
-    val metodoPago: String,
-    val tarjetaId: Int? = null
+    val items: List<OrderItemRequest>
 )
 
 

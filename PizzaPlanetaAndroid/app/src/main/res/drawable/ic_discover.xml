@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="64dp" android:height="40dp" android:viewportWidth="64" android:viewportHeight="40">
+    <!-- Discover emblem (circle + logotype) without background -->
+    <path android:fillColor="#FF6000" android:pathData="M40,20c0,6.6 -5.4,12 -12,12 -6.6,0 -12,-5.4 -12,-12 0,-6.6 5.4,-12 12,-12 6.6,0 12,5.4 12,12z"/>
+    <path android:fillColor="#000000" android:pathData="M10,28v-16h3.5c4.5,0 7.5,3.2 7.5,8 0,4.8 -3,8 -7.5,8h-3.5zM14.2,24.9c2.1,0 3.6,-1.8 3.6,-4.9 0,-3.1 -1.5,-4.9 -3.6,-4.9h-0.7v9.8h0.7zM46,12h8v16h-3.5v-12h-4.5zM36,12h8v16h-3.5v-12h-4.5zM30,12h3.5v16H30z"/>
+</vector>

@@ -115,6 +115,8 @@ fun PizzaHomeScreen() {
     var postLogin by remember { mutableStateOf<(() -> Unit)?>(null) }
     var showCarrito by remember { mutableStateOf(false) }
     val cartViewModel = remember { CartViewModel() }
+    // Métodos de pago guardados (solo front por ahora)
+    val savedCards = remember { mutableStateListOf<CardInfo>() }
 
     // Palette
     val Navy = Color(0xFF1D3557)
@@ -126,6 +128,8 @@ fun PizzaHomeScreen() {
         val token = TokenStore.getTokenBlocking(context)
         isLoggedIn = !token.isNullOrBlank()
         if (isLoggedIn) {
+            // Detectar rol admin al iniciar si ya existe un token guardado
+            isAdmin = JwtUtils.hasAdminRole(token)
             TokenStore.getDisplayNameBlocking(context)?.let { n ->
                 if (n.isNotBlank()) displayName = n
             }
@@ -905,11 +909,42 @@ fun PizzaHomeScreen() {
                         showMenu = false
                         showLogin = true
                     },
-                    cartViewModel = cartViewModel,
                     sucursalId = selectedSucursalId ?: 3,
                     sucursalName = selectedSucursalName ?: "",
                     sucursalAddress = selectedSucursalAddress,
                     sucursalMapsUrl = selectedSucursalMapsUrl
+                )
+            }
+
+            // Pantalla de Mi cuenta (perfil + pagos + historial)
+            if (showAccount) {
+                CuentaUsuarioScreen(
+                    fullname = displayName,
+                    phone = null,
+                    email = null,
+                    favorites = emptyList(),
+                    favoriteBranch = null,
+                    cards = savedCards,
+                    orders = emptyList(),
+                    headerImageRes = R.drawable.pizzorra,
+                    onBack = { showAccount = false },
+                    onEditProfile = { /* TODO: editar perfil */ },
+                    onLogout = {
+                        scope.launch(Dispatchers.IO) {
+                            TokenStore.clearToken(context)
+                            launch(Dispatchers.Main) {
+                                displayName = "Invitado"
+                                isLoggedIn = false
+                                isAdmin = false
+                                showAccount = false
+                                rootSnackbarHost.showSnackbar("Sesión cerrada")
+                            }
+                        }
+                    },
+                    isLoggedIn = isLoggedIn,
+                    onLogin = { showLogin = true },
+                    onReorder = { /* TODO: reordenar */ },
+                    onCardAdded = { savedCards.add(it) }
                 )
             }
 
@@ -929,6 +964,28 @@ fun PizzaHomeScreen() {
                 MetodoPagoScreen(
                     onBack = { showMetodoPago = false },
                     headerImageRes = R.drawable.pizzorra
+                )
+            }
+
+            // Panel de administración
+            if (showAdmin) {
+                AdminDashboard(
+                    onBack = {
+                        showAdmin = false
+                        showOrderSelector = true
+                    },
+                    onLogout = {
+                        scope.launch(Dispatchers.IO) {
+                            TokenStore.clearToken(context)
+                            launch(Dispatchers.Main) {
+                                displayName = "Invitado"
+                                isLoggedIn = false
+                                isAdmin = false
+                                showAdmin = false
+                                rootSnackbarHost.showSnackbar("Sesión cerrada")
+                            }
+                        }
+                    }
                 )
             }
 

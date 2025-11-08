@@ -156,8 +156,7 @@ fun CartScreen(
                         }
                         val body = CreateOrderRequest(
                             sucursalId = sucursalId,
-                            items = viewModel.items.map { OrderItemRequest(productoId = it.productoId, cantidad = it.cantidad) },
-                            metodoPago = "Efectivo"
+                            items = viewModel.items.map { OrderItemRequest(productoId = it.productoId, cantidad = it.cantidad) }
                         )
                         RetrofitProvider.pizzaApi(context).createOrder(body).enqueue(object: Callback<Void> {
                             override fun onResponse(call: Call<Void>, response: Response<Void>) {

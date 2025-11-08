@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="64dp" android:height="40dp" android:viewportWidth="64" android:viewportHeight="40">
+    <!-- AMEX wordmark (no background) -->
+    <path android:fillColor="#2E77BB" android:pathData="M10,28l5.2,-16h3.3l3.1,9.6 3.1,-9.6h3.3l5.2,16h-3.8l-3.1,-10.1 -3.2,10.1h-3.1l-3.2,-10.1 -3.1,10.1zM42,12h12v4h-8v2h7v4h-7v2h8v4h-12z"/>
+</vector>

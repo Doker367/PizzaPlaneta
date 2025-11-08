@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="64dp" android:height="40dp" android:viewportWidth="64" android:viewportHeight="40">
+    <!-- MasterCard overlapping circles (no background) -->
+    <group>
+        <path android:fillColor="#EB001B" android:pathData="M28,30c-4.4,0 -8,-3.6 -8,-8 0,-4.4 3.6,-8 8,-8 4.4,0 8,3.6 8,8 0,4.4 -3.6,8 -8,8z"/>
+        <path android:fillColor="#F79E1B" android:pathData="M36,30c-4.4,0 -8,-3.6 -8,-8 0,-4.4 3.6,-8 8,-8 4.4,0 8,3.6 8,8 0,4.4 -3.6,8 -8,8z"/>
+        <path android:fillColor="#FF5F00" android:pathData="M32,14c2.2,1.5 4,4.2 4,8 0,3.8 -1.8,6.5 -4,8 -2.2,-1.5 -4,-4.2 -4,-8 0,-3.8 1.8,-6.5 4,-8z"/>
+    </group>
+</vector>
