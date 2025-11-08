@@ -165,45 +165,58 @@ fun PizzaHomeScreen() {
                     }
                 }
                 Spacer(Modifier.height(16.dp))
-                DrawerItemRow(
-                    text = "Método de pago",
-                    icon = Icons.Default.CreditCard
-                ) { 
-                    
-                    scope.launch { 
-                        drawerState.close()
-                        showMetodoPago = true
-                    } 
+                // En el ModalDrawerSheet, mantener solo una instancia de cada opción
+                // En el drawer, agregar la definición de isGuestUser y ajustar el uso
+                val isGuestUser = !isLoggedIn
+                DrawerItemRow(text = "Método de pago", icon = Icons.Default.CreditCard) { 
+                    if (isGuestUser) {
+                        postLogin = { showMetodoPago = true }
+                        showLogin = true
+                    } else {
+                        showMetodoPago = true 
+                    }
+                    scope.launch { drawerState.close() }
                 }
+
                 DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) {
-                    scope.launch {
-                        drawerState.close()
+                    if (isGuestUser) {
+                        postLogin = { showCarrito = true }
+                        showLogin = true
+                    } else {
                         showCarrito = true
                     }
+                    scope.launch { drawerState.close() }
                 }
+
                 DrawerItemRow(text = "Favoritos", icon = Icons.Default.Favorite) {
-                    showFavoritesDialog = true
+                    if (isGuestUser) {
+                        postLogin = { showFavoritesDialog = true }
+                        showLogin = true
+                    } else {
+                        showFavoritesDialog = true
+                    }
                     scope.launch { drawerState.close() }
                 }
+
                 DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) {
-                    showFavoriteBranchesDialog = true
+                    if (isGuestUser) {
+                        postLogin = { showFavoriteBranchesDialog = true }
+                        showLogin = true
+                    } else {
+                        showFavoriteBranchesDialog = true
+                    }
                     scope.launch { drawerState.close() }
                 }
-                val isGuestUser = !isLoggedIn
                 DrawerItemRow(text = "Mi perfil", icon = Icons.Default.Person) {
                     if (isGuestUser) {
-                        // Abrir login encima de cualquier pantalla actual y volver a Perfil al terminar
                         postLogin = { showAccount = true }
                         showMenu = false
                         showOrderSelector = false
                         showAccount = false
-                        showRegister = false
-                        showForgot = false
                         showLogin = true
                         showRegister = false
                         showForgot = false
                     } else {
-                        // Navegar a la vista de perfil del usuario
                         showMenu = false
                         showOrderSelector = false
                         showAdmin = false
@@ -211,41 +224,8 @@ fun PizzaHomeScreen() {
                     }
                     scope.launch { drawerState.close() }
                 }
-                DrawerItemRow(text = "Carrito", icon = Icons.Default.ShoppingCart) {
-                    if (isGuestUser) {
-                        postLogin = { showCarrito = true }
-                        showMenu = false
-                        showOrderSelector = false
-                        showAccount = false
-                        showRegister = false
-                        showForgot = false
-                        showLogin = true
-                        showRegister = false
-                        showForgot = false
-                    } else {
-                        showCarrito = true
-                    }
-                    scope.launch { drawerState.close() }
-                }
-                DrawerItemRow(text = "Lugares favoritos", icon = Icons.Default.FavoriteBorder) {
-                    if (isGuestUser) {
-                        postLogin = { showOrderSelector = true }
-                        showMenu = false
-                        showOrderSelector = false
-                        showAccount = false
-                        showRegister = false
-                        showForgot = false
-                        showLogin = true
-                        showRegister = false
-                        showForgot = false
-                    } else {
-                        // TODO: Navegar a favoritos
-                        scope.launch {
-                            rootSnackbarHost.showSnackbar("Favoritos próximamente")
-                        }
-                    }
-                    scope.launch { drawerState.close() }
-                }
+
+                // Eliminar las secciones duplicadas de Carrito y Lugares favoritos
                 // Botón de cerrar sesión sólo si hay sesión activa
                 if (isLoggedIn) {
                     Spacer(Modifier.height(8.dp))
@@ -317,7 +297,7 @@ fun PizzaHomeScreen() {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 48.dp), // Reducido de 72.dp a 48.dp para subir todo el contenido
+                        .padding(top = 72.dp),  // Volvemos al padding original
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
@@ -327,15 +307,23 @@ fun PizzaHomeScreen() {
                             .fillMaxWidth(0.9f)
                             .height(120.dp)
                     )
-                    Spacer(Modifier.height(8.dp))  // Reducido de 12.dp a 8.dp
+                    Spacer(Modifier.height(12.dp))  // Volvemos al spacing original
                     Text(
                         "Bienvenido",
                         color = OnNavy,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                     )
-                    Spacer(Modifier.height(2.dp))  // Reducido de 4.dp a 2.dp
-                    // Animación de pizza caliente removida temporalmente (no implementada)
+                    Spacer(Modifier.height(4.dp))  // Volvemos al spacing original
+                    
+                    // Actualizamos los valores de la animación con los del código anterior
+                    HotPizzaAnimation(
+                        modifier = Modifier.padding(bottom = 16.dp),
+                        size = 600f,
+                        lineColor = Color.White.copy(alpha = 0.85f),
+                        strokeWidth = 8f
+                    )
+                    
                     Spacer(Modifier.height(8.dp))
                 }
 
@@ -932,7 +920,7 @@ fun PizzaHomeScreen() {
                     onBack = { showCarrito = false },
                     onOrderSuccess = {
                         showCarrito = false
-                        // opcional: mostrar selector o menú
+                        showMetodoPago = true  // Mostrar pantalla de método de pago
                     }
                 )
             }

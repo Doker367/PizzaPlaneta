@@ -36,7 +36,7 @@ data class LegacyCartItem(
 @Composable
 fun CarritoScreen(
     onBackClick: () -> Unit,
-    onCheckoutClick: () -> Unit,
+    onCheckoutClick: () -> Unit,  // Este parámetro se usará desde PizzaHomeScreen
     items: List<LegacyCartItem>,
     onUpdateQuantity: (LegacyCartItem, Int) -> Unit,
     onDeleteItem: (LegacyCartItem) -> Unit,
@@ -47,55 +47,59 @@ fun CarritoScreen(
 
     Scaffold(
         topBar = {
-            Column {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                ) {
-                    // Imagen de fondo PM1 (aumentar opacidad)
-                    Image(
-                        painter = painterResource(id = R.drawable.pm1),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        alpha = 0.7f  // Cambiado de 0.2f a 0.7f para que se vea más
-                    )
-                    // Logo superpuesto
-                    Image(
-                        painter = painterResource(id = R.drawable.il1_alt),
-                        contentDescription = "Pizza Planet Logo",
+            Surface(
+                shadowElevation = 4.dp
+            ) {
+                Column {
+                    // Header con imagen de fondo y logo
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp),
-                        contentScale = ContentScale.Fit
+                            .height(80.dp)
+                    ) {
+                        // Fondo con imagen PM1
+                        Image(
+                            painter = painterResource(id = R.drawable.pm1),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            alpha = 0.7f
+                        )
+                        // Logo superpuesto
+                        Image(
+                            painter = painterResource(id = R.drawable.il1_alt),
+                            contentDescription = "Pizza Planet Logo",
+                            modifier = Modifier
+                                .fillMaxWidth(0.4f)
+                                .align(Alignment.Center),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                    // Barra de navegación roja
+                    TopAppBar(
+                        title = { Text("Mi Carrito") },
+                        navigationIcon = {
+                            IconButton(onClick = onBackClick) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = "Regresar")
+                            }
+                        },
+                        actions = {
+                            if (items.isNotEmpty()) {
+                                TextButton(
+                                    onClick = { showClearCartDialog = true },
+                                    colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
+                                ) {
+                                    Text("Vaciar carrito")
+                                }
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color(0xFFD32F2F),
+                            titleContentColor = Color.White,
+                            navigationIconContentColor = Color.White
+                        )
                     )
                 }
-                TopAppBar(
-                    title = { Text("Mi Carrito") },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClick) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Regresar")
-                        }
-                    },
-                    actions = {
-                        if (items.isNotEmpty()) {
-                            TextButton(
-                                onClick = { showClearCartDialog = true },
-                                colors = ButtonDefaults.textButtonColors(
-                                    contentColor = Color.White
-                                )
-                            ) {
-                                Text("Vaciar carrito")
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFD32F2F),
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
-                    )
-                )
             }
         },
         bottomBar = {
@@ -121,11 +125,9 @@ fun CarritoScreen(
                     }
                     Spacer(Modifier.height(16.dp))
                     Button(
-                        onClick = onCheckoutClick,
+                        onClick = onCheckoutClick,  // Ya está configurado para usar el callback
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1D3557)
-                        )
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D3557))
                     ) {
                         Text("CONTINUAR")
                     }

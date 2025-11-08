@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.manybox.chofer.ui
 
 import androidx.compose.foundation.Image
